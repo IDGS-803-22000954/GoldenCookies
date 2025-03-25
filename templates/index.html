@@ -26,67 +26,43 @@
     <h1>Insumos</h1>
   </div>
 
-  <form method="post" action="" class="max-w-md mx-auto">
-    {{ formularioC.csrf_token }}
+  <form method="post" action="{{ url_for('agregar_insumo') }}" class="max-w-md mx-auto">
+    {{ formulario.hidden_tag() }}
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
 
     <div class="mb-4">
-        {{ camposNuevos(formularioC.nombre.label, class="w-full p-2 border border-gray-300 rounded")}}{{formularioC.nombre(class="form-control") }}
-        
+        <label class="block text-gray-700 text-sm font-bold mb-2">
+            {{ formulario.nombre.label }}
+        </label>
+        {{ formulario.nombre(class="w-full p-2 border border-gray-300 rounded") }}
+        {% if formulario.nombre.errors %}
+            <div class="text-red-500 text-xs italic">
+                {% for error in formulario.nombre.errors %}
+                    {{ error }}
+                {% endfor %}
+            </div>
+        {% endif %}
     </div>
 
     <div class="mb-4">
-        
-        {{ camposNuevos(formularioC.direccion.label, class="w-full p-2 border border-gray-300 rounded")}}{{formularioC.direccion(class="form-control") }}
+        <label class="block text-gray-700 text-sm font-bold mb-2">
+            {{ formulario.unidad_medida.label }}
+        </label>
+        {{ formulario.unidad_medida(class="w-full p-2 border border-gray-300 rounded") }}
+        {% if formulario.unidad_medida.errors %}
+            <div class="text-red-500 text-xs italic">
+                {% for error in formulario.unidad_medida.errors %}
+                    {{ error }}
+                {% endfor %}
+            </div>
+        {% endif %}
     </div>
 
-
-<div class="mb-4">
-    
-    {{ camposNuevos(formularioC.telefono.label, class="w-full p-2 border border-gray-300 rounded")}}{{formularioC.telefono(class="form-control") }}
-</div>
-
-
-<div class="card-body">
-<div class="mb-3">
-  <label class="form-label"
-    >{{ formularioP.tamanio.label }}</label
-  >
-  <div class="btn-group w-100" role="group">
-    {% for subfield in formularioP.tamanio %}
-    <div class="form-check form-check-inline mb-2 me-3">
-      {{ subfield(class="btn-check") }} {{
-      subfield.label(class="btn btn-outline-primary") }}
-    </div>
-    {% endfor %}
-  </div>
-</div>
-
-
-<div class="mb-3">
-<label class="form-label"
-  >{{ formularioP.ingredientes.label }}</label
->
-<div class="row">
-  {% for subfield in formularioP.ingredientes %}
-  <div class="col-md-6 col-lg-4 mb-2">
-    <div class="form-check">
-      {{ subfield(class="form-check-input") }} {{
-      subfield.label(class="form-check-label") }}
-    </div>
-  </div>
-  {% endfor %}
-</div>
-</div>
-
-<div class="mb-4">
-{{ camposNuevos(formularioP.numerop.label, class="w-full p-2 border border-gray-300 rounded")}}{{formularioP.numerop(class="form-control") }}
-</div>
-<center>
-    <button type="submit" style="width: 250px;" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
-        Submit
-    </button>
-</center>
+    <center>
+        <button type="submit" style="width: 250px;" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+            Guardar Insumo
+        </button>
+    </center>
 </form>
 
     <script src="https://cdn.jsdelivr.net/npm/flowbite@3.1.2/dist/flowbite.min.js"></script>
