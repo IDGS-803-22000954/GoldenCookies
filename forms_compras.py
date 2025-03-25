@@ -23,3 +23,8 @@ class InsumoForm(FlaskForm):
         validators.Length(
             min=1, max=60, message='La unidad debe tener entre 1 y 60 caracteres')
     ])
+    cantidad_insumo = StringField('Cantidad de insumo', [
+        validators.DataRequired(message='La cantidad de insumo es requerida'),
+        validators.Length(
+            min=1, max=10, message='La unidad debe tener entre 1 y 10 caracteres')
+    ])

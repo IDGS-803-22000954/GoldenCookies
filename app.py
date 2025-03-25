@@ -1,38 +1,33 @@
-from flask import Flask, render_template, request, redirect, url_for, session
-from flask import flash
+from flask import Flask, render_template, redirect, url_for, flash
 from flask_wtf.csrf import CSRFProtect
 from config import DevelopmentConfig
-from flask import g
-import forms_compras
-from models import Insumo
-from models import db
+from models import Insumo, db
 from forms_compras import InsumoForm
 
 app = Flask(__name__)
 app.config.from_object(DevelopmentConfig)
-csrf=CSRFProtect()
+csrf = CSRFProtect(app)
+db.init_app(app)
 
-@app.route("/")
-@app.route("/index")
+@app.route("/", methods=['GET', 'POST'])
+@app.route("/index", methods=['GET', 'POST'])
 def index():
-	return render_template("index.html")
-
-@app.route('/agregar_insumo', methods=['GET', 'POST'])
-def agregar_insumo():
-    formulario = InsumoForm()  # Cambiado de 'form' a 'formulario'
+    formulario = InsumoForm()
     
     if formulario.validate_on_submit():
         nuevo_insumo = Insumo(
             nombre=formulario.nombre.data,
-            unidad_medida=formulario.unidad_medida.data
+            unidad_medida=formulario.unidad_medida.data,
+            cantidad_insumo=formulario.cantidad_insumo.data
         )
         db.session.add(nuevo_insumo)
         db.session.commit()
+        flash('Insumo agregado correctamente!', 'success')
         return redirect(url_for('index'))
     
     return render_template('index.html', formulario=formulario)
 
-
-
 if __name__ == '__main__':
-	app.run(debug=True)
+    with app.app_context():
+        db.create_all()
+    app.run(debug=True)

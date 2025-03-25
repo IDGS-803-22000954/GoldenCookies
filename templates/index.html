@@ -13,6 +13,8 @@
       rel="stylesheet"
       href="{{url_for('static',filename='css/style.css')}}"
     />
+    <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@400;700&family=Dancing+Script:wght@400..700&family=Kavoon&family=Parisienne&display=swap" rel="stylesheet">
+    
   </head>
 
   <body>
@@ -26,44 +28,63 @@
     <h1>Insumos</h1>
   </div>
 
-  <form method="post" action="{{ url_for('agregar_insumo') }}" class="max-w-md mx-auto">
-    {{ formulario.hidden_tag() }}
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+  <!-- Formulario de insumos -->
+  <div class="max-w-md mx-auto bg-white p-8 rounded-lg shadow-md">
+    <h2 class="text-2xl font-bold mb-6 text-center">Agregar Insumo</h2>
+    
+    <form method="post" action="{{ url_for('index') }}" class="max-w-md mx-auto">
+        {{ formulario.hidden_tag() }}
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
 
-    <div class="mb-4">
-        <label class="block text-gray-700 text-sm font-bold mb-2">
-            {{ formulario.nombre.label }}
-        </label>
-        {{ formulario.nombre(class="w-full p-2 border border-gray-300 rounded") }}
-        {% if formulario.nombre.errors %}
-            <div class="text-red-500 text-xs italic">
-                {% for error in formulario.nombre.errors %}
-                    {{ error }}
-                {% endfor %}
-            </div>
-        {% endif %}
-    </div>
+        <div class="mb-4">
+            <label class="block text-gray-700 text-sm font-bold mb-2">
+                {{ formulario.nombre.label }}
+            </label>
+            {{ formulario.nombre(class="w-full p-2 border border-gray-300 rounded") }}
+            {% if formulario.nombre.errors %}
+                <div class="text-red-500 text-xs italic">
+                    {% for error in formulario.nombre.errors %}
+                        {{ error }}
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
 
-    <div class="mb-4">
-        <label class="block text-gray-700 text-sm font-bold mb-2">
-            {{ formulario.unidad_medida.label }}
-        </label>
-        {{ formulario.unidad_medida(class="w-full p-2 border border-gray-300 rounded") }}
-        {% if formulario.unidad_medida.errors %}
-            <div class="text-red-500 text-xs italic">
-                {% for error in formulario.unidad_medida.errors %}
-                    {{ error }}
-                {% endfor %}
-            </div>
-        {% endif %}
-    </div>
+        <div class="mb-6">
+            <label class="block text-gray-700 text-sm font-bold mb-2">
+                {{ formulario.unidad_medida.label }}
+            </label>
+            {{ formulario.unidad_medida(class="w-full p-2 border border-gray-300 rounded") }}
+            {% if formulario.unidad_medida.errors %}
+                <div class="text-red-500 text-xs italic">
+                    {% for error in formulario.unidad_medida.errors %}
+                        {{ error }}
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+        
+        <div class="mb-6">
+          <label class="block text-gray-700 text-sm font-bold mb-2">
+              {{ formulario.cantidad_insumo.label }}
+          </label>
+          {{ formulario.cantidad_insumo(class="w-full p-2 border border-gray-300 rounded") }}
+          {% if formulario.cantidad_insumo.errors %}
+              <div class="text-red-500 text-xs italic">
+                  {% for error in formulario.cantidad_insumo.errors %}
+                      {{ error }}
+                  {% endfor %}
+              </div>
+          {% endif %}
+      </div>
 
-    <center>
-        <button type="submit" style="width: 250px;" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
-            Guardar Insumo
-        </button>
-    </center>
-</form>
+        <div class="text-center">
+            <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                Guardar Insumo
+            </button>
+        </div>
+    </form>
+</div>
 
     <script src="https://cdn.jsdelivr.net/npm/flowbite@3.1.2/dist/flowbite.min.js"></script>
   </body>

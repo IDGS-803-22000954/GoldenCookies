@@ -30,6 +30,7 @@ class Insumo(db.Model):
     id_insumo: Mapped[int] = mapped_column(Integer, primary_key=True)
     nombre: Mapped[str] = mapped_column(String(100))
     unidad_medida: Mapped[str] = mapped_column(String(60))
+    cantidad_insumo: Mapped[float]= mapped_column(Float)
     created_at: Mapped[Optional[datetime.datetime]] = mapped_column(
         TIMESTAMP, server_default=text('CURRENT_TIMESTAMP'))
 
