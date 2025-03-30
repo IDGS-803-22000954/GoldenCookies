@@ -90,3 +90,21 @@ border-color:black
     background-color: #CF631B;
     color: #000;
   }
+
+
+
+
+
+  .form-container {
+    background-color: #EBAA6A;
+    padding: 20px;
+    border-radius: 10px;
+    border: 2px solid #000000;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    margin: 15px;
+  }
+  .form-content {
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+  }
