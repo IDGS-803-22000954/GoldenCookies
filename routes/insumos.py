@@ -3,6 +3,7 @@ from flask_wtf.csrf import CSRFProtect
 from config import DevelopmentConfig
 from models import Insumo, Proveedor, db
 from forms_compras import InsumoForm
+from flask_login import LoginManager, current_user, login_user, login_required, logout_user, UserMixin
 
 insumo_bp = Blueprint('insumo_bp', __name__, url_prefix='/insumo_bp')
 
@@ -10,6 +11,7 @@ insumo_bp = Blueprint('insumo_bp', __name__, url_prefix='/insumo_bp')
 
 @insumo_bp.route("/insumo", methods=['GET', 'POST'])
 def agregarInsumo():
+    login_required()
     formulario = InsumoForm()
     insumos = Insumo.query.all()  # Consulta todos los registros de la tabla Insumo
     
@@ -29,6 +31,7 @@ def agregarInsumo():
 
 @insumo_bp.route("/editar_insumo", methods=['POST'])
 def editar_insumo():
+    login_required()
     id_insumo = request.form.get('id_insumo')
     nombre = request.form.get('nombre')
     unidad_medida = request.form.get('unidad_medida')

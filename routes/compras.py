@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, redirect, url_for, flash, request
 from models import db, Insumo, Proveedor, LoteInsumo, CompraInsumo
 from forms_compras import CompraInsumoForm
 from datetime import datetime
+from flask_login import LoginManager, current_user, login_user, login_required, logout_user, UserMixin
 
 compras_bp = Blueprint('compras_bp', __name__, template_folder='templates')
 
@@ -10,6 +11,7 @@ compras_bp = Blueprint('compras_bp', __name__, template_folder='templates')
 
 @compras_bp.route('/compras', methods=['GET', 'POST'])
 def listar_compras():
+    login_required()
     form = CompraInsumoForm()
     compras = CompraInsumo.query.join(LoteInsumo).join(Insumo).join(Proveedor).all()
     # Llenar los select fields
