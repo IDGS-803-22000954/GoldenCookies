@@ -60,8 +60,6 @@ def login():
     return render_template('auth/login.html', form=form)
 
 
-
-
 @auth.route('/registro', methods=['GET', 'POST'])
 def registro():
     form = RegistroForm()
@@ -79,7 +77,7 @@ def registro():
 
         if not result.get('success'):
             flash('Por favor completa el reCAPTCHA.', 'danger')
-            return redirect(url_for('registro'))
+            return redirect(url_for('auth.registro'))
         
         # Hashear la contraseña antes de almacenarla
         hashed_password = generate_password_hash(form.contrasenia.data)

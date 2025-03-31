@@ -1,42 +1,65 @@
 from flask import Flask, render_template, redirect, url_for, flash, request
+from flask_login import LoginManager, current_user, login_user, login_required, logout_user, UserMixin
 from flask_wtf.csrf import CSRFProtect
 from config import DevelopmentConfig
-from models import Insumo, Proveedor, db
-from forms_compras import InsumoForm, ProveedorForm
+from models import Insumo, usuario, db
+from forms_compras import InsumoForm
+from venta import venta
+from pedidos import pedidos
+from auth import auth
 from routes.insumos import insumo_bp
 from routes.proveedores import proveedor_bp
 from routes.compras import compras_bp
-from flask_login import LoginManager, current_user, login_user, login_required, logout_user, UserMixin
-from flask import flash
-from functools import wraps
-from flask import abort
-from flask import g
-from models import usuario
-from auth import auth 
-import os
-
-def role_required(role_id):
-    """ Decorador para restringir acceso según el id_rol del usuario """
-    def decorator(f):
-        @wraps(f)
-        def wrapped_function(*args, **kwargs):
-            if not current_user.is_authenticated or current_user.id_rol != role_id:
-                abort(404)  # Mostrar error 404 en lugar de redirigir a login
-            return f(*args, **kwargs)
-        return wrapped_function
-    return decorator
-
 
 app = Flask(__name__)
+app.config.from_object(DevelopmentConfig)
+csrf = CSRFProtect(app)
+
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'auth.login'  # Ruta de inicio de sesión
+
+@login_manager.user_loader
+def load_user(user_id):
+    return usuario.query.get(int(user_id)) 
+
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('404.html'), 404
+
+
+def status_401(error):
+    return redirect(url_for('login'))
 
 @app.route("/")
 @app.route("/index")
 def index():
-	return render_template("index.html")
 
+	return redirect('auth/login')
+
+@app.route('/admin')
+def admin():
+    return render_template('admin.html')
+
+@app.route('/produccion')
+def produccion():
+    return render_template('produccion.html')
+
+@app.route('/cliente')
+def cliente():
+    return render_template('cliente.html')
+
+app.register_blueprint(auth, url_prefix='/auth')
 app.register_blueprint(insumo_bp)
 app.register_blueprint(proveedor_bp)
 app.register_blueprint(compras_bp, url_prefix='/compras')
+app.register_blueprint(venta)
+app.register_blueprint(pedidos)
 
 if __name__ == '__main__':
-	app.run(debug=True)
+    csrf.init_app(app)
+    db.init_app(app)
+    app.register_error_handler(401, status_401)
+    with app.app_context():
+        db.create_all()
+    app.run()

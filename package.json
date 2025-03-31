@@ -9,9 +9,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@tailwindcss/vite": "^4.0.14",
+    "@tailwindcss/cli": "^4.0.16",
+    "@tailwindcss/vite": "^4.0.16",
     "flowbite": "^3.1.2",
-    "tailwindcss": "^4.0.14"
+    "tailwindcss": "^4.0.16"
   },
   "repository": {
     "type": "git",
@@ -21,5 +22,6 @@
     "url": "https://github.com/IDGS-803-22000954/GoldenCookies/issues"
   },
   "homepage": "https://github.com/IDGS-803-22000954/GoldenCookies#readme",
-  "description": ""
+  "description": "",
+  "type": "commonjs"
 }

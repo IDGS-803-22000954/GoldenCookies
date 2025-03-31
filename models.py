@@ -1,11 +1,29 @@
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user
 from typing import List, Optional
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import Enum, Float, ForeignKeyConstraint, Index, Integer, String, TIMESTAMP, DateTime, text
 from sqlalchemy.dialects.mysql import LONGTEXT, TINYINT
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+from werkzeug.security import check_password_hash, generate_password_hash
 import datetime
 
 db = SQLAlchemy()
+
+class Log(db.Model):
+    __tablename__ = 'log'
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ['id_usuario'], ['usuario.id_usuario'], name='log_ibfk_1'),
+        Index('id_usuario', 'id_usuario')
+    )
+
+    id_log: Mapped[int] = mapped_column(Integer, primary_key=True)
+    tipo_evento: Mapped[str] = mapped_column(String(50))
+    fecha_evento: Mapped[datetime.datetime] = mapped_column(DateTime)
+    id_usuario: Mapped[Optional[int]] = mapped_column(Integer)
+
+    usuario: Mapped[Optional['usuario']] = relationship(
+        'usuario', back_populates='log')
 
 
 class Galleta(db.Model):
@@ -67,6 +85,9 @@ class usuario(db.Model, UserMixin):
     intentos_fallidos = db.Column(db.Integer, default=0)
     bloqueado = db.Column(db.Boolean, default=False)
     codigo_2fa = db.Column(db.String(8), nullable=True)
+    log: Mapped[List['Log']] = relationship('Log', back_populates='usuario')
+    venta: Mapped[List['Venta']] = relationship('Venta', back_populates='usuario')
+    produccion: Mapped[List['Produccion']] = relationship('Produccion', back_populates='usuario')
     email = db.Column(db.String(50), nullable=True)
 
     @classmethod
@@ -88,23 +109,6 @@ class usuario(db.Model, UserMixin):
 
     def get_id(self):
         return str(self.id_usuario) 
-
-
-class Log(db.Model):
-    __tablename__ = 'log'
-    __table_args__ = (
-        ForeignKeyConstraint(
-            ['id_usuario'], ['usuario.id_usuario'], name='log_ibfk_1'),
-        Index('id_usuario', 'id_usuario')
-    )
-
-    id_log: Mapped[int] = mapped_column(Integer, primary_key=True)
-    tipo_evento: Mapped[str] = mapped_column(String(50))
-    fecha_evento: Mapped[datetime.datetime] = mapped_column(DateTime)
-    id_usuario: Mapped[Optional[int]] = mapped_column(Integer)
-
-    usuario: Mapped[Optional['Usuario']] = relationship(
-        'Usuario', back_populates='log')
 
 
 class LoteInsumo(db.Model):
@@ -180,8 +184,8 @@ class Venta(db.Model):
     fecha_recogida: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime)
     pagado: Mapped[Optional[int]] = mapped_column(TINYINT(1), server_default=text("'1'"))
 
-    usuario: Mapped[Optional['Usuario']] = relationship(
-        'Usuario', back_populates='venta')
+    usuario: Mapped[Optional['usuario']] = relationship(
+        'usuario', back_populates='venta')
     detalle_venta: Mapped[List['DetalleVenta']] = relationship(
         'DetalleVenta', back_populates='venta')
 
@@ -285,8 +289,7 @@ class DetalleVenta(db.Model):
     id_detalle: Mapped[int] = mapped_column(Integer, primary_key=True)
     cantidad: Mapped[int] = mapped_column(Integer)
     precio_unitario: Mapped[float] = mapped_column(Float)
-    tipo_venta: Mapped[str] = mapped_column(
-        Enum('pieza', 'gramos', '700g', '1kg'), server_default=text("'pieza'"))
+    tipo_venta: Mapped[str] = mapped_column(String(50))
     id_venta: Mapped[Optional[int]] = mapped_column(Integer)
     id_lote_galleta: Mapped[Optional[int]] = mapped_column(Integer)
     created_at: Mapped[Optional[datetime.datetime]] = mapped_column(
@@ -324,8 +327,8 @@ class Produccion(db.Model):
         'LoteGalleta', back_populates='produccion')
     receta: Mapped[Optional['Receta']] = relationship(
         'Receta', back_populates='produccion')
-    usuario: Mapped[Optional['Usuario']] = relationship(
-        'Usuario', back_populates='produccion')
+    usuario: Mapped[Optional['usuario']] = relationship(
+        'usuario', back_populates='produccion')
     merma: Mapped[List['Merma']] = relationship('Merma', back_populates='produccion')
     produccion_insumo: Mapped[List['ProduccionInsumo']] = relationship(
         'ProduccionInsumo', back_populates='produccion')

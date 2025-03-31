@@ -1,11 +1,10 @@
-
 <!DOCTYPE html>
 <html>
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Venta</title>
+    <title>Nuevo Pedido</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Archivo CSS personalizado -->
@@ -26,7 +25,7 @@
 
     <div class="titulo">
         <img src="../static/img/carro-de-la-compra.png" alt="Venta" class="icono">
-        <h1>Venta</h1>
+        <h1>Nuevo Pedido</h1>
     </div>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
@@ -42,10 +41,9 @@
     {% endif %}
     {% endwith %}
 
-    
     <div class="venta-container">
         <!-- Formulario -->
-        <form method="post" class="formulario-venta" action="{{url_for('venta.procesar_tabla')}}">
+        <form method="post" class="formulario-venta" action="{{url_for('pedidos.procesar_t')}}">
             {{form.csrf_token}}
             <input type="hidden" name="csrf_token" value="{{csrf_token()}}" />
             <div class="mb-3">
@@ -96,14 +94,15 @@
                     </tr>
                 </thead>
                 <tbody id="grupo-table-body">
-                    {% for venta in ventas %}
+                    {% for pedido in pedidos %}
                     <tr>
-                        <td>{{ venta.galleta }}</td>
-                        <td>{{ venta.cantidad }}</td>
-                        <td>{{ venta.precio}}</td>
-                        <form action="{{url_for('venta.eliminar_venta', indice=loop.index0)}}">
+                        <td>{{ pedido.galleta }}</td>
+                        <td>{{ pedido.cantidad }}</td>
+                        <td>{{ pedido.precio}}</td>
+                        <form action="{{url_for('pedidos.eliminar_pedido', indice=loop.index0)}}">
                             <td>
-                                <button class="btn btn-danger btn-sm" style="background-color: #DC3545; border-radius:13px; border-color:black;">
+                                <button class="btn btn-danger btn-sm"
+                                    style="background-color: #DC3545; border-radius:13px; border-color:black;">
                                     Eliminar
                                 </button>
                             </td>
@@ -115,20 +114,14 @@
         </div>
     </div>
 
-    <div class="button-container d-flex justify-content-between">
-        <form method="post" action="{{url_for('venta.venta_pedido')}}" >
-            <input type="hidden" name="csrf_token" value="{{csrf_token()}}" />
-            <button class="btn btn-warning" >Ver pedidos</button>
+    <div class="button-container d-flex justify-content-end">
+        <form class="mx-4" action="{{url_for('pedidos.terminar_pedido')}}">
+            <button class="btn btn-warning">Cancelar</button>
         </form>
-        <div class="d-flex">
-            <form class="mx-4" action="{{url_for('venta.terminar_venta')}}">
-                <button class="btn btn-warning">Cancelar</button>
-            </form>
-            <form method="post" action="{{url_for('venta.realizar_venta')}}">
-                <input type="hidden" name="csrf_token" value="{{csrf_token()}}" />
-                <button class="btn btn-warning">Aceptar</button>
-            </form>
-        </div>
+        <form method="post" action="{{url_for('pedidos.realizar_pedido')}}">
+            <input type="hidden" name="csrf_token" value="{{csrf_token()}}" />
+            <button class="btn btn-warning">Aceptar</button>
+        </form>
     </div>
 
 
