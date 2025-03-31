@@ -31,6 +31,7 @@ class Galleta(db.Model):
 
     id_galleta: Mapped[int] = mapped_column(Integer, primary_key=True)
     nombre: Mapped[str] = mapped_column(String(100))
+    cantidad_galletas: Mapped[int] = mapped_column(Integer)
     precio_sugerido: Mapped[float] = mapped_column(Float)
     peso_unidad: Mapped[float] = mapped_column(Float)
     descripcion: Mapped[Optional[str]] = mapped_column(String(255))

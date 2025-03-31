@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Flowbite Flask</title>
+    <link
+      rel="stylesheet"
+      href="{{url_for('static',filename='css/output.css')}}"
+    />
+    <link
+      rel="stylesheet"
+      href="{{url_for('static',filename='css/style.css')}}"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@400;700&family=Dancing+Script:wght@400..700&family=Kavoon&family=Parisienne&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+
+  <body>
+    <header class="encabezado">
+      <a href="../index.html">
+        <img src="../static/img/logo_goldenCookies.jpeg" class="logo" />
+      </a>
+    </header>
+    <div class="container mt-4">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Registro de Mermas</h1>
+        <div>
+          <a
+            href="{{ url_for('produccion.merma_galleta') }}"
+            class="btn btn-warning"
+          >
+            <i class="fas fa-cookie-bite"></i> Registrar Merma de Galleta
+          </a>
+          <a
+            href="{{ url_for('produccion.merma_insumo') }}"
+            class="btn btn-warning ml-2"
+          >
+            <i class="fas fa-box-open"></i> Registrar Merma de Insumo
+          </a>
+          <a
+            href="{{ url_for('produccion.index') }}"
+            class="btn btn-secondary ml-2"
+          >
+            <i class="fas fa-arrow-left"></i> Volver
+          </a>
+        </div>
+      </div>
+
+      <!-- Resumen de mermas -->
+      <div class="row mb-4">
+        <div class="col-md-4">
+          <div class="card bg-light">
+            <div class="card-body">
+              <h5 class="card-title">Resumen por Tipo</h5>
+              <div class="list-group">
+                {% for tipo, total in mermas_por_tipo %}
+                <div
+                  class="list-group-item d-flex justify-content-between align-items-center"
+                >
+                  {% if tipo == 'caducidad' %}
+                  <span
+                    ><i class="fas fa-calendar-times text-warning"></i>
+                    Caducidad</span
+                  >
+                  {% elif tipo == 'daño' %}
+                  <span><i class="fas fa-bolt text-danger"></i> Daño</span>
+                  {% elif tipo == 'contaminación' %}
+                  <span
+                    ><i class="fas fa-biohazard text-danger"></i>
+                    Contaminación</span
+                  >
+                  {% elif tipo == 'error_proceso' %}
+                  <span
+                    ><i class="fas fa-exclamation-triangle text-info"></i> Error
+                    en Proceso</span
+                  >
+                  {% elif tipo == 'rotura' %}
+                  <span
+                    ><i class="fas fa-trash-alt text-secondary"></i>
+                    Rotura</span
+                  >
+                  {% elif tipo == 'calidad' %}
+                  <span
+                    ><i class="fas fa-check-circle text-primary"></i> Control de
+                    Calidad</span
+                  >
+                  {% else %}
+                  <span
+                    ><i class="fas fa-question-circle text-muted"></i>
+                    Otro</span
+                  >
+                  {% endif %}
+                  <span class="badge badge-primary badge-pill"
+                    >{{ total }}</span
+                  >
+                </div>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-8">
+          <div class="card bg-light">
+            <div class="card-body">
+              <h5 class="card-title">Distribución de Mermas</h5>
+              <div class="row mt-3">
+                <div class="col-md-6 text-center">
+                  <div class="display-4">{{ total_galletas }}</div>
+                  <p class="lead">Galletas (unidades)</p>
+                </div>
+                <div class="col-md-6 text-center">
+                  <div class="display-4">{{ total_insumos }}</div>
+                  <p class="lead">Insumos (registros)</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabla de mermas -->
+      <div class="card">
+        <div class="card-header">
+          <h5>Listado de Mermas</h5>
+        </div>
+        <div class="card-body">
+          {% if mermas %}
+          <div class="table-responsive">
+            <table class="table table-striped">
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Tipo</th>
+                  <th>Material</th>
+                  <th>Cantidad</th>
+                  <th>Producción</th>
+                  <th>Motivo</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for merma in mermas %}
+                <tr>
+                  <td>{{ merma.fecha_registro.strftime('%d/%m/%Y %H:%M') }}</td>
+                  <td>
+                    {% if merma.tipo_merma == 'caducidad' %}
+                    <span class="badge badge-warning">Caducidad</span>
+                    {% elif merma.tipo_merma == 'daño' %}
+                    <span class="badge badge-danger">Daño</span>
+                    {% elif merma.tipo_merma == 'contaminación' %}
+                    <span class="badge badge-danger">Contaminación</span>
+                    {% elif merma.tipo_merma == 'error_proceso' %}
+                    <span class="badge badge-info">Error en Proceso</span>
+                    {% elif merma.tipo_merma == 'rotura' %}
+                    <span class="badge badge-secondary">Rotura</span>
+                    {% elif merma.tipo_merma == 'calidad' %}
+                    <span class="badge badge-primary">Control Calidad</span>
+                    {% else %}
+                    <span class="badge badge-light">Otro</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if merma.id_lote_insumo %}
+                    <i class="fas fa-box-open"></i> {{
+                    merma.lote_insumo.insumo.nombre }}
+                    <small class="text-muted"
+                      >(Lote #{{ merma.lote_insumo.id_lote_insumo }})</small
+                    >
+                    {% elif merma.id_lote_galleta %}
+                    <i class="fas fa-cookie"></i> {{
+                    merma.lote_galleta.galleta.nombre }}
+                    <small class="text-muted"
+                      >(Lote #{{ merma.lote_galleta.id_lote_galleta }})</small
+                    >
+                    {% endif %}
+                  </td>
+                  <td>
+                    {{ merma.cantidad }} {% if merma.id_lote_insumo %} {{
+                    merma.lote_insumo.insumo.unidad_medida }} {% else %}
+                    unidades {% endif %}
+                  </td>
+                  <td>
+                    {% if merma.id_produccion %}
+                    <a
+                      href="{{ url_for('produccion.detalle', id=merma.id_produccion) }}"
+                    >
+                      #{{ merma.id_produccion }}
+                    </a>
+                    {% else %} N/A {% endif %}
+                  </td>
+                  <td>{{ merma.motivo or 'No especificado' }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <div class="alert alert-info">
+            No hay registros de mermas en el sistema.
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

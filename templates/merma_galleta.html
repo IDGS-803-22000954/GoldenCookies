@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Flowbite Flask</title>
+    <link
+      rel="stylesheet"
+      href="{{url_for('static',filename='css/output.css')}}"
+    />
+    <link
+      rel="stylesheet"
+      href="{{url_for('static',filename='css/style.css')}}"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@400;700&family=Dancing+Script:wght@400..700&family=Kavoon&family=Parisienne&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+
+  <body>
+    <header class="encabezado">
+      <a href="../index.html">
+        <img src="../static/img/logo_goldenCookies.jpeg" class="logo" />
+      </a>
+    </header>
+    <div class="container mt-4">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Registrar Merma de Galleta</h1>
+        <a href="{{ url_for('produccion.index') }}" class="btn btn-secondary">
+          <i class="fas fa-arrow-left"></i> Volver
+        </a>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h5>Formulario de Registro de Merma</h5>
+        </div>
+        <div class="card-body">
+          <form
+            method="POST"
+            action="{{ url_for('produccion.merma_galleta') }}"
+          >
+            {{ form.hidden_tag() }}
+
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  {{ form.lote_galleta.label(class="form-control-label") }} {{
+                  form.lote_galleta(class="form-control") }} {% if
+                  form.lote_galleta.errors %}
+                  <div class="invalid-feedback d-block">
+                    {% for error in form.lote_galleta.errors %} {{ error }} {%
+                    endfor %}
+                  </div>
+                  {% endif %}
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <div class="form-group">
+                  {{ form.tipo_merma.label(class="form-control-label") }} {{
+                  form.tipo_merma(class="form-control") }} {% if
+                  form.tipo_merma.errors %}
+                  <div class="invalid-feedback d-block">
+                    {% for error in form.tipo_merma.errors %} {{ error }} {%
+                    endfor %}
+                  </div>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  {{ form.cantidad.label(class="form-control-label") }} {{
+                  form.cantidad(class="form-control") }} {% if
+                  form.cantidad.errors %}
+                  <div class="invalid-feedback d-block">
+                    {% for error in form.cantidad.errors %} {{ error }} {%
+                    endfor %}
+                  </div>
+                  {% endif %}
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <div class="form-group">
+                  {{ form.fecha_registro.label(class="form-control-label") }} {{
+                  form.fecha_registro(class="form-control",
+                  type="datetime-local") }} {% if form.fecha_registro.errors %}
+                  <div class="invalid-feedback d-block">
+                    {% for error in form.fecha_registro.errors %} {{ error }} {%
+                    endfor %}
+                  </div>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              {{ form.produccion.label(class="form-control-label") }} {{
+              form.produccion(class="form-control") }} {% if
+              form.produccion.errors %}
+              <div class="invalid-feedback d-block">
+                {% for error in form.produccion.errors %} {{ error }} {% endfor
+                %}
+              </div>
+              {% endif %}
+              <small class="text-muted"
+                >Opcional: Seleccione la producción relacionada con esta
+                merma</small
+              >
+            </div>
+
+            <div class="form-group">
+              {{ form.motivo.label(class="form-control-label") }} {{
+              form.motivo(class="form-control", rows=3) }} {% if
+              form.motivo.errors %}
+              <div class="invalid-feedback d-block">
+                {% for error in form.motivo.errors %} {{ error }} {% endfor %}
+              </div>
+              {% endif %}
+              <small class="text-muted"
+                >Describa el motivo por el cual se está registrando esta
+                merma</small
+              >
+            </div>
+
+            <div class="form-group text-right">
+              {{ form.submit(class="btn btn-primary") }}
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

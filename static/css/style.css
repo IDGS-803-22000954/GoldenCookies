@@ -1,118 +1,292 @@
-body {
-    font-family: "Kavoon", serif;
-    font-weight: 400;
-    font-style: normal;
-  }
-
+/* Base styles */
 body {
   font-family: "Kavoon", serif;
-}
-h1{
-font-size:70px;
+  background-color: #fff8e7;
+  color: #4a3520;
+  line-height: 1.6;
+  margin: 0;
+  padding: 0;
 }
 
+/* Header styles */
 .encabezado {
-  background-color: #CA8014;
+  background-color: #ca8014;
+  padding: 10px 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  position: relative;
+  z-index: 10;
 }
 
 .logo {
-  margin: 20px;
-  width: 150px;
-  height: 150px;
+  margin: 10px 20px;
+  width: 120px;
+  height: 120px;
+  border-radius: 15px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease;
+}
+
+.logo:hover {
+  transform: scale(1.05);
+}
+
+/* Typography */
+h1 {
+  font-size: 3.5rem;
+  color: #ca8014;
+  text-align: center;
+  margin: 30px 0;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+h5 {
+  font-size: 1.4rem;
+  color: #ca8014;
+  margin-bottom: 15px;
+}
+
+/* Container and card styles */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.card {
+  background-color: white;
+  border-radius: 15px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+  margin-bottom: 30px;
+  overflow: hidden;
+  border: none;
+}
+
+.card-header {
+  background-color: #f9edd3;
+  padding: 15px 20px;
+  border-bottom: 3px solid #ebc280;
+}
+
+.card-body {
+  padding: 25px;
+}
+
+/* Form elements */
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-control {
+  border: 2px solid #ebc280;
+  border-radius: 10px;
+  padding: 12px;
+  font-family: inherit;
+  background-color: #fff8e7;
+  color: #4a3520;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.form-control:focus {
+  border-color: #ca8014;
+  box-shadow: 0 0 0 3px rgba(202, 128, 20, 0.2);
+  outline: none;
+}
+
+.form-control:read-only {
+  background-color: #f0e6d2;
+}
+
+.form-text {
+  color: #8c7b68;
+  font-size: 0.85rem;
+  margin-top: 5px;
+}
+
+/* Buttons */
+.btn {
+  font-family: "Kavoon", serif;
+  font-weight: bold;
+  padding: 10px 20px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  border: 2px solid transparent;
+}
+
+.btn-primary {
+  background-color: #d77230;
+  color: white;
+  border-color: #cf631b;
+}
+
+.btn-primary:hover {
+  background-color: #cf631b;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+.btn-secondary {
+  background-color: #8c7b68;
+  color: white;
+  border-color: #6e5c4a;
+}
+
+.btn-secondary:hover {
+  background-color: #6e5c4a;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+.btn-warning {
+  background-color: #ca8014;
+  color: white;
+  border: 2px solid #b26c04;
+  border-radius: 17px;
+  padding: 12px 24px;
+  font-weight: bold;
+}
+
+.btn-warning:hover {
+  background-color: #d77230;
+  color: white;
+  border-color: #cf631b;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Recipe details box */
+.bg-light {
+  background-color: #f9edd3 !important;
+  border: 1px solid #ebc280;
   border-radius: 10px;
 }
 
+/* Table styles */
+.table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin: 0;
+  text-align: center;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.table thead th {
+  background-color: #cf631b;
+  color: white;
+  border: none;
+  padding: 15px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.table tbody td {
+  background-color: #ebc280;
+  border: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 12px;
+  color: #4a3520;
+}
+
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.table tbody tr:hover td {
+  background-color: #f0d9a2;
+}
+
+/* Layout components */
 .titulo {
-  margin-top:20px;
+  margin-top: 30px;
   text-align: center;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 15px;
 }
 
 .icono {
-  width: 90px;
-  height: 90px;
+  width: 70px;
+  height: 70px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15));
+  transition: transform 0.3s ease;
+}
+
+.icono:hover {
+  transform: rotate(10deg);
 }
 
 .venta-container {
   display: flex;
   justify-content: space-between;
-  margin: 20px;
+  margin: 30px 20px;
+  gap: 30px;
 }
 
 .formulario-venta {
-  width: 40%;
-  padding: 20px;
-
+  width: 48%;
+  padding: 25px;
+  background-color: white;
+  border-radius: 15px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
 }
 
 .tabla-derecha-ventas {
-  width: 45%;
-}
-
-.table {
-  width: 100%;
-  margin: 0; /* Sin margen */
-  text-align: center;
-}
-
-.encabezado-tabla-venta {
-  color: #CF631B !important;
-  color: black;
-  border-color:black;
+  width: 48%;
 }
 
 .button-container {
   text-align: right;
-  margin: 20px;
+  margin: 25px 0;
 }
 
-.btn-warning {
-  background-color: #CA8014;
-  border-color: black;
-  font-weight: bold;
-  border-radius: 17px;
-  padding: 10px 20px;
-  color: white;
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  h1 {
+    font-size: 2.5rem;
+  }
+
+  .venta-container {
+    flex-direction: column;
+  }
+
+  .formulario-venta,
+  .tabla-derecha-ventas {
+    width: 100%;
+  }
+
+  .logo {
+    width: 90px;
+    height: 90px;
+  }
 }
-.btn-warning:hover {
-background-color: #D77230;
-color: white;
-border-color:black
+
+/* Invalid feedback for form validation */
+.invalid-feedback {
+  color: #dc3545;
+  font-size: 0.85rem;
+  margin-top: 5px;
 }
-  .table tbody td {
-    background-color: #EBC280;
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
   }
-/* Tabla */
-  .table thead th {
-    background-color: #CF631B;
-    color: #000;
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
-
-
-
-
-
-  .form-container {
-    background-color: #EBAA6A;
-    padding: 20px;
-    border-radius: 10px;
-    border: 2px solid #000000;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    margin: 15px;
-  }
-  .form-content {
-    background-color: white;
-    padding: 20px;
-    border-radius: 8px;
-  }
-
-  .column {
-    flex: 1;
 }
-.form-columns {
-  display: flex;
-  gap: 20px;
+
+.card,
+.form-control,
+.btn {
+  animation: fadeIn 0.5s ease;
 }
