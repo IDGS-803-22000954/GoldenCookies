@@ -80,16 +80,6 @@ function agregarAlCarrito() {
 
 // Función para realizar la venta
 function realizarVenta() {
-    const filas = document.querySelectorAll('#grupo-table-body tr');
-
-    if (filas.length === 0) {
-        Swal.fire({
-            icon: 'error',
-            title: 'Oops...',
-            text: 'No hay productos en el carrito.'
-        });
-        return;
-    }
 
     // Preguntar si se imprime el ticket
     Swal.fire({
@@ -104,44 +94,7 @@ function realizarVenta() {
         if (result.isConfirmed) {
             // Si elige "Sí", aquí puedes agregar la lógica para imprimir el ticket
             console.log("Imprimir ticket");
-        }
-
-        // Continuar con el proceso de venta
-        const ventas = Array.from(filas).map(fila => {
-            const celdas = fila.querySelectorAll('td');
-            return {
-                tipoGalleta: celdas[0].textContent.trim(),
-                tipoVenta: tipoVentaSelect.value,
-                cantidad: parseInt(celdas[1].textContent.trim()),
-                precio: parseFloat(celdas[2].textContent.trim())
-            };
-        });
-
-        fetch('/api/galleto/venta', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(ventas)
-        })
-        .then(response => {
-            if (response.ok) {
-                Swal.fire({
-                    icon: 'success',
-                    title: '¡Éxito!',
-                    text: 'Venta registrada exitosamente'
-                });
-                tableBody.innerHTML = ""; // Limpiar el carrito
-            } else {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'Hubo un error al registrar la venta'
-                });
-            }
-        })
-        .catch(error => console.error('Error:', error));
-    });
+        }});
 }
 
 // Eventos

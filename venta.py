@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, session, Blueprint, make_response, jsonify, flash
 from flask_login import UserMixin, login_user, LoginManager, login_required, logout_user, current_user
 import forms_ventas
-from models import db, Venta, DetalleVenta
+from models import db, Venta, DetalleVenta, Usuario
 from datetime import date
 
 venta = Blueprint('venta', __name__)
@@ -30,12 +30,10 @@ def procesar_tabla():
         ventas.append(nueva_venta)
         print(ventas)
         session['ventas_acumuladas'] = ventas
-
-        flash("Venta agregada correctamente.", "success")
         return redirect(url_for('venta.ventas'))
 
     flash("Error al procesar la venta.", "danger")
-    return render_template('venta.html', form=form, ventas=session.get('ventas_acumuladas', []))
+    return redirect(url_for('venta.ventas'))
 
 @venta.route("/terminar_venta", methods=['POST','GET'])
 def terminar_venta():
@@ -45,14 +43,14 @@ def terminar_venta():
 @venta.route("/eliminar_venta/<int:indice>", methods=['POST', 'GET'])
 def eliminar_venta(indice):
     va = session['ventas_acumuladas']
-    va.pop(indice)
+    if request.method == 'POST':
+        va.pop(indice)
     session['ventas_acumuladas'] = va
     
     return redirect(url_for('venta.ventas'))
 
 @venta.route("/realizar_venta", methods=['POST', 'GET'])
 def realizar_venta():
-    form = forms_ventas.VentaForm(request.form)
     va = session.get('ventas_acumuladas', [])
     if request.method == 'POST':
         try:
@@ -65,7 +63,6 @@ def realizar_venta():
                 metodo_pago='efectivo',
                 id_usuario=1,
                 created_at=date.today(),
-                estado='pagado',
                 fecha_recogida=date.today(),
                 pagado=1
             )
@@ -86,8 +83,30 @@ def realizar_venta():
             
             db.session.commit()
             flash('Venta realizada con éxito', 'success')
-            return redirect(url_for('venta.terminar_venta'))
+            mensaje_ticket = "¿Desea imprimir su ticket?"
+            return render_template('terminar_venta.html', mensaje_ticket=mensaje_ticket)
         except Exception as e:
             db.session.rollback()
             flash(f'Error al realizar la venta: {str(e)}', 'danger')
     return redirect(url_for('venta.ventas'))
+
+@venta.route("/venta_pedido", methods=['GET','POST'])
+def venta_pedido():
+    pedidos=db.session.query(Venta).filter(Venta.estado == 'pendiente').join(Usuario).all()
+    return render_template('venta_pedido.html', pedidos=pedidos)
+
+@venta.route("/realizar_venta_pedido/<int:id_venta>", methods=['GET','POST'])
+def realizar_venta_pedido(id_venta):
+    venta=db.session.query(Venta).filter_by(id_venta=id_venta).first()
+    if request.method == 'POST':
+        venta.estado = 'lista'
+        venta.fecha_recogida = date.today()
+        venta.pagado = 1
+        try:
+            db.session.commit()
+            flash('Venta realizada con exito', 'success')
+        except Exception as e:
+            db.session.rollback()
+            flash('Error al actualizar la venta', 'danger')
+
+    return redirect(url_for('venta.venta_pedido'))

@@ -44,7 +44,6 @@ def procesar_t():
 @pedidos.route("/terminar_pedido", methods=['POST','GET'])
 def terminar_pedido():
     session.pop('pedidos_acumulados', None)
-    ##flash('Pedido cancelado', 'success')
     return redirect(url_for('pedidos.pedido'))
 
 @pedidos.route("/eliminar_pedido/<int:indice>", methods=['POST', 'GET'])
@@ -70,7 +69,6 @@ def realizar_pedido():
                 id_usuario=3,
                 created_at=date.today(),
                 estado='pendiente',
-                fecha_recogida=date.today(),
                 pagado=0
             )
             db.session.add(nuevo_pedido)
@@ -89,7 +87,7 @@ def realizar_pedido():
                 db.session.add(nuevo_detalle)
             
             db.session.commit()
-            flash('Venta realizada con éxito', 'success')
+            flash('Pedido realizado con éxito', 'success')
             return redirect(url_for('pedidos.terminar_pedido'))
         except Exception as e:
             db.session.rollback()

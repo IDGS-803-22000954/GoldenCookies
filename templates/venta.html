@@ -41,6 +41,7 @@
     {% endif %}
     {% endwith %}
 
+    
     <div class="venta-container">
         <!-- Formulario -->
         <form method="post" class="formulario-venta" action="{{url_for('venta.procesar_tabla')}}">
@@ -113,15 +114,25 @@
         </div>
     </div>
 
-    <div class="button-container d-flex justify-content-end">
-        <form class="mx-4" action="{{url_for('venta.terminar_venta')}}">
-            <button class="btn btn-warning">Cancelar</button>
-        </form>
-        <form method="post" action="{{url_for('venta.realizar_venta')}}">
+    <div class="button-container d-flex justify-content-between">
+        <form method="post" action="{{url_for('venta.venta_pedido')}}" >
             <input type="hidden" name="csrf_token" value="{{csrf_token()}}" />
-            <button class="btn btn-warning">Aceptar</button>
+            <button class="btn btn-warning" >Ver pedidos</button>
         </form>
+        <div class="d-flex">
+            <form class="mx-4" action="{{url_for('venta.terminar_venta')}}">
+                <button class="btn btn-warning">Cancelar</button>
+            </form>
+            <form method="post" action="{{url_for('venta.realizar_venta')}}">
+                <input type="hidden" name="csrf_token" value="{{csrf_token()}}" />
+                <button class="btn btn-warning">Aceptar</button>
+            </form>
+        </div>
     </div>
+    
+    {% if mensaje_ticket %}
+    <script>realizarVenta();</script>
+    {% endif %}
 
 
     <!-- Bootstrap JS -->
