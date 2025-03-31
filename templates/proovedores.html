@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Flowbite Flask</title>
+    <link
+      rel="stylesheet"
+      href="{{url_for('static',filename='css/output.css')}}"
+    />
+    <link
+      rel="stylesheet"
+      href="{{url_for('static',filename='css/style.css')}}"
+    />
+    <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@400;700&family=Dancing+Script:wght@400..700&family=Kavoon&family=Parisienne&display=swap" rel="stylesheet">
+    
+  </head>
+
+  <body>
+    <header class="encabezado">
+      <a href="../index.html">
+      <img src="../static/img/logo_goldenCookies.jpeg" class="logo">
+      </a>
+  </header>
+  <div class="titulo">
+    <img src="../static/img/carro-de-la-compra.png" alt="Venta" class="icono">
+    <h1>Proveedores</h1>
+  </div>
+    <!-- Contenedor para ambos formularios -->
+    <div class="flex flex-wrap justify-center gap-8">
+  <!-- Formulario de proveedores -->
+  <div class="max-w-md mx-auto bg-white p-8 rounded-lg shadow-md">
+    <div class="form-container">
+        
+    <h2 class="text-2xl font-bold mb-6 text-center">Agregar proveedores</h2>
+    
+    <form method="post" action="{{ url_for('proveedor_bp.agregarProveedor') }}" class="max-w-md mx-auto">
+        {{ formulario.hidden_tag() }}
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+
+        <div class="mb-4">
+            <label class="block text-sm font-bold mb-2">
+                {{ formulario.nombre.label }}
+            </label>
+            {{ formulario.nombre(style="background-color: white;", class="w-full p-2 border rounded") }}
+            {% if formulario.nombre.errors %}
+                <div class="text-red-500 text-xs italic">
+                    {% for error in formulario.nombre.errors %}
+                        {{ error }}
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="mb-6">
+            <label class="block text-sm font-bold mb-2">
+                {{ formulario.contacto.label }}
+            </label>
+            {{ formulario.contacto(style="background-color: white;", class="w-full p-2 border rounded") }}
+            {% if formulario.contacto.errors %}
+                <div class="text-red-500 text-xs italic">
+                    {% for error in formulario.contacto.errors %}
+                        {{ error }}
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+        
+        <div class="mb-6">
+          <label class="block text-sm font-bold mb-2">
+              {{ formulario.telefono.label }}
+          </label>
+          {{ formulario.telefono(style="background-color: white;",class="w-full p-2 border rounded") }}
+          {% if formulario.telefono.errors %}
+              <div class="text-red-500 text-xs italic">
+                  {% for error in formulario.telefono.errors %}
+                      {{ error }}
+                  {% endfor %}
+              </div>
+          {% endif %}
+      </div>
+      <div class="button-container">
+        <div class="text-center">
+            <button type="submit" style="background-color: #006BE5; border-radius:13px; border-color:black; color:black;" class="btn btn-warning">
+                Guardar proveedor
+            </button>
+        </div>
+    </div>
+    </form>
+        
+    </div>
+</div>
+
+
+<!-- Formulario de edición de proveedores -->
+<div class="max-w-md mx-auto bg-white p-8 rounded-lg shadow-md">
+    <div class="form-container">
+        
+    <h2 class="text-2xl font-bold mb-6 text-center">Editar Proveedor</h2>
+    
+    <form method="post" action="{{ url_for('proveedor_bp.editar_proveedor') }}" class="max-w-md mx-auto">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        <input type="hidden" id="edit_id_proveedor" name="id_proveedor">
+
+        <div class="mb-4">
+            <label class="block  text-sm font-bold mb-2" for="edit_nombre">
+                Nombre
+            </label>
+            <input type="text" style="background-color: white;" id="edit_nombre" name="nombre" class="w-full p-2 border  rounded">
+        </div>
+
+        <div class="mb-6">
+            <label class="block  text-sm font-bold mb-2" for="edit_contacto">
+                Contacto
+            </label>
+            <input type="text" style="background-color: white;" id="edit_contacto" name="contacto" class="w-full p-2 border  rounded">
+        </div>
+        
+        <div class="mb-6">
+          <label class="block  text-sm font-bold mb-2" for="edit_telefono">
+              Teléfono
+          </label>
+          <input type="text" style="background-color: white;" step="0.01" id="edit_telefono" name="telefono" class="w-full p-2 border rounded">
+        </div>
+
+        <div class="button-container">
+        <div class="text-center">
+            <button type="submit" style="background-color: #006BE5; border-radius:13px; border-color:black; color:black;" class="btn btn-warning">
+                Guardar Cambios
+            </button>
+        </div>
+        <br>
+          <div class="text-center">
+              <button type="button" onclick="limpiarFormularioEditar()" style="background-color: #DC3545; border-radius:13px; border-color:black;" class="btn btn-warning">
+                  Cancelar
+              </button>
+          </div>
+        </div>
+    </form>
+        </div>
+    </div>
+  
+    </div>
+
+<center>
+<div class="container mt-5">
+  <h2 class="text-center mb-4">Lista de Proveedores</h2>
+  <table class="table table-striped table-hover">
+    <thead class="table-dark">
+        <tr>
+            <th>ID</th>
+            <th>Nombre</th>
+            <th>Contacto</th>
+            <th>Teléfono</th>
+            <th>Estatus</th>
+            <th>Fecha de Creación</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for proveedor in proveedores %}
+        <tr>
+            <td>{{ proveedor.id_proveedor }}</td>
+            <td>{{ proveedor.nombre }}</td> 
+            <td>{{ proveedor.contacto }}</td>
+            <td>{{ proveedor.telefono }}</td>
+            <td>{{ 'Activo' if proveedor.estatus else 'Inactivo' }}</td>
+            <td>{{ proveedor.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+            <td>
+                <button onclick="cargarDatosEdicion('{{ proveedor.id_proveedor }}', '{{ proveedor.nombre }}', '{{ proveedor.contacto }}', '{{ proveedor.telefono }}')" 
+                 class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded">
+                <img src="../static/img/editar.png" alt="Mantequilla de maní" style="max-width: 50px; width: 100%; height: auto;">
+                </button>
+                <a href="{{ url_for('proveedor_bp.cambiar_estatus', id=proveedor.id_proveedor) }}" 
+                style="background-color: #DC3545; border-radius:5px; border-color:black;"class="btn {{ 'btn-danger' if proveedor.estatus else 'btn-success' }} btn-sm">
+                    {{ 'Desactivar' if proveedor.estatus else 'Activar' }}
+                </a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+</center>
+
+<script>
+    function cargarDatosEdicion(id, nombre, contacto, telefono) {
+        document.getElementById('edit_id_proveedor').value = id;
+        document.getElementById('edit_nombre').value = nombre;
+        document.getElementById('edit_contacto').value = contacto;
+        document.getElementById('edit_telefono').value = telefono;
+        
+    
+        document.querySelector('.flex.flex-wrap.justify-center.gap-8').scrollIntoView({
+            behavior: 'smooth'
+        });
+    }
+    function limpiarFormularioEditar() {
+        document.getElementById('edit_id_proveedor').value = '';
+        document.getElementById('edit_nombre').value = '';
+        document.getElementById('edit_contacto').value = '';
+        document.getElementById('edit_telefono').value = '';
+    }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/flowbite@3.1.2/dist/flowbite.min.js"></script>
+  </body>
+</html>
