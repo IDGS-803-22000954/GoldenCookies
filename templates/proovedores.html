@@ -32,7 +32,7 @@
   <!-- Formulario de proveedores -->
   <div class="max-w-md mx-auto bg-white p-8 rounded-lg shadow-md">
     <div class="form-container">
-        <div class="form-content">
+        
     <h2 class="text-2xl font-bold mb-6 text-center">Agregar proveedores</h2>
     
     <form method="post" action="{{ url_for('proveedor_bp.agregarProveedor') }}" class="max-w-md mx-auto">
@@ -40,10 +40,10 @@
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
 
         <div class="mb-4">
-            <label class="block text-gray-700 text-sm font-bold mb-2">
+            <label class="block text-sm font-bold mb-2">
                 {{ formulario.nombre.label }}
             </label>
-            {{ formulario.nombre(class="w-full p-2 border border-gray-300 rounded") }}
+            {{ formulario.nombre(style="background-color: white;", class="w-full p-2 border rounded") }}
             {% if formulario.nombre.errors %}
                 <div class="text-red-500 text-xs italic">
                     {% for error in formulario.nombre.errors %}
@@ -54,10 +54,10 @@
         </div>
 
         <div class="mb-6">
-            <label class="block text-gray-700 text-sm font-bold mb-2">
+            <label class="block text-sm font-bold mb-2">
                 {{ formulario.contacto.label }}
             </label>
-            {{ formulario.contacto(class="w-full p-2 border border-gray-300 rounded") }}
+            {{ formulario.contacto(style="background-color: white;", class="w-full p-2 border rounded") }}
             {% if formulario.contacto.errors %}
                 <div class="text-red-500 text-xs italic">
                     {% for error in formulario.contacto.errors %}
@@ -68,10 +68,10 @@
         </div>
         
         <div class="mb-6">
-          <label class="block text-gray-700 text-sm font-bold mb-2">
+          <label class="block text-sm font-bold mb-2">
               {{ formulario.telefono.label }}
           </label>
-          {{ formulario.telefono(class="w-full p-2 border border-gray-300 rounded") }}
+          {{ formulario.telefono(style="background-color: white;",class="w-full p-2 border rounded") }}
           {% if formulario.telefono.errors %}
               <div class="text-red-500 text-xs italic">
                   {% for error in formulario.telefono.errors %}
@@ -88,7 +88,7 @@
         </div>
     </div>
     </form>
-        </div>
+        
     </div>
 </div>
 
@@ -96,7 +96,7 @@
 <!-- Formulario de edición de proveedores -->
 <div class="max-w-md mx-auto bg-white p-8 rounded-lg shadow-md">
     <div class="form-container">
-        <div class="form-content">
+        
     <h2 class="text-2xl font-bold mb-6 text-center">Editar Proveedor</h2>
     
     <form method="post" action="{{ url_for('proveedor_bp.editar_proveedor') }}" class="max-w-md mx-auto">
@@ -104,24 +104,24 @@
         <input type="hidden" id="edit_id_proveedor" name="id_proveedor">
 
         <div class="mb-4">
-            <label class="block text-gray-700 text-sm font-bold mb-2" for="edit_nombre">
+            <label class="block  text-sm font-bold mb-2" for="edit_nombre">
                 Nombre
             </label>
-            <input type="text" id="edit_nombre" name="nombre" class="w-full p-2 border border-gray-300 rounded">
+            <input type="text" style="background-color: white;" id="edit_nombre" name="nombre" class="w-full p-2 border  rounded">
         </div>
 
         <div class="mb-6">
-            <label class="block text-gray-700 text-sm font-bold mb-2" for="edit_contacto">
+            <label class="block  text-sm font-bold mb-2" for="edit_contacto">
                 Contacto
             </label>
-            <input type="text" id="edit_contacto" name="contacto" class="w-full p-2 border border-gray-300 rounded">
+            <input type="text" style="background-color: white;" id="edit_contacto" name="contacto" class="w-full p-2 border  rounded">
         </div>
         
         <div class="mb-6">
-          <label class="block text-gray-700 text-sm font-bold mb-2" for="edit_telefono">
+          <label class="block  text-sm font-bold mb-2" for="edit_telefono">
               Teléfono
           </label>
-          <input type="text" step="0.01" id="edit_telefono" name="telefono" class="w-full p-2 border border-gray-300 rounded">
+          <input type="text" style="background-color: white;" step="0.01" id="edit_telefono" name="telefono" class="w-full p-2 border rounded">
         </div>
 
         <div class="button-container">
@@ -140,7 +140,7 @@
     </form>
         </div>
     </div>
-  </div>
+  
     </div>
 
 <center>
