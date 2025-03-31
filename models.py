@@ -47,6 +47,7 @@ class Proveedor(db.Model):
     nombre: Mapped[str] = mapped_column(String(100))
     contacto: Mapped[Optional[str]] = mapped_column(String(100))
     telefono: Mapped[Optional[str]] = mapped_column(String(15))
+    estatus = db.Column(db.Boolean, default=True)
     created_at: Mapped[Optional[datetime.datetime]] = mapped_column(
         TIMESTAMP, server_default=text('CURRENT_TIMESTAMP'))
 

@@ -44,3 +44,19 @@ def editar_proveedor():
     db.session.commit()
     flash('Proveedor actualizado correctamente!', 'success')
     return redirect(url_for('proveedor_bp.agregarProveedor'))
+
+
+@proveedor_bp.route("/cambiar_estatus/<int:id>")
+def cambiar_estatus(id):
+    try:
+        proveedor = Proveedor.query.get_or_404(id)
+        proveedor.estatus = not proveedor.estatus
+        
+        db.session.commit()
+        action = "reactivado" if proveedor.estatus else "desactivado"
+        flash(f'Proveedor {action} correctamente', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash('Error al cambiar estatus', 'error')
+    
+    return redirect(url_for('proveedor_bp.agregarProveedor'))

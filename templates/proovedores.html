@@ -31,6 +31,8 @@
     <div class="flex flex-wrap justify-center gap-8">
   <!-- Formulario de proveedores -->
   <div class="max-w-md mx-auto bg-white p-8 rounded-lg shadow-md">
+    <div class="form-container">
+        <div class="form-content">
     <h2 class="text-2xl font-bold mb-6 text-center">Agregar proveedores</h2>
     
     <form method="post" action="{{ url_for('proveedor_bp.agregarProveedor') }}" class="max-w-md mx-auto">
@@ -78,18 +80,23 @@
               </div>
           {% endif %}
       </div>
-
+      <div class="button-container">
         <div class="text-center">
-            <button type="submit" style="color:black" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+            <button type="submit" style="background-color: #006BE5; border-radius:13px; border-color:black; color:black;" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
                 Guardar proveedor
             </button>
         </div>
+    </div>
     </form>
+        </div>
+    </div>
 </div>
 
 
 <!-- Formulario de edición de proveedores -->
 <div class="max-w-md mx-auto bg-white p-8 rounded-lg shadow-md">
+    <div class="form-container">
+        <div class="form-content">
     <h2 class="text-2xl font-bold mb-6 text-center">Editar Proveedor</h2>
     
     <form method="post" action="{{ url_for('proveedor_bp.editar_proveedor') }}" class="max-w-md mx-auto">
@@ -117,17 +124,22 @@
           <input type="text" step="0.01" id="edit_telefono" name="telefono" class="w-full p-2 border border-gray-300 rounded">
         </div>
 
+        <div class="button-container">
         <div class="text-center">
-            <button type="submit" style="color:black" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+            <button type="submit" style="background-color: #006BE5; border-radius:13px; border-color:black; color:black;" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
                 Guardar Cambios
             </button>
         </div>
+        <br>
           <div class="text-center">
-              <button type="button" onclick="limpiarFormularioEditar()" class="bg-gray-500 hover:bg-gray-700 text-black font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+              <button type="button" onclick="limpiarFormularioEditar()" style="background-color: #DC3545; border-radius:13px; border-color:black;" class="bg-gray-500 hover:bg-gray-700 text-black font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
                   Cancelar
               </button>
           </div>
+        </div>
     </form>
+        </div>
+    </div>
   </div>
     </div>
 
@@ -141,6 +153,7 @@
             <th>Nombre</th>
             <th>Contacto</th>
             <th>Teléfono</th>
+            <th>Estatus</th>
             <th>Fecha de Creación</th>
             <th>Acciones</th>
         </tr>
@@ -152,12 +165,17 @@
             <td>{{ proveedor.nombre }}</td> 
             <td>{{ proveedor.contacto }}</td>
             <td>{{ proveedor.telefono }}</td>
+            <td>{{ 'Activo' if proveedor.estatus else 'Inactivo' }}</td>
             <td>{{ proveedor.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
             <td>
                 <button onclick="cargarDatosEdicion('{{ proveedor.id_proveedor }}', '{{ proveedor.nombre }}', '{{ proveedor.contacto }}', '{{ proveedor.telefono }}')" 
-                        class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded">
-                    Editar
+                 class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded">
+                <img src="../static/img/editar.png" alt="Mantequilla de maní" style="max-width: 50px; width: 100%; height: auto;">
                 </button>
+                <a href="{{ url_for('proveedor_bp.cambiar_estatus', id=proveedor.id_proveedor) }}" 
+                style="background-color: #DC3545; border-radius:5px; border-color:black;"class="btn {{ 'btn-danger' if proveedor.estatus else 'btn-success' }} btn-sm">
+                    {{ 'Desactivar' if proveedor.estatus else 'Activar' }}
+                </a>
             </td>
         </tr>
         {% endfor %}

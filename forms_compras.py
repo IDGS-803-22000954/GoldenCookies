@@ -1,7 +1,7 @@
 from wtforms import Form
 from flask_wtf import FlaskForm
 import re
-from wtforms import StringField,IntegerField,RadioField, SelectMultipleField, widgets
+from wtforms import StringField,IntegerField,RadioField, SelectMultipleField, widgets,BooleanField, SubmitField
 from wtforms import EmailField
 from wtforms import validators
 from datetime import datetime
@@ -31,7 +31,7 @@ class InsumoForm(FlaskForm):
         validators.DataRequired(message='La cantidad de insumo es requerida'),
         validators.Length(min=1, max=10),
         validators.Regexp(r'^\d+(\.\d{1,2})?$',
-                         message='La cantidad debe ser un número con hasta 2 decimales')
+                         message='La cantidad debe ser un número con hasta 2 decimales y mayor o igual a 0')
     ])
 
     
@@ -57,6 +57,7 @@ class ProveedorForm(FlaskForm):
         validators.Regexp(r'^[\d\s\-\+\(\)]+$',
                         message='El teléfono solo puede contener dígitos, espacios y los caracteres +-()')
     ])
+
 
 
 class CompraInsumoForm(FlaskForm):

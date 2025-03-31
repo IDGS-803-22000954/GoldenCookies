@@ -108,3 +108,11 @@ border-color:black
     padding: 20px;
     border-radius: 8px;
   }
+
+  .column {
+    flex: 1;
+}
+.form-columns {
+  display: flex;
+  gap: 20px;
+}

@@ -13,8 +13,8 @@ def listar_compras():
     form = CompraInsumoForm()
     compras = CompraInsumo.query.join(LoteInsumo).join(Insumo).join(Proveedor).all()
     # Llenar los select fields
-    form.id_insumo.choices = [(i.id_insumo, i.nombre) for i in Insumo.query.order_by(Insumo.nombre)]
-    form.id_proveedor.choices = [(p.id_proveedor, p.nombre) for p in Proveedor.query.order_by(Proveedor.nombre)]
+    form.id_insumo.choices = [(i.id_insumo, i.nombre) for i in Insumo.query.filter(Insumo.id_insumo != 0).order_by(Insumo.nombre)]
+    form.id_proveedor.choices = [(p.id_proveedor, p.nombre) for p in Proveedor.query.filter(Proveedor.estatus != 0).order_by(Proveedor.nombre)]
     
     if form.validate_on_submit():
         try:
