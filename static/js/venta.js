@@ -145,8 +145,8 @@ function realizarVenta() {
 }
 
 // Eventos
-document.querySelector('.btn-add').addEventListener('click', agregarAlCarrito);
-document.querySelector('.btn-warning:nth-child(2)').addEventListener('click', realizarVenta);
+//document.querySelector('.btn-add').addEventListener('click', agregarAlCarrito);
+//document.querySelector('.btn-warning:nth-child(2)').addEventListener('click', realizarVenta);
 cantidadInput.addEventListener('input', actualizarPrecio);
 galletaSelect.addEventListener('change', actualizarPrecio);
 tipoVentaSelect.addEventListener('change', actualizarPrecio);

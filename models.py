@@ -277,8 +277,7 @@ class DetalleVenta(db.Model):
     id_detalle: Mapped[int] = mapped_column(Integer, primary_key=True)
     cantidad: Mapped[int] = mapped_column(Integer)
     precio_unitario: Mapped[float] = mapped_column(Float)
-    tipo_venta: Mapped[str] = mapped_column(
-        Enum('pieza', 'gramos', '700g', '1kg'), server_default=text("'pieza'"))
+    tipo_venta: Mapped[str] = mapped_column(String(50))
     id_venta: Mapped[Optional[int]] = mapped_column(Integer)
     id_lote_galleta: Mapped[Optional[int]] = mapped_column(Integer)
     created_at: Mapped[Optional[datetime.datetime]] = mapped_column(

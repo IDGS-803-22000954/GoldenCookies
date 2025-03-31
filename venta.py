@@ -1,9 +1,8 @@
-from flask import Flask, render_template, request, redirect, url_for, session, Blueprint, make_response, jsonify
-from flask import flash
+from flask import Flask, render_template, request, redirect, url_for, session, Blueprint, make_response, jsonify, flash
 from flask_login import UserMixin, login_user, LoginManager, login_required, logout_user, current_user
 import forms_ventas
-from models import db
-from models import Venta
+from models import db, Venta, DetalleVenta
+from datetime import date
 
 venta = Blueprint('venta', __name__)
 
@@ -40,7 +39,6 @@ def procesar_tabla():
 
 @venta.route("/terminar_venta", methods=['POST','GET'])
 def terminar_venta():
-    form = forms_ventas.VentaForm(request.form)
     session.pop('ventas_acumuladas', None)
     return redirect(url_for('venta.ventas'))
 
@@ -54,7 +52,42 @@ def eliminar_venta(indice):
 
 @venta.route("/realizar_venta", methods=['POST', 'GET'])
 def realizar_venta():
-
-    
-
+    form = forms_ventas.VentaForm(request.form)
+    va = session.get('ventas_acumuladas', [])
+    if request.method == 'POST':
+        try:
+            ptotal = sum(float(venta["precio"]) for venta in va)
+            
+            nueva_venta = Venta(
+                fecha=date.today(),
+                tipo_venta='local',
+                total=ptotal,
+                metodo_pago='efectivo',
+                id_usuario=1,
+                created_at=date.today(),
+                estado='pagado',
+                fecha_recogida=date.today(),
+                pagado=1
+            )
+            db.session.add(nueva_venta)
+            db.session.flush()
+            
+            idv = nueva_venta.id_venta
+            for v in va:
+                
+                nuevo_detalle = DetalleVenta(
+                    cantidad=int(v["cantidad"]),
+                    precio_unitario=float(v["precio"]),
+                    tipo_venta=v["tipo_venta"],
+                    id_venta=idv,
+                    created_at=date.today()
+                )
+                db.session.add(nuevo_detalle)
+            
+            db.session.commit()
+            flash('Venta realizada con éxito', 'success')
+            return redirect(url_for('venta.terminar_venta'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error al realizar la venta: {str(e)}', 'danger')
     return redirect(url_for('venta.ventas'))

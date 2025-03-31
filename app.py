@@ -4,6 +4,7 @@ from config import DevelopmentConfig
 from models import Insumo, db
 from forms_compras import InsumoForm
 from venta import venta
+from pedidos import pedidos
 
 app = Flask(__name__)
 app.config.from_object(DevelopmentConfig)
@@ -29,6 +30,7 @@ def index():
     return render_template('index.html', formulario=formulario)
 
 app.register_blueprint(venta)
+app.register_blueprint(pedidos)
 
 if __name__ == '__main__':
     with app.app_context():
