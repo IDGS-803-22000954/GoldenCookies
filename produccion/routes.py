@@ -7,11 +7,14 @@ from produccion.forms import (ProduccionForm, MermaInsumoForm,
                               MermaGalletaForm, FinalizarProduccionForm, BuscarProduccionForm)
 from collections import defaultdict
 from datetime import datetime, timedelta
+from auth import verificar_roles
 
 produccion_bp = Blueprint('produccion', __name__, url_prefix='/produccion')
 
 
 @produccion_bp.route('/', methods=['GET', 'POST'])
+@verificar_roles('admin', 'produccion')
+@login_required
 def index():
     form = BuscarProduccionForm()
 
@@ -32,6 +35,8 @@ def index():
 
 
 @produccion_bp.route('/crear', methods=['GET', 'POST'])
+@verificar_roles('admin', 'produccion')
+@login_required
 def crear():
     form = ProduccionForm()
 
@@ -53,6 +58,8 @@ def crear():
 
 
 @produccion_bp.route('/<int:id>', methods=['GET'])
+@verificar_roles('admin', 'produccion')
+@login_required
 def detalle(id):
     produccion = Produccion.query.get_or_404(id)
     insumos_usados = ProduccionInsumo.query.filter_by(id_produccion=id).all()
@@ -93,6 +100,8 @@ def detalle(id):
 
 
 @produccion_bp.route('/iniciar/<int:id>', methods=['POST'])
+@verificar_roles('admin', 'produccion')
+@login_required
 def iniciar(id):
     produccion = Produccion.query.get_or_404(id)
 
@@ -129,6 +138,8 @@ def iniciar(id):
 
 
 @produccion_bp.route('/mermas', methods=['GET'])
+@verificar_roles('admin', 'produccion')
+@login_required
 def listar_mermas():
     mermas = Merma.query.order_by(Merma.fecha_registro.desc()).all()
 
@@ -149,6 +160,8 @@ def listar_mermas():
 
 
 @produccion_bp.route('/finalizar/<int:id>', methods=['POST'])
+@verificar_roles('admin', 'produccion')
+@login_required
 def finalizar(id):
     produccion = Produccion.query.get_or_404(id)
 
@@ -228,6 +241,8 @@ def finalizar(id):
 
 
 @produccion_bp.route('/merma/insumo', methods=['GET', 'POST'])
+@verificar_roles('admin', 'produccion')
+@login_required
 def merma_insumo():
     form = MermaInsumoForm()
 
@@ -279,6 +294,8 @@ def merma_insumo():
 
 
 @produccion_bp.route('/merma/galleta', methods=['GET', 'POST'])
+@verificar_roles('admin', 'produccion')
+@login_required
 def merma_galleta():
     form = MermaGalletaForm()
 
@@ -312,6 +329,8 @@ def merma_galleta():
 
 
 @produccion_bp.route('/cancelar/<int:id>', methods=['POST'])
+@verificar_roles('admin', 'produccion')
+@login_required
 def cancelar(id):
     produccion = Produccion.query.get_or_404(id)
 
@@ -347,6 +366,8 @@ def calcular_costo():
 
 
 @produccion_bp.route('/estadisticas', methods=['GET'])
+@verificar_roles('admin', 'produccion')
+@login_required
 def estadisticas():
     estatus_count = db.session.query(
         Produccion.estatus, func.count(Produccion.id_produccion)

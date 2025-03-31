@@ -1,13 +1,34 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from flask_login import login_user, logout_user
 import requests
-from models import usuario  # Asegúrate de que el modelo esté bien definido en models.py
+# Asegúrate de que el modelo esté bien definido en models.py
+from models import usuario
 from werkzeug.security import check_password_hash, generate_password_hash
 from utils import generar_codigo_2fa  # Importa funciones auxiliares
-from models import db 
+from models import db
 from forms import loginForm, RegistroForm
+from functools import wraps
+from flask import jsonify
 
 auth = Blueprint('auth', __name__)
+
+
+def verificar_roles(*roles_permitidos):
+    def decorador(f):
+        @wraps(f)
+        def funcion_verificada(*args, **kwargs):
+            # Suponemos que el rol del usuario se almacena en la sesión
+            rol_usuario = session.get('rol', None)
+            print(f"Rol del usuario: {rol_usuario}")
+
+            if rol_usuario not in roles_permitidos:
+                return jsonify({'mensaje': 'Acceso denegado, rol no autorizado'}), 403
+
+            return f(*args, **kwargs)
+
+        return funcion_verificada
+    return decorador
+
 
 @auth.route('/login', methods=['GET', 'POST'])
 def login():
@@ -20,13 +41,14 @@ def login():
             'response': recaptcha_response,
             'secret': secret_key
         }
-        response = requests.post('https://www.google.com/recaptcha/api/siteverify', data=payload)
+        response = requests.post(
+            'https://www.google.com/recaptcha/api/siteverify', data=payload)
         result = response.json()
 
         if not result.get('success'):
             flash('Por favor completa el reCAPTCHA.', 'danger')
             return redirect(url_for('auth.login'))
-        
+
         nombre_usuario = form.username.data
         contrasenia = form.password.data
 
@@ -55,6 +77,7 @@ def login():
         generar_codigo_2fa(user)
 
         session['id_usuario'] = user.id_usuario
+        session['rol'] = user.rol
         return redirect(url_for('auth.verificar_codigo_2fa'))
 
     return render_template('auth/login.html', form=form)
@@ -72,13 +95,14 @@ def registro():
             'response': recaptcha_response,
             'secret': secret_key
         }
-        response = requests.post('https://www.google.com/recaptcha/api/siteverify', data=payload)
+        response = requests.post(
+            'https://www.google.com/recaptcha/api/siteverify', data=payload)
         result = response.json()
 
         if not result.get('success'):
             flash('Por favor completa el reCAPTCHA.', 'danger')
             return redirect(url_for('auth.registro'))
-        
+
         # Hashear la contraseña antes de almacenarla
         hashed_password = generate_password_hash(form.contrasenia.data)
 
@@ -89,7 +113,7 @@ def registro():
             email=form.email.data,
             contrasenia=hashed_password  # Guardar la contraseña encriptada
         )
-        
+
         db.session.add(user)
         db.session.commit()
 
@@ -106,7 +130,10 @@ def registro():
 def logout():
     logout_user()  # Cierra la sesión
     flash("Has cerrado sesión exitosamente", "success")  # Mensaje opcional
+    session.pop('id_usuario', None)  # Elimina el ID de usuario de la sesión
+    session.pop('rol', None)  # Elimina el rol de usuario de la sesión
     return redirect(url_for('auth.login'))
+
 
 @auth.route('/verificar_2fa', methods=['GET', 'POST'])
 def verificar_codigo_2fa():
@@ -114,22 +141,22 @@ def verificar_codigo_2fa():
     if not user:
         flash('Usuario no encontrado. Inicia sesión de nuevo.', 'danger')
         return redirect(url_for('auth.login'))
-        
+
     if request.method == 'POST':
         codigo_ingresado = request.form.get('codigo_2fa')
-        
+
         # Verificar si el código ingresado coincide con el código en la sesión
         if codigo_ingresado == session.get('codigo_2fa'):
             login_user(user)
             user.codigo_2fa = ''
             db.session.commit()
-            
+
             if user.rol.lower() == 'admin':
-                return redirect(url_for('admin_dashboard'))
+                return redirect(url_for('admin'))
             elif user.rol.lower() == 'produccion':
-                return redirect(url_for('produccion_dashboard'))
+                return redirect(url_for('produccion.index'))
             elif user.rol.lower() == 'ventas':
-                return redirect(url_for('ventas_dashboard'))
+                return redirect(url_for('venta.ventas'))
             elif user.rol.lower() == 'cliente':
                 return redirect(url_for('cliente'))
             else:
@@ -137,7 +164,7 @@ def verificar_codigo_2fa():
                 return redirect(url_for('auth.login'))
         else:
             flash('Código incorrecto. Inténtalo de nuevo.', 'danger')
-    
+
     return render_template('auth/verificar_2fa.html')
 
 
@@ -149,10 +176,12 @@ def reenviar_codigo():
 
     if user:
         generar_codigo_2fa(user)  # Regenerar el código y enviarlo de nuevo
-        return redirect(url_for('auth.verificar_codigo_2fa'))  # Redirigir a la página de verificación
+        # Redirigir a la página de verificación
+        return redirect(url_for('auth.verificar_codigo_2fa'))
     else:
         flash('Usuario no encontrado. Inicia sesión nuevamente.', 'danger')
         return redirect(url_for('auth.login'))
+
 
 @auth.route('/perfil', methods=['GET', 'POST'])
 def editar_perfil():

@@ -28,6 +28,14 @@
       <a href="../index.html">
         <img src="../static/img/logo_goldenCookies.jpeg" class="logo" />
       </a>
+      <div class="logout-container">
+        <form method="POST" action="{{ url_for('auth.logout') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+          <button type="submit" class="btn btn-danger">
+            <i class="fas fa-sign-out-alt"></i> Cerrar sesión
+          </button>
+        </form>
+      </div>
     </header>
     <div class="flash-messages container">
       {% with messages = get_flashed_messages(with_categories=true) %} {% if
