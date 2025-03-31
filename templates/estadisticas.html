@@ -25,7 +25,6 @@
         <img src="../static/img/logo_goldenCookies.jpeg" class="logo" />
       </a>
     </header>
-    <!-- Título de la página -->
     <div class="container-fluid px-4">
       <h1 class="mt-4 mb-4">
         <i class="fas fa-chart-bar me-2"></i> Estadísticas de Producción
@@ -34,7 +33,6 @@
         <i class="fas fa-arrow-left"></i> Volver
       </a>
 
-      <!-- Status Summary Cards -->
       <div class="row mb-4">
         <div class="col-12">
           <div class="card">
@@ -68,9 +66,7 @@
         </div>
       </div>
 
-      <!-- Top Cookies and Ingredients -->
       <div class="row">
-        <!-- Top Cookies -->
         <div class="col-md-6 mb-4">
           <div class="card">
             <div class="card-header">
@@ -103,7 +99,6 @@
           </div>
         </div>
 
-        <!-- Top Ingredients -->
         <div class="col-md-6 mb-4">
           <div class="card">
             <div class="card-header">
@@ -136,7 +131,6 @@
         </div>
       </div>
 
-      <!-- Losses Chart -->
       <div class="row">
         <div class="col-12 mb-4">
           <div class="card">
@@ -179,7 +173,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <script>
       document.addEventListener('DOMContentLoaded', function() {
-          // Datos para los gráficos
           const estatusLabels = [{% for estatus, count in estatus_count %} "{{ estatus|capitalize }}", {% endfor %}];
           const estatusData = [{% for estatus, count in estatus_count %} {{ count }}, {% endfor %}];
           const estatusColors = ['#6c757d', '#fd7e14', '#198754', '#dc3545'];
@@ -214,14 +207,12 @@
               }
           };
 
-          // Verificar que Chart.js esté cargado
           if (typeof Chart === 'undefined') {
               console.error('Chart.js no está cargado correctamente');
               return;
           }
 
           try {
-              // Gráfico de estatus
               const estatusCtx = document.getElementById('estatusChart');
               if (estatusCtx) {
                   new Chart(estatusCtx, {
@@ -253,7 +244,6 @@
                   });
               }
 
-              // Gráfico de galletas
               const galletasCtx = document.getElementById('galletasChart');
               if (galletasCtx) {
                   new Chart(galletasCtx, {
@@ -307,7 +297,6 @@
                   });
               }
 
-              // Gráfico de insumos
               const insumosCtx = document.getElementById('insumosChart');
               if (insumosCtx) {
                   new Chart(insumosCtx, {
@@ -361,7 +350,6 @@
                   });
               }
 
-              // Gráfico de mermas
               const mermasCtx = document.getElementById('mermasChart');
               if (mermasCtx) {
                   new Chart(mermasCtx, {

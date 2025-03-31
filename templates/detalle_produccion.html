@@ -79,7 +79,6 @@
         </div>
       </div>
 
-      <!-- Sección de Insumos Requeridos por la Receta -->
       <div class="card mb-4">
         <div class="card-header">
           <h5>Insumos Requeridos por la Receta</h5>
@@ -151,7 +150,6 @@
         </div>
       </div>
 
-      <!-- Sección de Insumos Utilizados (solo visible si hay insumos usados o la producción está completada) -->
       {% if insumos_usados or produccion.estatus == 'completada' %}
       <div class="card mb-4">
         <div class="card-header">
@@ -210,7 +208,6 @@
       </div>
       {% endif %}
 
-      <!-- Sección de Lote de Galletas (si la producción está completada) -->
       {% if produccion.estatus == 'completada' and lote_galleta %}
       <div class="card mb-4">
         <div class="card-header">
@@ -254,7 +251,6 @@
       </div>
       {% endif %}
 
-      <!-- Sección de Mermas -->
       {% if mermas %}
       <div class="card">
         <div class="card-header">

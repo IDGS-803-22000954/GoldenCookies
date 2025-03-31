@@ -8,19 +8,15 @@ from produccion.forms import (ProduccionForm, MermaInsumoForm,
 from collections import defaultdict
 from datetime import datetime, timedelta
 
-# Crear blueprint para rutas de producción
 produccion_bp = Blueprint('produccion', __name__, url_prefix='/produccion')
 
 
-# Listar producciones
 @produccion_bp.route('/', methods=['GET', 'POST'])
 def index():
     form = BuscarProduccionForm()
 
-    # Iniciar consulta
     query = Produccion.query.join(Receta).join(Galleta)
 
-    # Aplicar filtros si el formulario se envió
     if form.validate_on_submit():
         if form.estatus.data:
             query = query.filter(Produccion.estatus == form.estatus.data)
@@ -30,13 +26,11 @@ def index():
         if form.galleta.data:
             query = query.filter(Galleta.nombre.like(f'%{form.galleta.data}%'))
 
-    # Ordenar por fecha de creación (más reciente primero)
     producciones = query.order_by(Produccion.created_at.desc()).all()
 
     return render_template('produccion.html', producciones=producciones, form=form)
 
 
-# Nueva producción
 @produccion_bp.route('/crear', methods=['GET', 'POST'])
 def crear():
     form = ProduccionForm()
@@ -44,7 +38,7 @@ def crear():
     if form.validate_on_submit():
         nueva_produccion = Produccion(
             estatus=form.estatus.data,
-            id_usuario=current_user.id_usuario,  # Usamos el usuario actual
+            id_usuario=current_user.id_usuario,
             id_receta=form.receta.data.id_receta
         )
 
@@ -58,30 +52,24 @@ def crear():
     return render_template('crear_produccion.html', form=form)
 
 
-# Ver detalle de producción
 @produccion_bp.route('/<int:id>', methods=['GET'])
 def detalle(id):
     produccion = Produccion.query.get_or_404(id)
     insumos_usados = ProduccionInsumo.query.filter_by(id_produccion=id).all()
     mermas = Merma.query.filter_by(id_produccion=id).all()
 
-    # Si la producción está completada, mostrar también el lote de galleta
     lote_galleta = None
     if produccion.estatus == 'completada' and produccion.id_lote_galleta:
         lote_galleta = LoteGalleta.query.get(produccion.id_lote_galleta)
 
-    # Calcular costos basados en insumos usados
     costo_total = sum(pi.cantidad_usada *
                       pi.lote_insumo.costo_unitario for pi in insumos_usados)
 
-    # Verificar la disponibilidad de insumos para la receta
     insumos_disponibles = True
     insumos_insuficientes = []
 
     if produccion.estatus == 'programada':
-        # Verificar disponibilidad de insumos en la tabla Insumo (cantidad total)
         for ri in produccion.receta.receta_insumo:
-            # Obtener la cantidad total disponible del insumo
             insumo = Insumo.query.get(ri.id_insumo)
             cantidad_disponible = insumo.cantidad_insumo
 
@@ -112,11 +100,9 @@ def iniciar(id):
         flash('Solo se pueden iniciar producciones programadas', 'warning')
         return redirect(url_for('produccion.detalle', id=id))
 
-    # Verificar disponibilidad de insumos antes de iniciar usando la cantidad total en tabla Insumo
     insumos_insuficientes = []
 
     for ri in produccion.receta.receta_insumo:
-        # Obtener la cantidad total disponible del insumo
         insumo = Insumo.query.get(ri.id_insumo)
         cantidad_disponible = insumo.cantidad_insumo
 
@@ -144,15 +130,12 @@ def iniciar(id):
 
 @produccion_bp.route('/mermas', methods=['GET'])
 def listar_mermas():
-    # Consultar todas las mermas ordenadas por fecha (más reciente primero)
     mermas = Merma.query.order_by(Merma.fecha_registro.desc()).all()
 
-    # Calcular totales por tipo de merma
     mermas_por_tipo = db.session.query(
         Merma.tipo_merma, func.sum(Merma.cantidad).label('total')
     ).group_by(Merma.tipo_merma).all()
 
-    # Calcular totales por material (galletas vs insumos)
     total_galletas = db.session.query(func.sum(Merma.cantidad)).filter(
         Merma.id_lote_galleta != None).scalar() or 0
     total_insumos = len(db.session.query(Merma.id_merma).filter(
@@ -164,28 +147,22 @@ def listar_mermas():
                            total_galletas=total_galletas,
                            total_insumos=total_insumos)
 
-# Modificación de la función finalizar (producción)
-
 
 @produccion_bp.route('/finalizar/<int:id>', methods=['POST'])
 def finalizar(id):
     produccion = Produccion.query.get_or_404(id)
 
-    # Validar que la producción esté en proceso
     if produccion.estatus != 'en_proceso':
         flash('Solo se pueden finalizar producciones programadas o en proceso', 'warning')
         return redirect(url_for('produccion.detalle', id=id))
 
-    # Obtener la receta y sus insumos
     receta = produccion.receta
     receta_insumos = receta.receta_insumo
 
-    # Verificar disponibilidad de insumos y realizar el uso
     insumos_insuficientes = []
     costo_total = 0
 
     for ri in receta_insumos:
-        # Verificar si hay suficientes insumos en la tabla Insumo
         insumo = Insumo.query.get(ri.id_insumo)
         if insumo.cantidad_insumo < ri.cantidad_insumo:
             insumos_insuficientes.append({
@@ -196,12 +173,8 @@ def finalizar(id):
             })
             continue
 
-        # Calcular costo aproximado basado en el promedio o un valor predeterminado
-        # Ya que no estamos usando lotes, necesitamos determinar el costo de alguna manera
-        # Podríamos obtener el costo promedio de los lotes más recientes o usar un valor predeterminado
         costo_unitario_aprox = 0
 
-        # Opción 1: Usar el promedio de los últimos lotes (si existen)
         lotes_recientes = LoteInsumo.query.filter_by(id_insumo=ri.id_insumo)\
             .order_by(LoteInsumo.fecha_compra.desc())\
             .limit(3).all()
@@ -210,17 +183,13 @@ def finalizar(id):
             costo_unitario_aprox = sum(
                 lote.costo_unitario for lote in lotes_recientes) / len(lotes_recientes)
         else:
-            # Opción 2: Usar el precio sugerido de la receta o un valor predeterminado
-            costo_unitario_aprox = 1.0  # Valor predeterminado si no hay información
+            costo_unitario_aprox = 1.0
 
-        # Calcular el costo de este insumo
         costo_insumo = ri.cantidad_insumo * costo_unitario_aprox
         costo_total += costo_insumo
 
-        # Actualizar la cantidad total del insumo
         insumo.cantidad_insumo -= ri.cantidad_insumo
 
-    # Si hay insumos insuficientes, no continuar
     if insumos_insuficientes:
         db.session.rollback()
         mensaje = "No hay suficientes insumos para completar la producción: "
@@ -229,11 +198,9 @@ def finalizar(id):
         flash(mensaje, 'danger')
         return redirect(url_for('produccion.detalle', id=id))
 
-    # Calcular costos
     cantidad_galletas = receta.cantidad_produccion
     costo_unitario = costo_total / cantidad_galletas if cantidad_galletas > 0 else 0
 
-    # Crear lote de galletas automáticamente
     nuevo_lote = LoteGalleta(
         cantidad_inicial=cantidad_galletas,
         cantidad_disponible=cantidad_galletas,
@@ -247,13 +214,11 @@ def finalizar(id):
     )
 
     db.session.add(nuevo_lote)
-    db.session.flush()  # Para obtener el ID del lote
+    db.session.flush()
 
-    # Actualizar producción
     produccion.estatus = 'completada'
     produccion.id_lote_galleta = nuevo_lote.id_lote_galleta
 
-    # Actualizar inventario de galletas
     receta.galleta.cantidad_galletas += cantidad_galletas
 
     db.session.commit()
@@ -262,7 +227,6 @@ def finalizar(id):
     return redirect(url_for('produccion.detalle', id=id))
 
 
-# Modificar la función de merma de insumo
 @produccion_bp.route('/merma/insumo', methods=['GET', 'POST'])
 def merma_insumo():
     form = MermaInsumoForm()
@@ -274,7 +238,6 @@ def merma_insumo():
             print("Formulario validado correctamente")
 
             try:
-                # Verificar cantidad disponible
                 lote_insumo = form.lote_insumo.data
                 print(
                     f"Lote insumo seleccionado: {lote_insumo.id_lote_insumo}, disponible: {lote_insumo.cantidad_disponible}")
@@ -284,7 +247,6 @@ def merma_insumo():
                         f'La cantidad excede lo disponible. Máximo: {lote_insumo.cantidad_disponible} {lote_insumo.insumo.unidad_medida}', 'danger')
                     return redirect(url_for('produccion.merma_insumo'))
 
-                # Registrar la merma
                 nueva_merma = Merma(
                     tipo_merma=form.tipo_merma.data,
                     cantidad=form.cantidad.data,
@@ -295,10 +257,8 @@ def merma_insumo():
                 )
                 print("Merma creada en memoria:", vars(nueva_merma))
 
-                # Actualizar la cantidad disponible en el lote
                 lote_insumo.cantidad_disponible -= form.cantidad.data
 
-                # NUEVO: Actualizar la cantidad total en la tabla Insumo
                 lote_insumo.insumo.cantidad_insumo -= form.cantidad.data
 
                 db.session.add(nueva_merma)
@@ -318,20 +278,17 @@ def merma_insumo():
     return render_template('merma_insumo.html', form=form)
 
 
-# Modificar la función de merma de galleta
 @produccion_bp.route('/merma/galleta', methods=['GET', 'POST'])
 def merma_galleta():
     form = MermaGalletaForm()
 
     if form.validate_on_submit():
-        # Verificar cantidad disponible
         lote_galleta = form.lote_galleta.data
         if lote_galleta.cantidad_disponible < form.cantidad.data:
             flash(
                 f'La cantidad excede lo disponible. Máximo: {lote_galleta.cantidad_disponible}', 'danger')
             return redirect(url_for('produccion.merma_galleta'))
 
-        # Registrar la merma
         nueva_merma = Merma(
             tipo_merma=form.tipo_merma.data,
             cantidad=form.cantidad.data,
@@ -341,10 +298,8 @@ def merma_galleta():
             motivo=form.motivo.data
         )
 
-        # Actualizar la cantidad disponible en el lote
         lote_galleta.cantidad_disponible -= form.cantidad.data
 
-        # NUEVO: Actualizar la cantidad total en la tabla Galleta
         lote_galleta.galleta.cantidad_galletas -= form.cantidad.data
 
         db.session.add(nueva_merma)
@@ -354,14 +309,12 @@ def merma_galleta():
         return redirect(url_for('produccion.merma_galleta'))
 
     return render_template('merma_galleta.html', form=form)
-# Cancelar producción
 
 
 @produccion_bp.route('/cancelar/<int:id>', methods=['POST'])
 def cancelar(id):
     produccion = Produccion.query.get_or_404(id)
 
-    # Solo se pueden cancelar producciones que no estén completadas
     if produccion.estatus == 'completada':
         flash('No se puede cancelar una producción ya completada', 'danger')
         return redirect(url_for('produccion.detalle', id=id))
@@ -373,7 +326,6 @@ def cancelar(id):
     return redirect(url_for('produccion.detalle', id=id))
 
 
-# Obtener costos unitarios vía AJAX
 @produccion_bp.route('/calcular-costo', methods=['POST'])
 def calcular_costo():
     id_produccion = request.json.get('id_produccion')
@@ -382,7 +334,6 @@ def calcular_costo():
     if not id_produccion or not cantidad or cantidad <= 0:
         return jsonify({'error': 'Datos inválidos'}), 400
 
-    # Calcular costos basados en insumos usados
     insumos_usados = ProduccionInsumo.query.filter_by(
         id_produccion=id_produccion).all()
     costo_total = sum(pi.cantidad_usada *
@@ -395,15 +346,12 @@ def calcular_costo():
     })
 
 
-# Estadísticas de producción
 @produccion_bp.route('/estadisticas', methods=['GET'])
 def estadisticas():
-    # Producciones por estatus
     estatus_count = db.session.query(
         Produccion.estatus, func.count(Produccion.id_produccion)
     ).group_by(Produccion.estatus).all()
 
-    # Top 5 galletas más producidas
     top_galletas = db.session.query(
         Galleta.nombre, func.sum(LoteGalleta.cantidad_inicial).label('total')
     ).join(LoteGalleta).join(Produccion, Produccion.id_lote_galleta == LoteGalleta.id_lote_galleta)\
@@ -411,7 +359,6 @@ def estadisticas():
      .order_by(func.sum(LoteGalleta.cantidad_inicial).desc())\
      .limit(5).all()
 
-    # Top 5 insumos más utilizados
     top_insumos = db.session.query(
         Insumo.nombre, func.sum(ProduccionInsumo.cantidad_usada).label('total')
     ).join(LoteInsumo, ProduccionInsumo.id_lote_insumo == LoteInsumo.id_lote_insumo)\
@@ -420,7 +367,6 @@ def estadisticas():
      .order_by(func.sum(ProduccionInsumo.cantidad_usada).desc())\
      .limit(5).all()
 
-    # Mermas por tipo
     mermas = db.session.query(
         Merma.tipo_merma, func.sum(Merma.cantidad).label('total')
     ).group_by(Merma.tipo_merma).all()

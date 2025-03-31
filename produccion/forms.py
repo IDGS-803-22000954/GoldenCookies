@@ -66,7 +66,7 @@ class MermaInsumoForm(FlaskForm):
 
     fecha_registro = DateTimeField('Fecha de Registro',
                                    default=datetime.now,
-                                   format='%Y-%m-%dT%H:%M',  # Cambiar a este formato
+                                   format='%Y-%m-%dT%H:%M',
                                    validators=[DataRequired()])
 
     produccion = QuerySelectField('Producción Relacionada',
@@ -104,7 +104,7 @@ class MermaGalletaForm(FlaskForm):
 
     fecha_registro = DateTimeField('Fecha de Registro',
                                    default=datetime.now,
-                                   format='%Y-%m-%dT%H:%M',  # Cambiar a este formato
+                                   format='%Y-%m-%dT%H:%M',
                                    validators=[DataRequired()])
 
     produccion = QuerySelectField('Producción Relacionada',

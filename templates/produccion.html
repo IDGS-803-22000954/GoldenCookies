@@ -131,7 +131,6 @@
                     {{ produccion.created_at.strftime('%d/%m/%Y %H:%M') }}
                   </td>
                   <td>
-                    <!-- Botón para ver detalles (sigue siendo GET) -->
                     <a
                       href="{{ url_for('produccion.detalle', id=produccion.id_produccion) }}"
                       class="btn btn-sm btn-info"
@@ -140,7 +139,6 @@
                     </a>
 
                     {% if produccion.estatus == 'programada'%}
-                    <!-- Botón para iniciar producción (ahora es un formulario POST) -->
                     <form
                       method="POST"
                       action="{{ url_for('produccion.iniciar', id=produccion.id_produccion) }}"
@@ -157,7 +155,6 @@
                     </form>
                     {% endif %} {% if produccion.estatus == 'programada' or
                     produccion.estatus=='en_proceso'%}
-                    <!-- Botón para cancelar (ya es POST) -->
                     <form
                       method="POST"
                       action="{{ url_for('produccion.cancelar', id=produccion.id_produccion) }}"

@@ -99,7 +99,6 @@
       </div>
     </div>
 
-    <!-- Script para mostrar detalles de la receta seleccionada -->
     <script>
       document.addEventListener("DOMContentLoaded", function () {
         const recetaSelect = document.getElementById("receta");
@@ -112,8 +111,6 @@
           const recetaId = this.value;
 
           if (recetaId) {
-            // Aquí podrías hacer una llamada AJAX para obtener los detalles de la receta
-            // Por ahora mostramos el texto de la opción seleccionada
             recetaDetails.innerHTML = `<strong>Detalles de la receta:</strong> ${selectedOption.text}`;
           } else {
             recetaDetails.innerHTML = "";
