@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autenticación 2FA</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f4e3; /* Color de fondo tipo galleta */
+            font-family: 'Arial', sans-serif;
+        }
+        .container {
+            margin-top: 100px;
+            border-radius: 15px;
+            background-color: #fff; /* Fondo blanco */
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+        }
+        h2 {
+            color: #7d4b2a; /* Color marrón */
+        }
+        .btn-custom {
+            background-color: #d4af8c; /* Color galleta */
+            color: #fff;
+        }
+        .btn-custom:hover {
+            background-color: #c69c7d; /* Color de hover */
+        }
+        .cookie-icon {
+            font-size: 100px; /* Tamaño del icono de galleta */
+            color: #7d4b2a;
+            text-align: center;
+        }
+        .cookie-img {
+          width: 102px;  /* Ajusta el tamaño según necesites */
+          height: auto;
+          vertical-align: middle; /* Para que no desajuste el texto */
+          margin-bottom: 2px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2 class="text-center">Código de Autenticación</h2>
+        <div class="cookie-icon"><img src="../static/img/galleta_4.png" alt="Galleta" class="cookie-img"></div><!-- Icono de galleta -->
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+            <div class="mb-3">
+                {% for message in messages %}
+                <div class="alert alert-primary alert-dismissible fade show" role="alert">
+                    <strong>{{ message }}</strong>
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        {% endwith %}
+        <form action="/auth/verificar_2fa" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            <div class="form-group">
+                <label for="codigo_2fa">Introduce tu código 2FA:</label>
+                <input type="text" class="form-control" id="codigo_2fa" name="codigo_2fa" required>
+            </div>
+            <button type="submit" class="btn btn-custom btn-block">Verificar</button>
+        </form>
+        <div class="text-center mt-3">
+            <small>¿No recibiste el código? 
+                <a href="#" onclick="event.preventDefault(); document.getElementById('reenviarForm').submit();" class="text-warning">Reenviar Código</a>
+            </small>
+        </div>
+        <form id="reenviarForm" action="{{ url_for('auth.reenviar_codigo') }}" method="POST" style="display: none;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        </form>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

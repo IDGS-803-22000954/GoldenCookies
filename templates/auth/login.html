@@ -1,0 +1,49 @@
+{% extends './layout_A.html' %}
+
+
+{% block main %}
+<div class="container">
+    <div class="login-box p-4 rounded shadow">
+        <h2 class="text-center mb-4">Inicio de Sesión</h2>
+
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        <div class="mb-3">
+            {% for message in messages %}
+            <div class="alert alert-primary alert-dismissible fade show" role="alert">
+                <strong>{{ message }}</strong>
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        <form action="/auth/login" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+
+            <div class="mb-3">
+                {{ form.username.label(class="form-label fw-bold") }}  
+                {{ form.username(class="form-control custom-input", size=32) }}  
+            </div>
+
+            <div class="mb-3">
+                {{ form.password.label(class="form-label fw-bold") }}  
+                {{ form.password(class="form-control custom-input", size=32) }}  
+            </div>
+
+            <div class="text-center mb-3">
+                <div class="g-recaptcha" data-sitekey="6LcQ1QQrAAAAAKp-M8mPlG4YNSIiz-Rfy2-oOr8I"></div>
+            </div>
+
+            <div class="text-center mb-3">
+                <small>¿No tienes una cuenta? <a href="{{ url_for('auth.registro') }}" class="fw-bold text-dark">Regístrate como cliente</a></small>
+            </div>
+
+            <button type="submit" class="btn custom-btn w-100">Aceptar</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 - Cookie Not Found</title>
+    <style>
+        *,
+        :after,
+        :before,
+        html {
+            box-sizing: border-box;
+        } 
+      
+        body {
+            margin: 15px;
+            background-color: #4b2e1e;
+            background-image: radial-gradient(rgb(189, 180, 169) 20%, transparent 20%), radial-gradient(rgb(225, 208, 185) 20%, transparent 20%);
+            background-size: 30px 30px;
+            background-position: 0 0, 30px 30px; 
+            color: #f4e1c1;
+            font-family: "Courier New", monospace;
+            font-size: 40px;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        
+        .notfound {
+            position: fixed; /* Cambiado de display: fixed a position: fixed */
+            top: 50%; /* Alineación vertical */
+            left: 50%; /* Alineación horizontal */
+            transform: translate(-50%, -50%); /* Centrado exacto */
+            background-color: #7d4b2a;
+            padding: 20px;
+            border: 5px solid #f4e1c1;
+            border-radius: 15px;
+            width: 80%;
+            max-width: 900px;
+            z-index: 1000; /* Asegura que esté encima de otros elementos */
+        }
+        
+        .title {
+            font-size: 72px;
+            font-weight: bold;
+            color: #ffdd99;
+        }
+        
+        .cookies {
+          width: 70px;  /* Ajusta el tamaño según necesites */
+          height: auto;
+          vertical-align: middle;
+        }
+
+        .cookie-icon {
+            font-size: 70px;
+            display: block;
+            margin: 10px 0;
+        }
+        
+        .cookie-img {
+          width: 22px;  /* Ajusta el tamaño según necesites */
+          height: auto;
+          vertical-align: middle; /* Para que no desajuste el texto */
+          margin-bottom: 2px;
+        }
+
+        .blink {
+            animation: blinkingText 1s infinite;
+        }
+        
+        @keyframes blinkingText {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="notfound">
+
+        <div class="title">4<img src="../static/img/galleta_6.png" alt="Galleta" class="cookies">4</div>
+        <div class="cookie-icon"><img src="../static/img/galleta_5.png" alt="Galleta" class="cookies"></div>
+        <div class="text">C<img src="../static/img/galleta_2.png" alt="Galleta" class="cookie-img"><img src="../static/img/galleta_2.png" alt="Galleta" class="cookie-img">kie N<img src="../static/img/galleta_3.png" alt="Galleta" class="cookie-img">t F<img src="../static/img/galleta_7.png" alt="Galleta" class="cookie-img">und</div>
+        <p><img src="../static/img/galleta_1.png" alt="Galleta" class="cookie-img"><img src="../static/img/galleta_1.png" alt="Galleta" class="cookie-img">ps! L<img src="../static/img/galleta_3.png" alt="Galleta" class="cookie-img"><img src="../static/img/galleta_3.png" alt="Galleta" class="cookie-img">ks like the c<img src="../static/img/galleta_7.png" alt="Galleta" class="cookie-img"><img src="../static/img/galleta_7.png" alt="Galleta" class="cookie-img">kie y<img src="../static/img/galleta_1.png" alt="Galleta" class="cookie-img">u were l<img src="../static/img/biscuit.png" alt="Galleta" class="cookie-img"><img src="../static/img/biscuit.png" alt="Galleta" class="cookie-img">king f<img src="../static/img/galleta_3.png" alt="Galleta" class="cookie-img">r has crumbled.</p>
+        <p>Try checking the jar again <img src="../static/img/galleta_2.png" alt="Galleta" class="cookie-img">r head back t<img src="../static/img/galleta_7.png" alt="Galleta" class="cookie-img"> the h<img src="../static/img/galleta_1.png" alt="Galleta" class="cookie-img">mepage.</p>
+        <p class="blink">Press any key t<img src="../static/img/galleta_2.png" alt="Galleta" class="cookie-img"> c<img src="../static/img/galleta_2.png" alt="Galleta" class="cookie-img">ntinue...</p>
+
+    </div>
+    
+</body>
+</html>
