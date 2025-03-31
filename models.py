@@ -1,53 +1,3 @@
-<<<<<<< HEAD
-from flask_sqlalchemy import SQLAlchemy
-import datetime
-from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user
-from werkzeug.security import check_password_hash, generate_password_hash
-db = SQLAlchemy()
-
-
-class usuario(db.Model, UserMixin):
-    id_usuario = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    nombre = db.Column(db.String(100), nullable=False)
-    nombre_usuario = db.Column(db.String(50), nullable=False, unique=True)
-    contrasenia = db.Column(db.String(255), nullable=False)
-    created_at = db.Column(db.TIMESTAMP, default=datetime.datetime.utcnow)
-    rol = db.Column(db.Enum('admin', 'ventas', 'produccion', 'cliente', name='rol_enum'), nullable=False, default='cliente')
-    telefono = db.Column(db.String(15), nullable=False)
-    ultimo_login = db.Column(db.DateTime, nullable=True)
-    intentos_fallidos = db.Column(db.Integer, default=0)
-    bloqueado = db.Column(db.Boolean, default=False)
-    codigo_2fa = db.Column(db.String(8), nullable=True)
-    email = db.Column(db.String(50), nullable=True)
-
-    @classmethod
-    
-    def set_password(self, password):
-        self.password_hash = generate_password_hash(password)
-
-    def check_password(self, password):
-        return check_password_hash(self.password_hash, password)
-    
-    def is_active(self):
-        return not self.bloqueado  # Considera activo si no está bloqueado
-
-    def is_authenticated(self):
-        return True  # Siempre autenticado si ha iniciado sesión
-
-    def is_anonymous(self):
-        return False  # Nunca anónimo si ha iniciado sesión
-
-    def get_id(self):
-        return str(self.id_usuario) 
-
-# goldenAdN--admin
-# goldenVdN--vendedor
-# goldenPrN--produccion
-#Tiger8431
-#LunarX27
-#Gadget9023
-#Bravo55Z
-=======
 from typing import List, Optional
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import Enum, Float, ForeignKeyConstraint, Index, Integer, String, TIMESTAMP, DateTime, text
@@ -105,32 +55,39 @@ class Proveedor(db.Model):
         'CompraInsumo', back_populates='proveedor')
 
 
-class Usuario(db.Model):
-    __tablename__ = 'usuario'
-    __table_args__ = (
-        Index('nombre_usuario', 'nombre_usuario', unique=True),
-    )
+class usuario(db.Model, UserMixin):
+    id_usuario = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    nombre = db.Column(db.String(100), nullable=False)
+    nombre_usuario = db.Column(db.String(50), nullable=False, unique=True)
+    contrasenia = db.Column(db.String(255), nullable=False)
+    created_at = db.Column(db.TIMESTAMP, default=datetime.datetime.utcnow)
+    rol = db.Column(db.Enum('admin', 'ventas', 'produccion', 'cliente', name='rol_enum'), nullable=False, default='cliente')
+    telefono = db.Column(db.String(15), nullable=False)
+    ultimo_login = db.Column(db.DateTime, nullable=True)
+    intentos_fallidos = db.Column(db.Integer, default=0)
+    bloqueado = db.Column(db.Boolean, default=False)
+    codigo_2fa = db.Column(db.String(8), nullable=True)
+    email = db.Column(db.String(50), nullable=True)
 
-    id_usuario: Mapped[int] = mapped_column(Integer, primary_key=True)
-    nombre: Mapped[str] = mapped_column(String(100))
-    nombre_usuario: Mapped[str] = mapped_column(String(50))
-    contrasenia: Mapped[str] = mapped_column(String(255))
-    rol: Mapped[str] = mapped_column(Enum('admin', 'ventas', 'produccion',
-                         'cliente'), server_default=text("'cliente'"))
-    telefono: Mapped[str] = mapped_column(String(15))
-    created_at: Mapped[Optional[datetime.datetime]] = mapped_column(
-        TIMESTAMP, server_default=text('CURRENT_TIMESTAMP'))
-    ultimo_login: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime)
-    intentos_fallidos: Mapped[Optional[int]] = mapped_column(
-        Integer, server_default=text("'0'"))
-    bloqueado: Mapped[Optional[int]] = mapped_column(
-        TINYINT(1), server_default=text("'0'"))
-    codigo_2fa: Mapped[Optional[str]] = mapped_column(String(8))
+    @classmethod
+    
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
 
-    log: Mapped[List['Log']] = relationship('Log', back_populates='usuario')
-    venta: Mapped[List['Venta']] = relationship('Venta', back_populates='usuario')
-    produccion: Mapped[List['Produccion']] = relationship(
-        'Produccion', back_populates='usuario')
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+    
+    def is_active(self):
+        return not self.bloqueado  # Considera activo si no está bloqueado
+
+    def is_authenticated(self):
+        return True  # Siempre autenticado si ha iniciado sesión
+
+    def is_anonymous(self):
+        return False  # Nunca anónimo si ha iniciado sesión
+
+    def get_id(self):
+        return str(self.id_usuario) 
 
 
 class Log(db.Model):
@@ -429,4 +386,3 @@ class ProduccionInsumo(db.Model):
         'LoteInsumo', back_populates='produccion_insumo')
     produccion: Mapped[Optional['Produccion']] = relationship(
         'Produccion', back_populates='produccion_insumo')
->>>>>>> 024c22ed1bed1f138522f50c4431b1b92a7e7a14
