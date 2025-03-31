@@ -2,7 +2,7 @@ from typing import List, Optional
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import Enum, Float, ForeignKeyConstraint, Index, Integer, String, TIMESTAMP, DateTime, text
 from sqlalchemy.dialects.mysql import LONGTEXT, TINYINT
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 import datetime
 
 db = SQLAlchemy()
@@ -11,45 +11,46 @@ db = SQLAlchemy()
 class Galleta(db.Model):
     __tablename__ = 'galleta'
 
-    id_galleta: int = db.Column(Integer, primary_key=True)
-    nombre: str = db.Column(String(100))
-    precio_sugerido: float = db.Column(Float)
-    peso_unidad: float = db.Column(Float)
-    descripcion: Optional[str] = db.Column(String(255))
-    created_at: Optional[datetime.datetime] = db.Column(
+    id_galleta: Mapped[int] = mapped_column(Integer, primary_key=True)
+    nombre: Mapped[str] = mapped_column(String(100))
+    precio_sugerido: Mapped[float] = mapped_column(Float)
+    peso_unidad: Mapped[float] = mapped_column(Float)
+    descripcion: Mapped[Optional[str]] = mapped_column(String(255))
+    created_at: Mapped[Optional[datetime.datetime]] = mapped_column(
         TIMESTAMP, server_default=text('CURRENT_TIMESTAMP'))
 
-    receta: List['Receta'] = relationship('Receta', back_populates='galleta')
-    lote_galleta: List['LoteGalleta'] = relationship(
+    receta: Mapped[List['Receta']] = relationship('Receta', back_populates='galleta')
+    lote_galleta: Mapped[List['LoteGalleta']] = relationship(
         'LoteGalleta', back_populates='galleta')
 
 
 class Insumo(db.Model):
     __tablename__ = 'insumo'
 
-    id_insumo: int = db.Column(Integer, primary_key=True)
-    nombre: str = db.Column(String(100))
-    unidad_medida: str = db.Column(String(60))
-    created_at: Optional[datetime.datetime] = db.Column(
+    id_insumo: Mapped[int] = mapped_column(Integer, primary_key=True)
+    nombre: Mapped[str] = mapped_column(String(100))
+    unidad_medida: Mapped[str] = mapped_column(String(60))
+    cantidad_insumo: Mapped[float]= mapped_column(Float)
+    created_at: Mapped[Optional[datetime.datetime]] = mapped_column(
         TIMESTAMP, server_default=text('CURRENT_TIMESTAMP'))
 
-    lote_insumo: List['LoteInsumo'] = relationship(
+    lote_insumo: Mapped[List['LoteInsumo']] = relationship(
         'LoteInsumo', back_populates='insumo')
-    receta_insumo: List['RecetaInsumo'] = relationship(
+    receta_insumo: Mapped[List['RecetaInsumo']] = relationship(
         'RecetaInsumo', back_populates='insumo')
 
 
 class Proveedor(db.Model):
     __tablename__ = 'proveedor'
 
-    id_proveedor: int = db.Column(Integer, primary_key=True)
-    nombre: str = db.Column(String(100))
-    contacto: Optional[str] = db.Column(String(100))
-    telefono: Optional[str] = db.Column(String(15))
-    created_at: Optional[datetime.datetime] = db.Column(
+    id_proveedor: Mapped[int] = mapped_column(Integer, primary_key=True)
+    nombre: Mapped[str] = mapped_column(String(100))
+    contacto: Mapped[Optional[str]] = mapped_column(String(100))
+    telefono: Mapped[Optional[str]] = mapped_column(String(15))
+    created_at: Mapped[Optional[datetime.datetime]] = mapped_column(
         TIMESTAMP, server_default=text('CURRENT_TIMESTAMP'))
 
-    compra_insumo: List['CompraInsumo'] = relationship(
+    compra_insumo: Mapped[List['CompraInsumo']] = relationship(
         'CompraInsumo', back_populates='proveedor')
 
 
@@ -59,25 +60,25 @@ class Usuario(db.Model):
         Index('nombre_usuario', 'nombre_usuario', unique=True),
     )
 
-    id_usuario: int = db.Column(Integer, primary_key=True)
-    nombre: str = db.Column(String(100))
-    nombre_usuario: str = db.Column(String(50))
-    contrasenia: str = db.Column(String(255))
-    rol: str = db.Column(Enum('admin', 'ventas', 'produccion',
+    id_usuario: Mapped[int] = mapped_column(Integer, primary_key=True)
+    nombre: Mapped[str] = mapped_column(String(100))
+    nombre_usuario: Mapped[str] = mapped_column(String(50))
+    contrasenia: Mapped[str] = mapped_column(String(255))
+    rol: Mapped[str] = mapped_column(Enum('admin', 'ventas', 'produccion',
                          'cliente'), server_default=text("'cliente'"))
-    telefono: str = db.Column(String(15))
-    created_at: Optional[datetime.datetime] = db.Column(
+    telefono: Mapped[str] = mapped_column(String(15))
+    created_at: Mapped[Optional[datetime.datetime]] = mapped_column(
         TIMESTAMP, server_default=text('CURRENT_TIMESTAMP'))
-    ultimo_login: Optional[datetime.datetime] = db.Column(DateTime)
-    intentos_fallidos: Optional[int] = db.Column(
+    ultimo_login: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime)
+    intentos_fallidos: Mapped[Optional[int]] = mapped_column(
         Integer, server_default=text("'0'"))
-    bloqueado: Optional[int] = db.Column(
+    bloqueado: Mapped[Optional[int]] = mapped_column(
         TINYINT(1), server_default=text("'0'"))
-    codigo_2fa: Optional[str] = db.Column(String(8))
+    codigo_2fa: Mapped[Optional[str]] = mapped_column(String(8))
 
-    log: List['Log'] = relationship('Log', back_populates='usuario')
-    venta: List['Venta'] = relationship('Venta', back_populates='usuario')
-    produccion: List['Produccion'] = relationship(
+    log: Mapped[List['Log']] = relationship('Log', back_populates='usuario')
+    venta: Mapped[List['Venta']] = relationship('Venta', back_populates='usuario')
+    produccion: Mapped[List['Produccion']] = relationship(
         'Produccion', back_populates='usuario')
 
 
@@ -89,12 +90,12 @@ class Log(db.Model):
         Index('id_usuario', 'id_usuario')
     )
 
-    id_log: int = db.Column(Integer, primary_key=True)
-    tipo_evento: str = db.Column(String(50))
-    fecha_evento: datetime.datetime = db.Column(DateTime)
-    id_usuario: Optional[int] = db.Column(Integer)
+    id_log: Mapped[int] = mapped_column(Integer, primary_key=True)
+    tipo_evento: Mapped[str] = mapped_column(String(50))
+    fecha_evento: Mapped[datetime.datetime] = mapped_column(DateTime)
+    id_usuario: Mapped[Optional[int]] = mapped_column(Integer)
 
-    usuario: Optional['Usuario'] = relationship(
+    usuario: Mapped[Optional['Usuario']] = relationship(
         'Usuario', back_populates='log')
 
 
@@ -106,22 +107,22 @@ class LoteInsumo(db.Model):
         Index('id_insumo', 'id_insumo')
     )
 
-    id_lote_insumo: int = db.Column(Integer, primary_key=True)
-    cantidad: float = db.Column(Float)
-    cantidad_disponible: float = db.Column(Float)
-    costo_unitario: float = db.Column(Float)
-    fecha_compra: datetime.datetime = db.Column(DateTime)
-    fecha_caducidad: datetime.datetime = db.Column(DateTime)
-    id_insumo: Optional[int] = db.Column(Integer)
-    created_at: Optional[datetime.datetime] = db.Column(
+    id_lote_insumo: Mapped[int] = mapped_column(Integer, primary_key=True)
+    cantidad: Mapped[float] = mapped_column(Float)
+    cantidad_disponible: Mapped[float] = mapped_column(Float)
+    costo_unitario: Mapped[float] = mapped_column(Float)
+    fecha_compra: Mapped[datetime.datetime] = mapped_column(DateTime)
+    fecha_caducidad: Mapped[datetime.datetime] = mapped_column(DateTime)
+    id_insumo: Mapped[Optional[int]] = mapped_column(Integer)
+    created_at: Mapped[Optional[datetime.datetime]] = mapped_column(
         TIMESTAMP, server_default=text('CURRENT_TIMESTAMP'))
 
-    insumo: Optional['Insumo'] = relationship(
+    insumo: Mapped[Optional['Insumo']] = relationship(
         'Insumo', back_populates='lote_insumo')
-    compra_insumo: List['CompraInsumo'] = relationship(
+    compra_insumo: Mapped[List['CompraInsumo']] = relationship(
         'CompraInsumo', back_populates='lote_insumo')
-    merma: List['Merma'] = relationship('Merma', back_populates='lote_insumo')
-    produccion_insumo: List['ProduccionInsumo'] = relationship(
+    merma: Mapped[List['Merma']] = relationship('Merma', back_populates='lote_insumo')
+    produccion_insumo: Mapped[List['ProduccionInsumo']] = relationship(
         'ProduccionInsumo', back_populates='lote_insumo')
 
 
@@ -133,20 +134,21 @@ class Receta(db.Model):
         Index('id_galleta', 'id_galleta')
     )
 
-    id_receta: int = db.Column(Integer, primary_key=True)
-    cantidad_produccion: int = db.Column(Integer)
-    id_galleta: Optional[int] = db.Column(Integer)
-    descripcion: Optional[str] = db.Column(LONGTEXT)
-    created_at: Optional[datetime.datetime] = db.Column(
+    id_receta: Mapped[int] = mapped_column(Integer, primary_key=True)
+    nombre: Mapped[str] = mapped_column(String(100)) 
+    cantidad_produccion: Mapped[int] = mapped_column(Integer)
+    id_galleta: Mapped[Optional[int]] = mapped_column(Integer)
+    descripcion: Mapped[Optional[str]] = mapped_column(LONGTEXT)
+    created_at: Mapped[Optional[datetime.datetime]] = mapped_column(
         TIMESTAMP, server_default=text('CURRENT_TIMESTAMP'))
 
-    galleta: Optional['Galleta'] = relationship(
+    galleta: Mapped[Optional['Galleta']] = relationship(
         'Galleta', back_populates='receta')
-    lote_galleta: List['LoteGalleta'] = relationship(
+    lote_galleta: Mapped[List['LoteGalleta']] = relationship(
         'LoteGalleta', back_populates='receta')
-    receta_insumo: List['RecetaInsumo'] = relationship(
+    receta_insumo: Mapped[List['RecetaInsumo']] = relationship(
         'RecetaInsumo', back_populates='receta')
-    produccion: List['Produccion'] = relationship(
+    produccion: Mapped[List['Produccion']] = relationship(
         'Produccion', back_populates='receta')
 
 
@@ -158,22 +160,22 @@ class Venta(db.Model):
         Index('id_usuario', 'id_usuario')
     )
 
-    id_venta: int = db.Column(Integer, primary_key=True)
-    fecha: datetime.datetime = db.Column(DateTime)
-    tipo_venta: str = db.Column(String(50))
-    total: float = db.Column(Float)
-    metodo_pago: str = db.Column(String(50))
-    id_usuario: Optional[int] = db.Column(Integer)
-    created_at: Optional[datetime.datetime] = db.Column(
+    id_venta: Mapped[int] = mapped_column(Integer, primary_key=True)
+    fecha: Mapped[datetime.datetime] = mapped_column(DateTime)
+    tipo_venta: Mapped[str] = mapped_column(String(50))
+    total: Mapped[float] = mapped_column(Float)
+    metodo_pago: Mapped[str] = mapped_column(String(50))
+    id_usuario: Mapped[Optional[int]] = mapped_column(Integer)
+    created_at: Mapped[Optional[datetime.datetime]] = mapped_column(
         TIMESTAMP, server_default=text('CURRENT_TIMESTAMP'))
-    estado: Optional[str] = db.Column(
+    estado: Mapped[Optional[str]] = mapped_column(
         Enum('pendiente', 'lista'), server_default=text("'lista'"))
-    fecha_recogida: Optional[datetime.datetime] = db.Column(DateTime)
-    pagado: Optional[int] = db.Column(TINYINT(1), server_default=text("'1'"))
+    fecha_recogida: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime)
+    pagado: Mapped[Optional[int]] = mapped_column(TINYINT(1), server_default=text("'1'"))
 
-    usuario: Optional['Usuario'] = relationship(
+    usuario: Mapped[Optional['Usuario']] = relationship(
         'Usuario', back_populates='venta')
-    detalle_venta: List['DetalleVenta'] = relationship(
+    detalle_venta: Mapped[List['DetalleVenta']] = relationship(
         'DetalleVenta', back_populates='venta')
 
 
@@ -188,18 +190,18 @@ class CompraInsumo(db.Model):
         Index('id_proveedor', 'id_proveedor')
     )
 
-    id_compra: int = db.Column(Integer, primary_key=True)
-    presentacion: str = db.Column(String(50))
-    cantidad_normalizada: float = db.Column(Float)
-    precio_total: float = db.Column(Float)
-    id_proveedor: Optional[int] = db.Column(Integer)
-    id_lote_insumo: Optional[int] = db.Column(Integer)
-    created_at: Optional[datetime.datetime] = db.Column(
+    id_compra: Mapped[int] = mapped_column(Integer, primary_key=True)
+    presentacion: Mapped[str] = mapped_column(String(50))
+    cantidad_normalizada: Mapped[float] = mapped_column(Float)
+    precio_total: Mapped[float] = mapped_column(Float)
+    id_proveedor: Mapped[Optional[int]] = mapped_column(Integer)
+    id_lote_insumo: Mapped[Optional[int]] = mapped_column(Integer)
+    created_at: Mapped[Optional[datetime.datetime]] = mapped_column(
         TIMESTAMP, server_default=text('CURRENT_TIMESTAMP'))
 
-    lote_insumo: Optional['LoteInsumo'] = relationship(
+    lote_insumo: Mapped[Optional['LoteInsumo']] = relationship(
         'LoteInsumo', back_populates='compra_insumo')
-    proveedor: Optional['Proveedor'] = relationship(
+    proveedor: Mapped[Optional['Proveedor']] = relationship(
         'Proveedor', back_populates='compra_insumo')
 
 
@@ -214,28 +216,28 @@ class LoteGalleta(db.Model):
         Index('id_receta', 'id_receta')
     )
 
-    id_lote_galleta: int = db.Column(Integer, primary_key=True)
-    cantidad_inicial: int = db.Column(Integer)
-    cantidad_disponible: int = db.Column(Integer)
-    precio_venta: float = db.Column(Float)
-    costo_total_produccion: float = db.Column(Float)
-    costo_unitario: float = db.Column(Float)
-    fecha_produccion: datetime.datetime = db.Column(DateTime)
-    fecha_caducidad: datetime.datetime = db.Column(DateTime)
-    id_galleta: Optional[int] = db.Column(Integer)
-    created_at: Optional[datetime.datetime] = db.Column(
+    id_lote_galleta: Mapped[int] = mapped_column(Integer, primary_key=True)
+    cantidad_inicial: Mapped[int] = mapped_column(Integer)
+    cantidad_disponible: Mapped[int] = mapped_column(Integer)
+    precio_venta: Mapped[float] = mapped_column(Float)
+    costo_total_produccion: Mapped[float] = mapped_column(Float)
+    costo_unitario: Mapped[float] = mapped_column(Float)
+    fecha_produccion: Mapped[datetime.datetime] = mapped_column(DateTime)
+    fecha_caducidad: Mapped[datetime.datetime] = mapped_column(DateTime)
+    id_galleta: Mapped[Optional[int]] = mapped_column(Integer)
+    created_at: Mapped[Optional[datetime.datetime]] = mapped_column(
         TIMESTAMP, server_default=text('CURRENT_TIMESTAMP'))
-    id_receta: Optional[int] = db.Column(Integer)
+    id_receta: Mapped[Optional[int]] = mapped_column(Integer)
 
-    galleta: Optional['Galleta'] = relationship(
+    galleta: Mapped[Optional['Galleta']] = relationship(
         'Galleta', back_populates='lote_galleta')
-    receta: Optional['Receta'] = relationship(
+    receta: Mapped[Optional['Receta']] = relationship(
         'Receta', back_populates='lote_galleta')
-    detalle_venta: List['DetalleVenta'] = relationship(
+    detalle_venta: Mapped[List['DetalleVenta']] = relationship(
         'DetalleVenta', back_populates='lote_galleta')
-    produccion: List['Produccion'] = relationship(
+    produccion: Mapped[List['Produccion']] = relationship(
         'Produccion', back_populates='lote_galleta')
-    merma: List['Merma'] = relationship('Merma', back_populates='lote_galleta')
+    merma: Mapped[List['Merma']] = relationship('Merma', back_populates='lote_galleta')
 
 
 class RecetaInsumo(db.Model):
@@ -249,16 +251,16 @@ class RecetaInsumo(db.Model):
         Index('id_receta', 'id_receta')
     )
 
-    id_receta_insumo: int = db.Column(Integer, primary_key=True)
-    cantidad_insumo: float = db.Column(Float)
-    id_receta: Optional[int] = db.Column(Integer)
-    id_insumo: Optional[int] = db.Column(Integer)
-    created_at: Optional[datetime.datetime] = db.Column(
+    id_receta_insumo: Mapped[int] = mapped_column(Integer, primary_key=True)
+    cantidad_insumo: Mapped[float] = mapped_column(Float)
+    id_receta: Mapped[Optional[int]] = mapped_column(Integer)
+    id_insumo: Mapped[Optional[int]] = mapped_column(Integer)
+    created_at: Mapped[Optional[datetime.datetime]] = mapped_column(
         TIMESTAMP, server_default=text('CURRENT_TIMESTAMP'))
 
-    insumo: Optional['Insumo'] = relationship(
+    insumo: Mapped[Optional['Insumo']] = relationship(
         'Insumo', back_populates='receta_insumo')
-    receta: Optional['Receta'] = relationship(
+    receta: Mapped[Optional['Receta']] = relationship(
         'Receta', back_populates='receta_insumo')
 
 
@@ -273,19 +275,19 @@ class DetalleVenta(db.Model):
         Index('id_venta', 'id_venta')
     )
 
-    id_detalle: int = db.Column(Integer, primary_key=True)
-    cantidad: int = db.Column(Integer)
-    precio_unitario: float = db.Column(Float)
-    tipo_venta: str = db.Column(
+    id_detalle: Mapped[int] = mapped_column(Integer, primary_key=True)
+    cantidad: Mapped[int] = mapped_column(Integer)
+    precio_unitario: Mapped[float] = mapped_column(Float)
+    tipo_venta: Mapped[str] = mapped_column(
         Enum('pieza', 'gramos', '700g', '1kg'), server_default=text("'pieza'"))
-    id_venta: Optional[int] = db.Column(Integer)
-    id_lote_galleta: Optional[int] = db.Column(Integer)
-    created_at: Optional[datetime.datetime] = db.Column(
+    id_venta: Mapped[Optional[int]] = mapped_column(Integer)
+    id_lote_galleta: Mapped[Optional[int]] = mapped_column(Integer)
+    created_at: Mapped[Optional[datetime.datetime]] = mapped_column(
         TIMESTAMP, server_default=text('CURRENT_TIMESTAMP'))
 
-    lote_galleta: Optional['LoteGalleta'] = relationship(
+    lote_galleta: Mapped[Optional['LoteGalleta']] = relationship(
         'LoteGalleta', back_populates='detalle_venta')
-    venta: Optional['Venta'] = relationship(
+    venta: Mapped[Optional['Venta']] = relationship(
         'Venta', back_populates='detalle_venta')
 
 
@@ -303,22 +305,22 @@ class Produccion(db.Model):
         Index('id_usuario', 'id_usuario')
     )
 
-    id_produccion: int = db.Column(Integer, primary_key=True)
-    estatus: str = db.Column(String(100))
-    id_usuario: Optional[int] = db.Column(Integer)
-    id_lote_galleta: Optional[int] = db.Column(Integer)
-    id_receta: Optional[int] = db.Column(Integer)
-    created_at: Optional[datetime.datetime] = db.Column(
+    id_produccion: Mapped[int] = mapped_column(Integer, primary_key=True)
+    estatus: Mapped[str] = mapped_column(String(100))
+    id_usuario: Mapped[Optional[int]] = mapped_column(Integer)
+    id_lote_galleta: Mapped[Optional[int]] = mapped_column(Integer)
+    id_receta: Mapped[Optional[int]] = mapped_column(Integer)
+    created_at: Mapped[Optional[datetime.datetime]] = mapped_column(
         TIMESTAMP, server_default=text('CURRENT_TIMESTAMP'))
 
-    lote_galleta: Optional['LoteGalleta'] = relationship(
+    lote_galleta: Mapped[Optional['LoteGalleta']] = relationship(
         'LoteGalleta', back_populates='produccion')
-    receta: Optional['Receta'] = relationship(
+    receta: Mapped[Optional['Receta']] = relationship(
         'Receta', back_populates='produccion')
-    usuario: Optional['Usuario'] = relationship(
+    usuario: Mapped[Optional['Usuario']] = relationship(
         'Usuario', back_populates='produccion')
-    merma: List['Merma'] = relationship('Merma', back_populates='produccion')
-    produccion_insumo: List['ProduccionInsumo'] = relationship(
+    merma: Mapped[List['Merma']] = relationship('Merma', back_populates='produccion')
+    produccion_insumo: Mapped[List['ProduccionInsumo']] = relationship(
         'ProduccionInsumo', back_populates='produccion')
 
 
@@ -336,22 +338,22 @@ class Merma(db.Model):
         Index('id_produccion', 'id_produccion')
     )
 
-    id_merma: int = db.Column(Integer, primary_key=True)
-    tipo_merma: str = db.Column(String(50))
-    cantidad: float = db.Column(Float)
-    fecha_registro: datetime.datetime = db.Column(DateTime)
-    id_produccion: Optional[int] = db.Column(Integer)
-    id_lote_insumo: Optional[int] = db.Column(Integer)
-    id_lote_galleta: Optional[int] = db.Column(Integer)
-    motivo: Optional[str] = db.Column(String(255))
-    created_at: Optional[datetime.datetime] = db.Column(
+    id_merma: Mapped[int] = mapped_column(Integer, primary_key=True)
+    tipo_merma: Mapped[str] = mapped_column(String(50))
+    cantidad: Mapped[float] = mapped_column(Float)
+    fecha_registro: Mapped[datetime.datetime] = mapped_column(DateTime)
+    id_produccion: Mapped[Optional[int]] = mapped_column(Integer)
+    id_lote_insumo: Mapped[Optional[int]] = mapped_column(Integer)
+    id_lote_galleta: Mapped[Optional[int]] = mapped_column(Integer)
+    motivo: Mapped[Optional[str]] = mapped_column(String(255))
+    created_at: Mapped[Optional[datetime.datetime]] = mapped_column(
         TIMESTAMP, server_default=text('CURRENT_TIMESTAMP'))
 
-    lote_galleta: Optional['LoteGalleta'] = relationship(
+    lote_galleta: Mapped[Optional['LoteGalleta']] = relationship(
         'LoteGalleta', back_populates='merma')
-    lote_insumo: Optional['LoteInsumo'] = relationship(
+    lote_insumo: Mapped[Optional['LoteInsumo']] = relationship(
         'LoteInsumo', back_populates='merma')
-    produccion: Optional['Produccion'] = relationship(
+    produccion: Mapped[Optional['Produccion']] = relationship(
         'Produccion', back_populates='merma')
 
 
@@ -366,14 +368,14 @@ class ProduccionInsumo(db.Model):
         Index('id_produccion', 'id_produccion')
     )
 
-    id_produccion_insumo: int = db.Column(Integer, primary_key=True)
-    cantidad_usada: float = db.Column(Float)
-    id_produccion: Optional[int] = db.Column(Integer)
-    id_lote_insumo: Optional[int] = db.Column(Integer)
-    created_at: Optional[datetime.datetime] = db.Column(
+    id_produccion_insumo: Mapped[int] = mapped_column(Integer, primary_key=True)
+    cantidad_usada: Mapped[float] = mapped_column(Float)
+    id_produccion: Mapped[Optional[int]] = mapped_column(Integer)
+    id_lote_insumo: Mapped[Optional[int]] = mapped_column(Integer)
+    created_at: Mapped[Optional[datetime.datetime]] = mapped_column(
         TIMESTAMP, server_default=text('CURRENT_TIMESTAMP'))
 
-    lote_insumo: Optional['LoteInsumo'] = relationship(
+    lote_insumo: Mapped[Optional['LoteInsumo']] = relationship(
         'LoteInsumo', back_populates='produccion_insumo')
-    produccion: Optional['Produccion'] = relationship(
+    produccion: Mapped[Optional['Produccion']] = relationship(
         'Produccion', back_populates='produccion_insumo')

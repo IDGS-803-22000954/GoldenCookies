@@ -1,92 +1,198 @@
-body {
-    font-family: "Kavoon", serif;
-    font-weight: 400;
-    font-style: normal;
-  }
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recetas</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kavoon&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../static/css/recetas.css">
+</head>
+<body>
+    <header class="encabezado ">
+        <div class="container d-flex justify-content-between align-items-center">
+            <a href="../index.html">
+                <img src="../static/img/logo_goldenCookies.jpg" alt="Logo" class="logo">
+            </a>
+        </div>
+    </header>
+    
+    <div class="container my-5">
+        <div class="text-center">
+            <img src="../static/img/libro-de-cocina.png" alt="Receta" class="icono">
+            <h1 class="display-4 fw-bold">Recetas</h1>
+        </div>
+        <div class="text-center mt-4">
+            <button class="btn btn-warning text-white fw-bold" id="btnAgregarReceta">
+                <i class="fas fa-plus"></i> Agregar Receta
+            </button>
+        </div>
 
-body {
-  font-family: "Kavoon", serif;
-}
-h1{
-font-size:70px;
-}
+        <div id="formAgregar" class="mt-4" style="display: none;">
+            <h5>Agregar Receta</h5>
+            <form id="agregarForm" method="POST" action="{{ url_for('recetas.insertar_receta') }}">
+                {{ form.hidden_tag() }}
+                <label>Nombre:</label>
+                <input type="text" class="form-control" name="nombre" required>
+                
+                <label>Descripción:</label>
+                <textarea class="form-control" name="descripcion" required></textarea>
+                
+                <label>Cantidad Producida:</label>
+                <input type="number" class="form-control" name="cantidad_produccion" required>
+                
+                <label>Galleta:</label>
+                <select class="form-select" name="id_galleta" required>
+                    <option value="">Seleccione una galleta</option>
+                    {% for galleta in galletas %}
+                        <option value="{{ galleta.id_galleta }}">{{ galleta.nombre }}</option>
+                    {% endfor %}
+                </select>
+                
+                <label>Insumos:</label>
+                <div id="insumosContainer">
+                    {% for insumo in insumos %}
+                        <div>
+                            <input type="checkbox" name="insumo_{{ insumo.id_insumo }}" data-id="{{ insumo.id_insumo }}">
+                            <label>{{ insumo.nombre }} ({{ insumo.unidad_medida }})</label>
+                            <input type="number" step="any" name="cantidad_{{ insumo.id_insumo }}" disabled>
+                        </div>
+                    {% endfor %}
+                </div>
+                
+                <button type="submit" class="btn btn-primary">Guardar</button>
+                <button type="button" class="btn btn-secondary" id="btnCancelarAgregar">Cancelar</button>
+            </form>            
+        </div>
 
-.encabezado {
-  background-color: #CA8014;
-}
+        <!-- Formulario de modificar receta -->
+        <div id="formModificar" class="mt-4" style="display: none;">
+            <h5>Modificar Receta</h5>
+            <form id="modificarForm" method="POST" action="">   
+                {{ form.hidden_tag() }}       
+                <input type="hidden" name="id_receta" id="modificarId">
+                <label>Nombre:</label>
+                <input type="text" class="form-control" name="nombre" id="modificarNombre" required>
+                <label>Descripción:</label>
+                <textarea class="form-control" name="descripcion" id="modificarDescripcion" required></textarea>
+                <label>Cantidad Producida:</label>
+                <input type="number" class="form-control" name="cantidad_produccion" id="modificarCantidad" required>
+                <label>Galleta:</label>
+                <select class="form-select" name="id_galleta" id="modificarGalleta" required>
+                    <option value="">Seleccione una galleta</option>
+                    {% for galleta in galletas %}
+                        <option value="{{ galleta.id_galleta }}">{{ galleta.nombre }}</option>
+                    {% endfor %}
+                </select>
+                <label>Insumos:</label>
+                <div id="modificarInsumosContainer"></div>
+                <button type="submit" class="btn btn-primary">Guardar</button>
+                <button type="button" class="btn btn-secondary" id="btnCancelarModificar">Cancelar</button>
+            </form>
+        </div>
 
-.logo {
-  margin: 20px;
-  width: 150px;
-  height: 150px;
-  border-radius: 10px;
-}
+        <!-- Tabla de recetas -->
+        <table class="table mt-4">
+            <thead>
+                <tr>
+                    <th>Receta</th>
+                    <th>Descripción</th>
+                    <th>Cantidad</th>
+                    <th>Galleta</th>
+                    <th>Insumos</th>
+                    <th>Modificar</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for receta in recetas %}
+                <tr>
+                    <td>{{ receta.nombre }}</td>
+                    <td>{{ receta.descripcion }}</td>
+                    <td>{{ receta.cantidad_produccion }}</td>
+                    <td>{{ receta.galleta.nombre }}</td>
+                    <td>
+                        <ul>
+                            {% for ri in receta.receta_insumo %}
+                                <li>{{ ri.insumo.nombre }}: {{ ri.cantidad_insumo }} {{ ri.insumo.unidad_medida }}</li>
+                            {% endfor %}
+                        </ul>
+                    </td>                    
+                    <td>
+                        <button class="btn btn-primary btnModificar" data-id="{{ receta.id_receta }}">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 
-.titulo {
-  margin-top:20px;
-  text-align: center;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-}
+    <script>
+        document.getElementById('btnAgregarReceta').addEventListener('click', function() {
+    document.getElementById('formAgregar').style.display = 'block';
+    document.getElementById('formModificar').style.display = 'none';
+});
 
-.icono {
-  width: 90px;
-  height: 90px;
-}
+document.getElementById('btnCancelarAgregar').addEventListener('click', function() {
+    document.getElementById('formAgregar').style.display = 'none';
+});
 
-.venta-container {
-  display: flex;
-  justify-content: space-between;
-  margin: 20px;
-}
+document.getElementById('btnCancelarModificar').addEventListener('click', function() {
+    document.getElementById('formModificar').style.display = 'none';
+});
 
-.formulario-venta {
-  width: 40%;
-  padding: 20px;
+document.querySelectorAll('.btnModificar').forEach(button => {
+    button.addEventListener('click', function() {
+        let idReceta = this.getAttribute('data-id');
+        let formModificar = document.getElementById('modificarForm');
+        formModificar.action = `/recetas/modificar_receta/${idReceta}`; // Establecer la acción aquí
 
-}
+        fetch(`/recetas/modificar_receta/${idReceta}`)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('modificarId').value = idReceta;
+                document.getElementById('modificarNombre').value = data.nombre;
+                document.getElementById('modificarDescripcion').value = data.descripcion;
+                document.getElementById('modificarCantidad').value = data.cantidad_produccion;
+                document.getElementById('modificarGalleta').value = data.id_galleta;
 
-.tabla-derecha-ventas {
-  width: 45%;
-}
+                let insumosContainer = document.getElementById('modificarInsumosContainer');
+                insumosContainer.innerHTML = '';
 
-.table {
-  width: 100%;
-  margin: 0; /* Sin margen */
-  text-align: center;
-}
+                // Cargar insumos existentes
+                data.insumos.forEach(insumo => {
+                    let div = document.createElement('div');
+                    div.innerHTML = `
+                        <input type="checkbox" name="insumo_${insumo.id_insumo}" checked>
+                        <label>${insumo.nombre} (${insumo.unidad_medida})</label>
+                        <input type="number" step="any" name="cantidad_${insumo.id_insumo}" value="${insumo.cantidad}">
+                    `;
+                    insumosContainer.appendChild(div);
+                });
 
-.encabezado-tabla-venta {
-  color: #CF631B !important;
-  color: black;
-  border-color:black;
-}
+                // Mostrar el formulario de modificación
+                document.getElementById('formModificar').style.display = 'block';
+                document.getElementById('formAgregar').style.display = 'none';
+            })
+            .catch(error => console.error('Error al cargar receta:', error));
+    });
+});
+document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+    checkbox.addEventListener('change', function() {
+        let cantidadInput = this.nextElementSibling.nextElementSibling; // Selecciona el input de cantidad
+        if (this.checked) {
+            cantidadInput.disabled = false;
+        } else {
+            cantidadInput.disabled = true;
+            cantidadInput.value = ''; // Limpiar el valor cuando se desmarca
+        }
+    });
+});
 
-.button-container {
-  text-align: right;
-  margin: 20px;
-}
-
-.btn-warning {
-  background-color: #CA8014;
-  border-color: black;
-  font-weight: bold;
-  border-radius: 17px;
-  padding: 10px 20px;
-  color: white;
-}
-.btn-warning:hover {
-background-color: #D77230;
-color: white;
-border-color:black
-}
-  .table tbody td {
-    background-color: #EBC280;
-  }
-/* Tabla */
-  .table thead th {
-    background-color: #CF631B;
-    color: #000;
-  }
+    </script>
+</body>
+</html>
