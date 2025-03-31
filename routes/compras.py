@@ -10,8 +10,9 @@ compras_bp = Blueprint('compras_bp', __name__, template_folder='templates')
 
 
 @compras_bp.route('/compras', methods=['GET', 'POST'])
+@login_required
 def listar_compras():
-    login_required()
+
     form = CompraInsumoForm()
     compras = CompraInsumo.query.join(LoteInsumo).join(Insumo).join(Proveedor).all()
     # Llenar los select fields

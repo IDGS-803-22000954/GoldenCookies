@@ -9,8 +9,8 @@ proveedor_bp = Blueprint('proveedor_bp', __name__, url_prefix='/proveedor_bp')
 
 
 @proveedor_bp.route("/proveedores", methods=['GET', 'POST'])
+@login_required
 def agregarProveedor():
-    login_required()
     formulario = ProveedorForm()  # Cambiado a ProveedorForm
     proveedores = Proveedor.query.all()
     
@@ -29,8 +29,8 @@ def agregarProveedor():
 
 
 @proveedor_bp.route("/editar_proveedor", methods=['POST'])
+@login_required
 def editar_proveedor():
-    login_required()
     id_proveedor = request.form.get('id_proveedor')
     print(f"ID Proveedor recibido: {id_proveedor}")
     nombre = request.form.get('nombre')
@@ -49,8 +49,8 @@ def editar_proveedor():
 
 
 @proveedor_bp.route("/cambiar_estatus/<int:id>")
+@login_required
 def cambiar_estatus(id):
-    login_required()
     try:
         proveedor = Proveedor.query.get_or_404(id)
         proveedor.estatus = not proveedor.estatus
