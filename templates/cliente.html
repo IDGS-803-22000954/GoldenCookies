@@ -1,13 +1,15 @@
-{# templates/index_C.html #} {% extends "layout_C.html" %} {% block main %}
+{# templates/index_C.html #} {% extends "layout_C.html" %}
+{% block main %}
 
 <main class="row justify-content-center">
     <div class="container-buttons d-flex justify-content-center flex-wrap">
         <div class="row">
-            <a href="#" class="boton">
+            <a href="{{url_for('pedidos.pedido')}}" class="boton">
                 <img src="../static/img/pedido.png" alt="Pedidos" class="icono">
                 <p class="texto">Pedidos</p>
             </a>
         </div>
     </div>
 </main>
+
 {% endblock %}

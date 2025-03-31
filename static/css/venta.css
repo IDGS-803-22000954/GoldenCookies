@@ -11,16 +11,6 @@ h1{
 font-size:70px;
 }
 
-.encabezado {
-    background-color: #CA8014;
-}
-
-.logo {
-    margin: 20px;
-    width: 150px;
-    height: 150px;
-    border-radius: 10px;
-}
 
 .titulo {
     margin-top:20px;

@@ -1,4 +1,5 @@
-{# templates/index_B.html #} {% extends "layout_B.html" %} {% block main %}
+{# templates/index_B.html #} {% extends "layout_B.html" %}
+{% block main %}
 
 <main class="row justify-content-center">
     <div class="container-buttons d-flex justify-content-center flex-wrap">
@@ -29,11 +30,11 @@
                 <img src="../static/img/receta.png" alt="Recetas" class="icono">
                 <p class="texto">Recetas</p>
             </a>
-            <a href="#" class="boton">
+            <a href="{{url_for('venta.venta_pedido')}}" class="boton">
                 <img src="../static/img/pedido.png" alt="Pedidos" class="icono">
                 <p class="texto">Pedidos</p>
             </a>
-            <a href="#" class="boton">
+            <a href="{{url_for('venta.ventas')}}" class="boton">
                 <img src="../static/img/ventas.png" alt="Ventas" class="icono">
                 <p class="texto">Ventas</p>
             </a>
