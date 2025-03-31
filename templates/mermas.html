@@ -25,6 +25,23 @@
         <img src="../static/img/logo_goldenCookies.jpeg" class="logo" />
       </a>
     </header>
+    <div class="flash-messages container">
+      {% with messages = get_flashed_messages(with_categories=true) %} {% if
+      messages %} {% for category, message in messages %}
+      <div
+        class="alert alert-{{ category }} alert-dismissible fade show"
+        role="alert"
+      >
+        {{ message }}
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="alert"
+          aria-label="Cerrar"
+        ></button>
+      </div>
+      {% endfor %} {% endif %} {% endwith %}
+    </div>
     <div class="container mt-4">
       <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>Registro de Mermas</h1>
