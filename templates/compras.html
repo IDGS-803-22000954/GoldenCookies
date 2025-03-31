@@ -33,7 +33,7 @@
   <div class="container mx-auto px-4 py-8">
 
     
-    <div class="bg-white p-6 rounded-lg shadow-md">
+    
         <form method="POST" action="{{ url_for('compras_bp.listar_compras') }}">
             {{ form.hidden_tag() }}
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
@@ -42,32 +42,32 @@
             <div class="column">
             
                 <div class="mb-4">
-                    {{ form.id_insumo.label(class="block text-gray-700 font-bold mb-2") }}
-                    {{ form.id_insumo(class="w-full p-2 border rounded") }}
+                    {{ form.id_insumo.label(class="block font-bold mb-2") }}
+                    {{ form.id_insumo(style="background-color: white;", class="w-full p-2 border rounded") }}
                     {% for error in form.id_insumo.errors %}
                         <p class="text-red-500 text-xs italic">{{ error }}</p>
                     {% endfor %}
                 </div>
                 
                 <div class="mb-4">
-                    {{ form.id_proveedor.label(class="block text-gray-700 font-bold mb-2") }}
-                    {{ form.id_proveedor(class="w-full p-2 border rounded") }}
+                    {{ form.id_proveedor.label(class="block font-bold mb-2") }}
+                    {{ form.id_proveedor(style="background-color: white;", class="w-full p-2 border rounded") }}
                     {% for error in form.id_proveedor.errors %}
                         <p class="text-red-500 text-xs italic">{{ error }}</p>
                     {% endfor %}
                 </div>
                 
                 <div class="mb-4">
-                    {{ form.cantidad.label(class="block text-gray-700 font-bold mb-2") }}
-                    {{ form.cantidad(class="w-full p-2 border rounded") }}
+                    {{ form.cantidad.label(class="block font-bold mb-2") }}
+                    {{ form.cantidad(style="background-color: white;", class="w-full p-2 border rounded") }}
                     {% for error in form.cantidad.errors %}
                         <p class="text-red-500 text-xs italic">{{ error }}</p>
                     {% endfor %}
                 </div>
                 
                 <div class="mb-4">
-                    {{ form.costo_unitario.label(class="block text-gray-700 font-bold mb-2") }}
-                    {{ form.costo_unitario(class="w-full p-2 border rounded") }}
+                    {{ form.costo_unitario.label(class="block font-bold mb-2") }}
+                    {{ form.costo_unitario(style="background-color: white;", class="w-full p-2 border rounded") }}
                     {% for error in form.costo_unitario.errors %}
                         <p class="text-red-500 text-xs italic">{{ error }}</p>
                     {% endfor %}
@@ -75,24 +75,24 @@
             </div>
             <div class="column">
                 <div class="mb-4">
-                    {{ form.presentacion.label(class="block text-gray-700 font-bold mb-2") }}
-                    {{ form.presentacion(class="w-full p-2 border rounded") }}
+                    {{ form.presentacion.label(class="block font-bold mb-2") }}
+                    {{ form.presentacion(style="background-color: white;", class="w-full p-2 border rounded") }}
                     {% for error in form.presentacion.errors %}
                         <p class="text-red-500 text-xs italic">{{ error }}</p>
                     {% endfor %}
                 </div>
                 
                 <div class="mb-4">
-                    {{ form.fecha_compra.label(class="block text-gray-700 font-bold mb-2") }}
-                    {{ form.fecha_compra(class="w-full p-2 border rounded") }}
+                    {{ form.fecha_compra.label(class="block font-bold mb-2") }}
+                    {{ form.fecha_compra(style="background-color: white;", class="w-full p-2 border rounded") }}
                     {% for error in form.fecha_compra.errors %}
                         <p class="text-red-500 text-xs italic">{{ error }}</p>
                     {% endfor %}
                 </div>
                 
                 <div class="mb-4">
-                    {{ form.fecha_caducidad.label(class="block text-gray-700 font-bold mb-2") }}
-                    {{ form.fecha_caducidad(class="w-full p-2 border rounded") }}
+                    {{ form.fecha_caducidad.label(class="block font-bold mb-2") }}
+                    {{ form.fecha_caducidad(style="background-color: white;", class="w-full p-2 border rounded") }}
                     {% for error in form.fecha_caducidad.errors %}
                         <p class="text-red-500 text-xs italic">{{ error }}</p>
                     {% endfor %}
@@ -101,17 +101,17 @@
             </div>
         </div>
             <div class="button-container">
-            <div class="flex justify-end mt-6">
-                <button type="submit"  style="margin-right: 10px;"class="btn btn-warning">
+            
+                <button type="submit"  style="background-color: #006BE5; border-radius:13px; border-color:black; color:black;" class="btn btn-warning">
                     Registrar Compra
                 </button>
-                <a href="{{ url_for('compras_bp.listar_compras') }}" class="btn btn-warning">
+                <a href="{{ url_for('compras_bp.listar_compras') }}" style="background-color: #DC3545; border-radius:13px; border-color:black; color:black;" class="btn btn-warning">
                     Cancelar
                 </a>
-            </div>
+            
         </div>
         </form>
-    </div>
+    
 </div>
 </div>
 
