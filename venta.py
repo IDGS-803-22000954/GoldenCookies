@@ -97,11 +97,12 @@ def realizar_venta():
 
             db.session.commit()
             flash('Venta realizada con éxito', 'success')
-            mensaje_ticket = "¿Desea imprimir su ticket?"
-            return render_template('terminar_venta.html', mensaje_ticket=mensaje_ticket)
+            session.pop('ventas_acumuladas', None)
+            return redirect(url_for('venta.ventas'))
+
         except Exception as e:
             db.session.rollback()
-            flash(f'Error al realizar la venta: {str(e)}', 'danger')
+            flash(f'Error al realizar la venta', 'danger')
     return redirect(url_for('venta.ventas'))
 
 

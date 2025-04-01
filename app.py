@@ -11,6 +11,8 @@ from routes.insumos import insumo_bp
 from routes.proveedores import proveedor_bp
 from routes.compras import compras_bp
 from produccion.routes import produccion_bp
+from recetas.recetas import recetas_bp
+from recetas.galletas import galletas_bp
 
 app = Flask(__name__)
 app.config.from_object(DevelopmentConfig)
@@ -39,10 +41,12 @@ def index():
 	return redirect('auth/login')
 
 @app.route('/admin')
+@login_required
 def admin():
     return render_template('admin.html')
 
 @app.route('/cliente')
+@login_required
 def cliente():
     return render_template('cliente.html')
 
@@ -53,6 +57,8 @@ app.register_blueprint(compras_bp, url_prefix='/compras')
 app.register_blueprint(venta)
 app.register_blueprint(pedidos)
 app.register_blueprint(produccion_bp, url_prefix='/produccion')
+app.register_blueprint(recetas_bp, url_prefix='/recetas')
+app.register_blueprint(galletas_bp, url_prefix='/galletas')
 
 if __name__ == '__main__':
     csrf.init_app(app)

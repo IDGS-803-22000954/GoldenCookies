@@ -323,3 +323,197 @@ h5 {
   color: inherit;
   cursor: pointer;
 }
+/* Estilos para los contenedores de formularios */
+.form-container {
+  background-color: #ffffff;
+  border-radius: 15px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+  padding: 25px;
+  margin: 20px auto;
+  width: 90%;
+  max-width: 900px;
+  border: 2px solid #ebc280;
+  position: relative;
+  overflow: hidden;
+}
+
+.form-container::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  background-color: #ca8014;
+}
+
+/* Estilo para organizar las columnas del formulario */
+.form-columns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.column {
+  flex: 1;
+  min-width: 300px;
+}
+
+/* Estilos para las etiquetas */
+.form-container label {
+  display: block;
+  font-weight: bold;
+  color: #4a3520;
+  margin-bottom: 8px;
+  font-family: "Kavoon", serif;
+}
+
+/* Estilos para los campos de formulario */
+.form-container input[type="text"],
+.form-container input[type="number"],
+.form-container input[type="date"],
+.form-container select {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 15px;
+  border: 2px solid #ebc280;
+  border-radius: 10px;
+  background-color: #fff8e7;
+  color: #4a3520;
+  font-family: inherit;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.form-container input:focus,
+.form-container select:focus {
+  border-color: #ca8014;
+  box-shadow: 0 0 0 3px rgba(202, 128, 20, 0.2);
+  outline: none;
+}
+
+/* Estilos para los mensajes de error */
+.text-red-500 {
+  color: #dc3545;
+  font-size: 0.85rem;
+  margin-top: -10px;
+  margin-bottom: 10px;
+  display: block;
+}
+
+/* Estilos para los botones */
+.button-container {
+  margin-top: 25px;
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+}
+
+.button-container button,
+.button-container a {
+  padding: 12px 24px;
+  font-family: "Kavoon", serif;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  text-decoration: none;
+  display: inline-block;
+  text-align: center;
+}
+
+/* Mantenemos los estilos originales de los botones */
+.btn-warning {
+  background-color: #ca8014 !important;
+  color: white !important;
+  border: 2px solid #b26c04 !important;
+}
+
+.btn-warning:hover {
+  background-color: #d77230 !important;
+  border-color: #cf631b !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Estilos para la tabla */
+.container {
+  margin-top: 40px;
+  width: 90%;
+  max-width: 1200px;
+}
+
+.table {
+  margin-top: 30px;
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.table thead th {
+  background-color: #cf631b !important;
+  color: white !important;
+  border: none;
+  padding: 15px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.table tbody td {
+  background-color: #ebc280 !important;
+  border: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 12px;
+  color: #4a3520;
+}
+
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.table tbody tr:hover td {
+  background-color: #f0d9a2 !important;
+}
+
+/* Estilo para el botón de nueva compra */
+.bg-green-500 {
+  background-color: #28a745 !important;
+  color: white !important;
+  padding: 10px 20px;
+  border-radius: 10px;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  font-weight: bold;
+}
+
+.bg-green-500:hover {
+  background-color: #218838 !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Estilos responsivos */
+@media (max-width: 768px) {
+  .form-columns {
+    flex-direction: column;
+  }
+
+  .column {
+    width: 100%;
+  }
+
+  .button-container {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .button-container button,
+  .button-container a {
+    width: 80%;
+    margin-bottom: 10px;
+  }
+}

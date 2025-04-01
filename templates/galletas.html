@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Galletas</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Kavoon&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../static/css/galletas.css" />
+  </head>
+  <body>
+    <header class="encabezado">
+      <div class="container d-flex justify-content-between align-items-center">
+        <a href="../index.html">
+          <img
+            src="../static/img/logo.png"
+            alt="Logo"
+            class="logo"
+          />
+        </a>
+      </div>
+    </header>
+
+    <div class="container my-5">
+      <div class="text-center">
+        <img src="../static/img/galletas.png" alt="Receta" class="icono" />
+        <h1 class="display-4 fw-bold">Galletas</h1>
+      </div>
+
+      <div class="text-center mt-4">
+        <button
+          class="btn btn-warning text-white fw-bold"
+          onclick="mostrarFormulario('form-agregar')"
+        >
+          <i class="fas fa-plus"></i> Agregar Galleta
+        </button>
+      </div>
+
+      <div id="form-agregar" class="mt-4">
+        <h5>Agregar Galleta</h5>
+        <form method="POST" action="{{ url_for('galletas.agregar_galleta') }}">
+          {{ form.hidden_tag() }}
+
+          <div class="mb-3">
+            <label for="nombre" class="form-label">Nombre de la Galleta:</label>
+            {{ form.nombre(class="form-control", required=True) }}
+          </div>
+
+          <div class="mb-3">
+            <label for="precio_sugerido" class="form-label"
+              >Precio Sugerido:</label
+            >
+            {{ form.precio_sugerido(class="form-control", required=True) }}
+          </div>
+
+          <div class="mb-3">
+            <label for="peso_unidad" class="form-label">Peso por Unidad:</label>
+            {{ form.peso_unidad(class="form-control", required=True) }}
+          </div>
+
+          <div class="mb-3">
+            <label for="descripcion" class="form-label">Descripción:</label>
+            {{ form.descripcion(class="form-control", rows=3, required=True) }}
+          </div>
+
+          <div class="text-center">
+            <button type="submit" class="btn btn-primary">
+              Guardar Galleta
+            </button>
+            <button
+              type="button"
+              class="btn btn-secondary"
+              onclick="ocultarFormulario('form-agregar')"
+            >
+              Cancelar
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <div id="form-modificar" class="mt-4" style="display: none">
+        <h5>Modificar Galleta</h5>
+        <form method="POST" id="formModificar" action="">
+          {{ form.hidden_tag() }}
+          <input type="hidden" id="id_galleta" name="id_galleta" />
+
+          <div class="mb-3">
+            <label for="nombre_mod" class="form-label"
+              >Nombre de la Galleta:</label
+            >
+            <input
+              type="text"
+              id="nombre_mod"
+              name="nombre"
+              class="form-control"
+              required
+            />
+          </div>
+
+          <div class="mb-3">
+            <label for="precio_sugerido_mod" class="form-label"
+              >Precio Sugerido:</label
+            >
+            <input
+              type="text"
+              id="precio_sugerido_mod"
+              name="precio_sugerido"
+              class="form-control"
+              required
+            />
+          </div>
+
+          <div class="mb-3">
+            <label for="peso_unidad_mod" class="form-label"
+              >Peso por Unidad:</label
+            >
+            <input
+              type="text"
+              id="peso_unidad_mod"
+              name="peso_unidad"
+              class="form-control"
+              required
+            />
+          </div>
+
+          <div class="mb-3">
+            <label for="descripcion_mod" class="form-label">Descripción:</label>
+            <textarea
+              id="descripcion_mod"
+              name="descripcion"
+              class="form-control"
+              rows="3"
+              required
+            ></textarea>
+          </div>
+
+          <div class="text-center">
+            <button type="submit" class="btn btn-warning">
+              Modificar Galleta
+            </button>
+            <button
+              type="button"
+              class="btn btn-secondary"
+              onclick="ocultarFormulario('form-modificar')"
+            >
+              Cancelar
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <div class="card mt-5 p-4">
+        <h2 class="text-center">Galletas Registradas</h2>
+
+        <table class="table table-striped table-hover">
+          <thead class="table-dark">
+            <tr>
+              <th>Nombre</th>
+              <th>Precio Sugerido</th>
+              <th>Peso por Unidad</th>
+              <th>Descripción</th>
+              <th>Modificar</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for galleta in galletas %}
+            <tr>
+              <td>{{ galleta.nombre }}</td>
+              <td>{{ galleta.precio_sugerido }}</td>
+              <td>{{ galleta.peso_unidad }}</td>
+              <td>{{ galleta.descripcion }}</td>
+              <td>
+                <button
+                  class="btn btn-warning btn-sm"
+                  onclick="mostrarFormularioModificar({{ galleta.id_galleta }}, '{{ galleta.nombre }}', '{{ galleta.precio_sugerido }}', '{{ galleta.peso_unidad }}', '{{ galleta.descripcion }}')"
+                >
+                  <i class="fas fa-edit"></i>
+                </button>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <script>
+      function mostrarFormulario(id) {
+        document.getElementById(id).style.display = "block";
+      }
+      function ocultarFormulario(id) {
+        document.getElementById(id).style.display = "none";
+      }
+      function mostrarFormularioModificar(
+        id,
+        nombre,
+        precio,
+        peso,
+        descripcion
+      ) {
+        document.getElementById("form-modificar").style.display = "block";
+        document.getElementById("id_galleta").value = id;
+        document.getElementById("nombre_mod").value = nombre;
+        document.getElementById("precio_sugerido_mod").value = precio;
+        document.getElementById("peso_unidad_mod").value = peso;
+        document.getElementById("descripcion_mod").value = descripcion;
+        document.getElementById(
+          "formModificar"
+        ).action = `/galletas/modificar/${id}`;
+      }
+    </script>
+  </body>
+</html>

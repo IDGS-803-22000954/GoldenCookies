@@ -22,7 +22,7 @@ def verificar_roles(*roles_permitidos):
             print(f"Rol del usuario: {rol_usuario}")
 
             if rol_usuario not in roles_permitidos:
-                return jsonify({'mensaje': 'Acceso denegado, rol no autorizado'}), 403
+                return render_template('404.html'), 404
 
             return f(*args, **kwargs)
 
