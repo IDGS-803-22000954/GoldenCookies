@@ -1,14 +1,14 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
-from flask_login import login_user, logout_user
+from flask_login import login_user, logout_user, login_required
 import requests
-# Asegúrate de que el modelo esté bien definido en models.py
 from models import usuario
 from werkzeug.security import check_password_hash, generate_password_hash
 from utils import generar_codigo_2fa  # Importa funciones auxiliares
 from models import db
-from forms import loginForm, RegistroForm
+from forms import loginForm, RegistroForm, RegistroForm_adm
 from functools import wraps
 from flask import jsonify
+from datetime import datetime, timedelta
 
 auth = Blueprint('auth', __name__)
 
@@ -17,7 +17,6 @@ def verificar_roles(*roles_permitidos):
     def decorador(f):
         @wraps(f)
         def funcion_verificada(*args, **kwargs):
-            # Suponemos que el rol del usuario se almacena en la sesión
             rol_usuario = session.get('rol', None)
             print(f"Rol del usuario: {rol_usuario}")
 
@@ -47,7 +46,7 @@ def login():
 
         if not result.get('success'):
             flash('Por favor completa el reCAPTCHA.', 'danger')
-            return redirect(url_for('auth.login'))
+            return redirect(url_for('login'))
 
         nombre_usuario = form.username.data
         contrasenia = form.password.data
@@ -56,11 +55,11 @@ def login():
 
         if not user:
             flash('El usuario no existe. Regístrate primero.', 'warning')
-            return redirect(url_for('auth.login'))
+            return redirect(url_for('login'))
 
         if user.bloqueado:
             flash('Tu cuenta está bloqueada. Contacta al soporte.', 'danger')
-            return redirect(url_for('auth.login'))
+            return redirect(url_for('login'))
 
         if not check_password_hash(user.contrasenia, contrasenia):
             user.intentos_fallidos += 1
@@ -68,16 +67,19 @@ def login():
                 user.bloqueado = True
                 flash('Cuenta bloqueada por intentos fallidos.', 'danger')
             db.session.commit()
-            return redirect(url_for('auth.login'))
+            return redirect(url_for('login'))
 
         # Restablecer intentos fallidos
         user.intentos_fallidos = 0
+        user.ultimo_login = datetime.now()
         db.session.commit()
+
+        session['id_usuario'] = user.id_usuario
+        session['expiracion_sesion'] = (
+            datetime.now() + timedelta(seconds=30)).timestamp()
 
         generar_codigo_2fa(user)
 
-        session['id_usuario'] = user.id_usuario
-        session['rol'] = user.rol
         return redirect(url_for('auth.verificar_codigo_2fa'))
 
     return render_template('auth/login.html', form=form)
@@ -103,6 +105,13 @@ def registro():
             flash('Por favor completa el reCAPTCHA.', 'danger')
             return redirect(url_for('auth.registro'))
 
+            # Verificar si el nombre de usuario ya existe en la base de datos
+        usuario_existente = usuario.query.filter_by(
+            nombre_usuario=form.nombre_usuario.data).first()
+        if usuario_existente:
+            flash('El nombre de usuario ya está en uso. Por favor, elige otro.', 'danger')
+            return redirect(url_for('auth.registro_adm'))
+
         # Hashear la contraseña antes de almacenarla
         hashed_password = generate_password_hash(form.contrasenia.data)
 
@@ -111,11 +120,16 @@ def registro():
             nombre_usuario=form.nombre_usuario.data,
             telefono=form.telefono.data,
             email=form.email.data,
-            contrasenia=hashed_password  # Guardar la contraseña encriptada
+            contrasenia=hashed_password,  # Guardar la contraseña encriptada
+            ultimo_login=datetime.utcnow()
         )
 
         db.session.add(user)
         db.session.commit()
+
+        session['id_usuario'] = user.id_usuario
+        session['expiracion_sesion'] = (
+            datetime.utcnow() + timedelta(seconds=20)).timestamp()
 
         # Autenticar al usuario recién registrado
         login_user(user)
@@ -130,8 +144,6 @@ def registro():
 def logout():
     logout_user()  # Cierra la sesión
     flash("Has cerrado sesión exitosamente", "success")  # Mensaje opcional
-    session.pop('id_usuario', None)  # Elimina el ID de usuario de la sesión
-    session.pop('rol', None)  # Elimina el rol de usuario de la sesión
     return redirect(url_for('auth.login'))
 
 
@@ -154,9 +166,9 @@ def verificar_codigo_2fa():
             if user.rol.lower() == 'admin':
                 return redirect(url_for('admin'))
             elif user.rol.lower() == 'produccion':
-                return redirect(url_for('produccion.index'))
+                return redirect(url_for('produccion'))
             elif user.rol.lower() == 'ventas':
-                return redirect(url_for('venta.ventas'))
+                return redirect(url_for('ventas'))
             elif user.rol.lower() == 'cliente':
                 return redirect(url_for('cliente'))
             else:
@@ -184,6 +196,7 @@ def reenviar_codigo():
 
 
 @auth.route('/perfil', methods=['GET', 'POST'])
+@login_required
 def editar_perfil():
     if 'id_usuario' not in session:
         flash("Debes iniciar sesión para acceder a tu perfil.", "warning")
@@ -206,3 +219,130 @@ def editar_perfil():
         return redirect(url_for('auth.editar_perfil'))
 
     return render_template('perfil.html', usuario=user)
+
+
+@auth.route('/redirigir')
+def redirigir():
+    # Obtener el rol del usuario desde la sesión (o de donde lo manejes)
+    user = usuario.query.get(session.get('id_usuario'))
+    rol = session.get('rol', 'admin')  # Por defecto "cliente"
+
+    # Diccionario con las rutas según el rol
+    if user.rol.lower() == 'admin':
+        return redirect(url_for('admin'))
+    elif user.rol.lower() == 'produccion':
+        return redirect(url_for('produccion'))
+    elif user.rol.lower() == 'ventas':
+        return redirect(url_for('ventas'))
+    elif user.rol.lower() == 'cliente':
+        return redirect(url_for('cliente'))
+    else:
+        flash('Rol no reconocido.', 'danger')
+        return redirect(url_for('auth.login'))
+
+
+@auth.route('/registro_adm', methods=['GET', 'POST'])
+def registro_adm():
+    form = RegistroForm_adm()
+
+    roles_permitidos = ['admin', 'cliente', 'ventas', 'produccion']
+
+    if form.validate_on_submit():
+
+        rol_seleccionado = form.rol.data
+        if rol_seleccionado not in roles_permitidos:
+            flash('Rol no válido.', 'danger')
+            return redirect(url_for('auth.registro_adm'))
+
+            # Verificar si el nombre de usuario ya existe en la base de datos
+        usuario_existente = usuario.query.filter_by(
+            nombre_usuario=form.nombre_usuario.data).first()
+        if usuario_existente:
+            flash('El nombre de usuario ya está en uso. Por favor, elige otro.', 'danger')
+            return redirect(url_for('auth.registro_adm'))
+
+        # Hashear la contraseña antes de almacenarla
+        hashed_password = generate_password_hash(form.contrasenia.data)
+
+        user = usuario(
+            nombre=form.nombre.data,
+            nombre_usuario=form.nombre_usuario.data,
+            telefono=form.telefono.data,
+            email=form.email.data,
+            contrasenia=hashed_password,  # Guardar la contraseña encriptada
+            rol=rol_seleccionado
+        )
+
+        db.session.add(user)
+        db.session.commit()
+
+        # Autenticar al usuario recién registrado
+        login_user(user)
+
+        flash('Usuario registrado y autenticado con éxito!', 'success')
+        return render_template('/registro_adm.html', form=form)
+
+    return render_template('/registro_adm.html', form=form)
+
+
+@auth.route('/expirada')
+def expirada():
+    expiracion = verificar_expiracion_sesion()
+    if expiracion:
+        return expiracion  # Redirige al logout si la sesión ha expirado
+
+    return render_template('auth/login.html')
+
+
+def verificar_expiracion_sesion():
+    if 'expiracion_sesion' in session:
+        tiempo_expiracion = session['expiracion_sesion']
+        tiempo_actual = datetime.now().timestamp()
+
+        if tiempo_actual > tiempo_expiracion:
+            flash(
+                'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.', 'warning')
+            # Llamar a la función logout
+            return redirect(url_for('auth.logout'))
+
+
+@auth.route('/usuarios', methods=['GET'])
+def obtener_usuarios():
+    """Renderiza la página con la tabla de usuarios, permitiendo búsqueda y filtrado."""
+    filtro_rol = request.args.get('rol', '')
+    busqueda = request.args.get('q', '')
+
+    query = usuario.query
+
+    if filtro_rol:
+        query = query.filter_by(rol=filtro_rol)
+
+    if busqueda:
+        query = query.filter(
+            (usuario.nombre.ilike(f"%{busqueda}%")) |
+            (usuario.nombre_usuario.ilike(f"%{busqueda}%")) |
+            (usuario.telefono.ilike(f"%{busqueda}%")) |
+            (usuario.email.ilike(f"%{busqueda}%")) |
+            (usuario.rol.ilike(f"%{busqueda}%"))
+        )
+
+    usuarios = query.all()
+
+    return render_template('registro_adm.html', usuarios=usuarios)
+
+
+@auth.route('/eliminar_usuario/<int:id>', methods=['POST'])
+def eliminar_usuario(id):
+    """Elimina un usuario por ID."""
+    usuario = usuario.query.get_or_404(id)
+    db.session.delete(usuario)
+    db.session.commit()
+    flash('Usuario eliminado correctamente.', 'success')
+    return redirect(url_for('auth.registro_adm'))
+
+
+@auth.route('/obtener_usuario/<int:id>', methods=['GET'])
+def obtener_usuario(id):
+    """Obtiene los datos de un usuario específico para edición."""
+    usuario = usuario.query.get_or_404(id)
+    return render_template('registro_adm.html', usuario=usuario)
