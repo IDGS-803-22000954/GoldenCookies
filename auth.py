@@ -77,6 +77,7 @@ def login():
         session['id_usuario'] = user.id_usuario
         session['expiracion_sesion'] = (
             datetime.now() + timedelta(seconds=30)).timestamp()
+        session['rol'] = user.rol.lower()
 
         generar_codigo_2fa(user)
 
@@ -130,6 +131,7 @@ def registro():
         session['id_usuario'] = user.id_usuario
         session['expiracion_sesion'] = (
             datetime.utcnow() + timedelta(seconds=20)).timestamp()
+        session['rol'] = user.rol.lower()
 
         # Autenticar al usuario recién registrado
         login_user(user)
@@ -144,6 +146,9 @@ def registro():
 def logout():
     logout_user()  # Cierra la sesión
     flash("Has cerrado sesión exitosamente", "success")  # Mensaje opcional
+    session.pop('id_usuario', None)  # Elimina el ID de usuario de la sesión
+    session.pop('rol', None)
+    session.pop('expiracion_sesion', None)  # Elimina la expiración de sesión
     return redirect(url_for('auth.login'))
 
 
@@ -242,6 +247,8 @@ def redirigir():
 
 
 @auth.route('/registro_adm', methods=['GET', 'POST'])
+@login_required
+@verificar_roles('admin')
 def registro_adm():
     form = RegistroForm_adm()
 

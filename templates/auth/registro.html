@@ -5,10 +5,14 @@
   <div class="login-box-r p-4 rounded shadow">
     <h2 class="text-center mb-4">Registro de Usuario</h2>
 
-    {% with messages = get_flashed_messages() %} {% if messages %}
+    {% with messages = get_flashed_messages(with_categories=true) %} {% if
+    messages %}
     <div class="mb-3">
-      {% for message in messages %}
-      <div class="alert alert-primary alert-dismissible fade show" role="alert">
+      {% for category, message in messages %}
+      <div
+        class="alert alert-{{ category }} alert-dismissible fade show"
+        role="alert"
+      >
         <strong>{{ message }}</strong>
         <button
           type="button"
@@ -29,40 +33,52 @@
 
       <div class="mb-3">
         {{ form.nombre.label(class="form-label fw-bold") }} {{
-        form.nombre(class="form-control custom-input", required=True) }}
+        form.nombre(class="form-control custom-input", required=True) }} {% if
+        form.nombre.errors %} {% for error in form.nombre.errors %}
+        <div class="text-danger">{{ error }}</div>
+        {% endfor %} {% endif %}
       </div>
 
       <div class="mb-3">
         {{ form.nombre_usuario.label(class="form-label fw-bold") }} {{
         form.nombre_usuario(class="form-control custom-input", required=True) }}
+        {% if form.nombre_usuario.errors %} {% for error in
+        form.nombre_usuario.errors %}
+        <div class="text-danger">{{ error }}</div>
+        {% endfor %} {% endif %}
       </div>
 
       <div class="mb-3">
         {{ form.telefono.label(class="form-label fw-bold") }} {{
-        form.telefono(class="form-control custom-input", required=True) }}
+        form.telefono(class="form-control custom-input", required=True) }} {% if
+        form.telefono.errors %} {% for error in form.telefono.errors %}
+        <div class="text-danger">{{ error }}</div>
+        {% endfor %} {% endif %}
       </div>
 
       <div class="mb-3">
         {{ form.email.label(class="form-label fw-bold") }} {{
-        form.email(class="form-control custom-input", required=True) }}
+        form.email(class="form-control custom-input", required=True) }} {% if
+        form.email.errors %} {% for error in form.email.errors %}
+        <div class="text-danger">{{ error }}</div>
+        {% endfor %} {% endif %}
       </div>
 
       <div class="mb-3">
         {{ form.contrasenia.label(class="form-label fw-bold") }} {{
         form.contrasenia(class="form-control custom-input", required=True) }} {%
-        if form.contrasenia.errors %}
-        <div class="alert alert-danger mt-2">
-          {% for error in form.contrasenia.errors %}
-          <p>{{ error }}</p>
-          {% endfor %}
-        </div>
-        {% endif %}
+        if form.contrasenia.errors %} {% for error in form.contrasenia.errors %}
+        <div class="text-danger">{{ error }}</div>
+        {% endfor %} {% endif %}
       </div>
 
       <div class="mb-3">
         {{ form.confirmar_contrasenia.label(class="form-label fw-bold") }} {{
         form.confirmar_contrasenia(class="form-control custom-input",
-        required=True) }}
+        required=True) }} {% if form.confirmar_contrasenia.errors %} {% for
+        error in form.confirmar_contrasenia.errors %}
+        <div class="text-danger">{{ error }}</div>
+        {% endfor %} {% endif %}
       </div>
 
       <div class="text-center mb-3">
