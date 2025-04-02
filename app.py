@@ -6,7 +6,7 @@ from models import Insumo, usuario, db
 from forms_compras import InsumoForm
 from venta import venta
 from pedidos import pedidos
-from auth import auth
+from auth import auth, verificar_roles
 from routes.insumos import insumo_bp
 from routes.proveedores import proveedor_bp
 from routes.compras import compras_bp
@@ -38,14 +38,17 @@ def index():
 	return redirect('auth/login')
 
 @app.route('/admin')
+@login_required
 def admin():
     return render_template('admin.html')
 
 @app.route('/produccion')
+@login_required
 def produccion():
     return render_template('produccion.html')
 
 @app.route('/cliente')
+@login_required
 def cliente():
     return render_template('cliente.html')
 

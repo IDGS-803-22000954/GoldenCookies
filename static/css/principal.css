@@ -175,3 +175,44 @@
             margin-top: 5px;
             font-size: 14px;
         }
+
+        .container-rr {
+            display: fixed;
+            justify-content: center;
+            align-items: center; /* Permite que el contenedor ocupe al menos el 100% de la altura de la ventana */
+            padding: 20px;
+             /* Agrega un poco de espacio */
+        }
+
+        .login-box-rr {
+            width: 800px;
+            padding: 20px;
+            background-color: #d4af8c;
+            border: 5px solid #4d2c14;
+            border-radius: 20px;
+            text-align: center;
+            margin: auto; /* Centra horizontalmente el contenedor */
+            margin-top: 160px;
+            margin-left: 350px;
+            top: auto;
+        }
+
+
+        /* Estilos personalizados para el formulario */
+.form-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    width: 700px;
+}
+
+.form-column {
+    width: 300px; /* Ajuste para dividir en dos columnas */
+}
+
+/* Ajuste para el botón */
+.form-button {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+}

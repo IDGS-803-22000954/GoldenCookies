@@ -12,7 +12,9 @@
 </head>
 <body>
 <header class="header">
-    <img src="../static/img/logo.png" alt="Logo Golden Cookie" class="logo"> 
+    <a href="{{ url_for('auth.redirigir') }}" class="logo">
+      <img src="../static/img/logo.png" alt="Logo" style="cursor: pointer;" class="logo">
+    </a>
     <form action="{{ url_for('auth.logout') }}" method="POST">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
       <button type="submit" class="btn btn-danger">Cerrar sesión</button>

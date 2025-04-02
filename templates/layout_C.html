@@ -12,8 +12,9 @@
 </head>
 <body>
   <header class="header">
-    <img src="../static/img/logo.png" alt="Logo Golden Cookie" class="logo">
-    
+    <a href="{{ url_for('cliente') }}" class="logo">
+        <img src="../static/img/logo.png" alt="Logo" style="cursor: pointer;" class="logo">
+    </a>
     <!-- Menú desplegable -->
     <div class="dropdown">
         <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
