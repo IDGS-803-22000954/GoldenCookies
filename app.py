@@ -13,6 +13,7 @@ from routes.compras import compras_bp
 from produccion.routes import produccion_bp
 from recetas.recetas import recetas_bp
 from recetas.galletas import galletas_bp
+from auth import verificar_roles
 
 app = Flask(__name__)
 app.config.from_object(DevelopmentConfig)
@@ -46,10 +47,12 @@ def index():
 
 @app.route('/admin')
 @login_required
+@verificar_roles('admin')
 def admin():
     return render_template('admin.html')
 
 @app.route('/cliente')
+@verificar_roles('cliente','admin')
 @login_required
 def cliente():
     return render_template('cliente.html')
