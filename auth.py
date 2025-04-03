@@ -46,7 +46,7 @@ def login():
 
         if not result.get('success'):
             flash('Por favor completa el reCAPTCHA.', 'danger')
-            return redirect(url_for('login'))
+            return redirect(url_for('auth.login'))
 
         nombre_usuario = form.username.data
         contrasenia = form.password.data
@@ -55,11 +55,11 @@ def login():
 
         if not user:
             flash('El usuario no existe. Regístrate primero.', 'warning')
-            return redirect(url_for('login'))
+            return redirect(url_for('auth.login'))
 
         if user.bloqueado:
             flash('Tu cuenta está bloqueada. Contacta al soporte.', 'danger')
-            return redirect(url_for('login'))
+            return redirect(url_for('auth.login'))
 
         if not check_password_hash(user.contrasenia, contrasenia):
             user.intentos_fallidos += 1
@@ -67,7 +67,7 @@ def login():
                 user.bloqueado = True
                 flash('Cuenta bloqueada por intentos fallidos.', 'danger')
             db.session.commit()
-            return redirect(url_for('login'))
+            return redirect(url_for('auth.login'))
 
         # Restablecer intentos fallidos
         user.intentos_fallidos = 0
@@ -171,9 +171,9 @@ def verificar_codigo_2fa():
             if user.rol.lower() == 'admin':
                 return redirect(url_for('admin'))
             elif user.rol.lower() == 'produccion':
-                return redirect(url_for('produccion'))
+                return redirect(url_for('produccion.index'))
             elif user.rol.lower() == 'ventas':
-                return redirect(url_for('ventas'))
+                return redirect(url_for('venta.ventas'))
             elif user.rol.lower() == 'cliente':
                 return redirect(url_for('cliente'))
             else:
@@ -238,7 +238,7 @@ def redirigir():
     elif user.rol.lower() == 'produccion':
         return redirect(url_for('produccion'))
     elif user.rol.lower() == 'ventas':
-        return redirect(url_for('ventas'))
+        return redirect(url_for('venta.ventas'))
     elif user.rol.lower() == 'cliente':
         return redirect(url_for('cliente'))
     else:
@@ -335,7 +335,7 @@ def obtener_usuarios():
 
     usuarios = query.all()
 
-    return render_template('registro_adm.html', usuarios=usuarios)
+    return render_template('registro_adm.html', usuario=usuarios)
 
 
 @auth.route('/eliminar_usuario/<int:id>', methods=['POST'])

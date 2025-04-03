@@ -49,13 +49,6 @@ def index():
 def admin():
     return render_template('admin.html')
 
-
-@app.route('/produccion')
-@login_required
-def produccion():
-    return render_template('produccion.html')
-
-
 @app.route('/cliente')
 @login_required
 def cliente():
