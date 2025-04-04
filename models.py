@@ -9,31 +9,14 @@ import datetime
 
 db = SQLAlchemy()
 
-
-class Log(db.Model):
-    __tablename__ = 'log'
-    __table_args__ = (
-        ForeignKeyConstraint(
-            ['id_usuario'], ['usuario.id_usuario'], name='log_ibfk_1'),
-        Index('id_usuario', 'id_usuario')
-    )
-
-    id_log: Mapped[int] = mapped_column(Integer, primary_key=True)
-    tipo_evento: Mapped[str] = mapped_column(String(50))
-    fecha_evento: Mapped[datetime.datetime] = mapped_column(DateTime)
-    id_usuario: Mapped[Optional[int]] = mapped_column(Integer)
-
-    usuario: Mapped[Optional['usuario']] = relationship(
-        'usuario', back_populates='log')
-
-
 class Galleta(db.Model):
     __tablename__ = 'galleta'
 
     id_galleta: Mapped[int] = mapped_column(Integer, primary_key=True)
     nombre: Mapped[str] = mapped_column(String(100))
     cantidad_galletas: Mapped[int] = mapped_column(Integer)
-    precio_sugerido: Mapped[float] = mapped_column(Float)
+    precio: Mapped[float] = mapped_column(Float)
+    imagen: Mapped[Optional[str]] = mapped_column(String(50))
     peso_unidad: Mapped[float] = mapped_column(Float)
     descripcion: Mapped[Optional[str]] = mapped_column(String(255))
     created_at: Mapped[Optional[datetime.datetime]] = mapped_column(
@@ -89,7 +72,6 @@ class usuario(db.Model, UserMixin):
     intentos_fallidos = db.Column(db.Integer, default=0)
     bloqueado = db.Column(db.Boolean, default=False)
     codigo_2fa = db.Column(db.String(8), nullable=True)
-    log: Mapped[List['Log']] = relationship('Log', back_populates='usuario')
     venta: Mapped[List['Venta']] = relationship(
         'Venta', back_populates='usuario')
     produccion: Mapped[List['Produccion']] = relationship(
@@ -127,8 +109,7 @@ class LoteInsumo(db.Model):
     id_lote_insumo: Mapped[int] = mapped_column(Integer, primary_key=True)
     cantidad: Mapped[float] = mapped_column(Float)
     cantidad_disponible: Mapped[float] = mapped_column(Float)
-    costo_unitario: Mapped[float] = mapped_column(Float)
-    fecha_compra: Mapped[datetime.datetime] = mapped_column(DateTime)
+    costo_total: Mapped[float] = mapped_column(Float)
     fecha_caducidad: Mapped[datetime.datetime] = mapped_column(DateTime)
     id_insumo: Mapped[Optional[int]] = mapped_column(Integer)
     created_at: Mapped[Optional[datetime.datetime]] = mapped_column(
@@ -178,10 +159,8 @@ class Venta(db.Model):
     )
 
     id_venta: Mapped[int] = mapped_column(Integer, primary_key=True)
-    fecha: Mapped[datetime.datetime] = mapped_column(DateTime)
     tipo_venta: Mapped[str] = mapped_column(String(50))
     total: Mapped[float] = mapped_column(Float)
-    metodo_pago: Mapped[str] = mapped_column(String(50))
     id_usuario: Mapped[Optional[int]] = mapped_column(Integer)
     created_at: Mapped[Optional[datetime.datetime]] = mapped_column(
         TIMESTAMP, server_default=text('CURRENT_TIMESTAMP'))
@@ -240,8 +219,7 @@ class LoteGalleta(db.Model):
     cantidad_disponible: Mapped[int] = mapped_column(Integer)
     precio_venta: Mapped[float] = mapped_column(Float)
     costo_total_produccion: Mapped[float] = mapped_column(Float)
-    costo_unitario: Mapped[float] = mapped_column(Float)
-    fecha_produccion: Mapped[datetime.datetime] = mapped_column(DateTime)
+    costo_unitario_produccion: Mapped[float] = mapped_column(Float)
     fecha_caducidad: Mapped[datetime.datetime] = mapped_column(DateTime)
     id_galleta: Mapped[Optional[int]] = mapped_column(Integer)
     created_at: Mapped[Optional[datetime.datetime]] = mapped_column(
@@ -287,8 +265,8 @@ class RecetaInsumo(db.Model):
 class DetalleVenta(db.Model):
     __tablename__ = 'detalle_venta'
     __table_args__ = (
-        ForeignKeyConstraint(['id_lote_galleta'], [
-                             'lote_galleta.id_lote_galleta'], name='detalle_venta_ibfk_2'),
+        ForeignKeyConstraint(['id_galleta'], [
+                             'galleta.id_galleta'], name='detalle_venta_ibfk_2'),
         ForeignKeyConstraint(['id_venta'], ['venta.id_venta'],
                              name='detalle_venta_ibfk_1'),
         Index('id_lote_galleta', 'id_lote_galleta'),
@@ -304,8 +282,8 @@ class DetalleVenta(db.Model):
     created_at: Mapped[Optional[datetime.datetime]] = mapped_column(
         TIMESTAMP, server_default=text('CURRENT_TIMESTAMP'))
 
-    lote_galleta: Mapped[Optional['LoteGalleta']] = relationship(
-        'LoteGalleta', back_populates='detalle_venta')
+    galleta: Mapped[Optional['Galleta']] = relationship(
+        'Galleta', back_populates='detalle_venta')
     venta: Mapped[Optional['Venta']] = relationship(
         'Venta', back_populates='detalle_venta')
 
@@ -361,7 +339,6 @@ class Merma(db.Model):
     id_merma: Mapped[int] = mapped_column(Integer, primary_key=True)
     tipo_merma: Mapped[str] = mapped_column(String(50))
     cantidad: Mapped[float] = mapped_column(Float)
-    fecha_registro: Mapped[datetime.datetime] = mapped_column(DateTime)
     id_produccion: Mapped[Optional[int]] = mapped_column(Integer)
     id_lote_insumo: Mapped[Optional[int]] = mapped_column(Integer)
     id_lote_galleta: Mapped[Optional[int]] = mapped_column(Integer)
