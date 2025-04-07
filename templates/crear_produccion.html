@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Flowbite Flask</title>
+    <link
+      rel="stylesheet"
+      href="{{url_for('static',filename='css/output.css')}}"
+    />
+    <link
+      rel="stylesheet"
+      href="{{url_for('static',filename='css/style.css')}}"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@400;700&family=Dancing+Script:wght@400..700&family=Kavoon&family=Parisienne&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+
+  <body>
+    <header class="encabezado">
+      <a href="../index.html">
+        <img src="../static/img/logo_goldenCookies.jpeg" class="logo" />
+      </a>
+    </header>
+    <div class="flash-messages container">
+      {% with messages = get_flashed_messages(with_categories=true) %} {% if
+      messages %} {% for category, message in messages %}
+      <div
+        class="alert alert-{{ category }} alert-dismissible fade show"
+        role="alert"
+      >
+        {{ message }}
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="alert"
+          aria-label="Cerrar"
+        ></button>
+      </div>
+      {% endfor %} {% endif %} {% endwith %}
+    </div>
+    <div class="container mt-4">
+      <h1>Nueva Producción</h1>
+
+      <div class="card">
+        <div class="card-header">
+          <h5>Datos de la Producción</h5>
+        </div>
+        <div class="card-body">
+          <form method="POST" action="{{ url_for('produccion.crear') }}">
+            {{ form.csrf_token }}
+
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label>Responsable</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    value="{{ current_user.nombre }}"
+                    readonly
+                  />
+                  <small class="form-text text-muted"
+                    >Se utilizará automáticamente tu usuario</small
+                  >
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <div class="form-group">
+                  {{ form.receta.label }} {{ form.receta(class="form-control")
+                  }} {% if form.receta.errors %}
+                  <div class="invalid-feedback">
+                    {% for error in form.receta.errors %} {{ error }} {% endfor
+                    %}
+                  </div>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  {{ form.estatus.label }} {{ form.estatus(class="form-control")
+                  }} {% if form.estatus.errors %}
+                  <div class="invalid-feedback">
+                    {% for error in form.estatus.errors %} {{ error }} {% endfor
+                    %}
+                  </div>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+
+            <div class="row mt-3">
+              <div class="col-md-12 text-right">
+                <a
+                  href="{{ url_for('produccion.index') }}"
+                  class="btn btn-secondary mr-2"
+                >
+                  <i class="fas fa-times"></i> Cancelar
+                </a>
+                {{ form.submit(class="btn btn-primary") }}
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const recetaSelect = document.getElementById("receta");
+        const recetaDetails = document.createElement("div");
+        recetaDetails.className = "mt-3 p-3 bg-light rounded";
+        recetaSelect.parentNode.appendChild(recetaDetails);
+
+        recetaSelect.addEventListener("change", function () {
+          const selectedOption = this.options[this.selectedIndex];
+          const recetaId = this.value;
+
+          if (recetaId) {
+            recetaDetails.innerHTML = `<strong>Detalles de la receta:</strong> ${selectedOption.text}`;
+          } else {
+            recetaDetails.innerHTML = "";
+          }
+        });
+      });
+    </script>
+  </body>
+</html>

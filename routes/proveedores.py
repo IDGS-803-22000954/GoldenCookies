@@ -3,12 +3,16 @@ from flask_wtf.csrf import CSRFProtect
 from config import DevelopmentConfig
 from models import Insumo, Proveedor, db
 from forms_compras import InsumoForm, ProveedorForm
+from flask_login import login_required
+from auth import verificar_roles
 
 
 proveedor_bp = Blueprint('proveedor_bp', __name__, url_prefix='/proveedor_bp')
 
 
 @proveedor_bp.route("/proveedores", methods=['GET', 'POST'])
+@verificar_roles('admin')
+@login_required
 def agregarProveedor():
     formulario = ProveedorForm()  # Cambiado a ProveedorForm
     proveedores = Proveedor.query.all()

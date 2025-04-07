@@ -9,6 +9,7 @@ import datetime
 
 db = SQLAlchemy()
 
+
 class Log(db.Model):
     __tablename__ = 'log'
     __table_args__ = (
@@ -31,13 +32,15 @@ class Galleta(db.Model):
 
     id_galleta: Mapped[int] = mapped_column(Integer, primary_key=True)
     nombre: Mapped[str] = mapped_column(String(100))
+    cantidad_galletas: Mapped[int] = mapped_column(Integer)
     precio_sugerido: Mapped[float] = mapped_column(Float)
     peso_unidad: Mapped[float] = mapped_column(Float)
     descripcion: Mapped[Optional[str]] = mapped_column(String(255))
     created_at: Mapped[Optional[datetime.datetime]] = mapped_column(
         TIMESTAMP, server_default=text('CURRENT_TIMESTAMP'))
 
-    receta: Mapped[List['Receta']] = relationship('Receta', back_populates='galleta')
+    receta: Mapped[List['Receta']] = relationship(
+        'Receta', back_populates='galleta')
     lote_galleta: Mapped[List['LoteGalleta']] = relationship(
         'LoteGalleta', back_populates='galleta')
 
@@ -48,7 +51,7 @@ class Insumo(db.Model):
     id_insumo: Mapped[int] = mapped_column(Integer, primary_key=True)
     nombre: Mapped[str] = mapped_column(String(100))
     unidad_medida: Mapped[str] = mapped_column(String(60))
-    cantidad_insumo: Mapped[float]= mapped_column(Float)
+    cantidad_insumo: Mapped[float] = mapped_column(Float)
     created_at: Mapped[Optional[datetime.datetime]] = mapped_column(
         TIMESTAMP, server_default=text('CURRENT_TIMESTAMP'))
 
@@ -79,25 +82,27 @@ class usuario(db.Model, UserMixin):
     nombre_usuario = db.Column(db.String(50), nullable=False, unique=True)
     contrasenia = db.Column(db.String(255), nullable=False)
     created_at = db.Column(db.TIMESTAMP, default=datetime.datetime.utcnow)
-    rol = db.Column(db.Enum('admin', 'ventas', 'produccion', 'cliente', name='rol_enum'), nullable=False, default='cliente')
+    rol = db.Column(db.Enum('admin', 'ventas', 'produccion', 'cliente',
+                    name='rol_enum'), nullable=False, default='cliente')
     telefono = db.Column(db.String(15), nullable=False)
     ultimo_login = db.Column(db.DateTime, nullable=True)
     intentos_fallidos = db.Column(db.Integer, default=0)
     bloqueado = db.Column(db.Boolean, default=False)
     codigo_2fa = db.Column(db.String(8), nullable=True)
     log: Mapped[List['Log']] = relationship('Log', back_populates='usuario')
-    venta: Mapped[List['Venta']] = relationship('Venta', back_populates='usuario')
-    produccion: Mapped[List['Produccion']] = relationship('Produccion', back_populates='usuario')
+    venta: Mapped[List['Venta']] = relationship(
+        'Venta', back_populates='usuario')
+    produccion: Mapped[List['Produccion']] = relationship(
+        'Produccion', back_populates='usuario')
     email = db.Column(db.String(50), nullable=True)
 
     @classmethod
-    
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
-    
+
     def is_active(self):
         return not self.bloqueado  # Considera activo si no está bloqueado
 
@@ -108,7 +113,7 @@ class usuario(db.Model, UserMixin):
         return False  # Nunca anónimo si ha iniciado sesión
 
     def get_id(self):
-        return str(self.id_usuario) 
+        return str(self.id_usuario)
 
 
 class LoteInsumo(db.Model):
@@ -133,7 +138,8 @@ class LoteInsumo(db.Model):
         'Insumo', back_populates='lote_insumo')
     compra_insumo: Mapped[List['CompraInsumo']] = relationship(
         'CompraInsumo', back_populates='lote_insumo')
-    merma: Mapped[List['Merma']] = relationship('Merma', back_populates='lote_insumo')
+    merma: Mapped[List['Merma']] = relationship(
+        'Merma', back_populates='lote_insumo')
     produccion_insumo: Mapped[List['ProduccionInsumo']] = relationship(
         'ProduccionInsumo', back_populates='lote_insumo')
 
@@ -145,8 +151,8 @@ class Receta(db.Model):
             ['id_galleta'], ['galleta.id_galleta'], name='receta_ibfk_1'),
         Index('id_galleta', 'id_galleta')
     )
-
     id_receta: Mapped[int] = mapped_column(Integer, primary_key=True)
+    nombre: Mapped[str] = mapped_column(String(50))
     cantidad_produccion: Mapped[int] = mapped_column(Integer)
     id_galleta: Mapped[Optional[int]] = mapped_column(Integer)
     descripcion: Mapped[Optional[str]] = mapped_column(LONGTEXT)
@@ -181,8 +187,10 @@ class Venta(db.Model):
         TIMESTAMP, server_default=text('CURRENT_TIMESTAMP'))
     estado: Mapped[Optional[str]] = mapped_column(
         Enum('pendiente', 'lista'), server_default=text("'lista'"))
-    fecha_recogida: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime)
-    pagado: Mapped[Optional[int]] = mapped_column(TINYINT(1), server_default=text("'1'"))
+    fecha_recogida: Mapped[Optional[datetime.datetime]
+                           ] = mapped_column(DateTime)
+    pagado: Mapped[Optional[int]] = mapped_column(
+        TINYINT(1), server_default=text("'1'"))
 
     usuario: Mapped[Optional['usuario']] = relationship(
         'usuario', back_populates='venta')
@@ -248,7 +256,8 @@ class LoteGalleta(db.Model):
         'DetalleVenta', back_populates='lote_galleta')
     produccion: Mapped[List['Produccion']] = relationship(
         'Produccion', back_populates='lote_galleta')
-    merma: Mapped[List['Merma']] = relationship('Merma', back_populates='lote_galleta')
+    merma: Mapped[List['Merma']] = relationship(
+        'Merma', back_populates='lote_galleta')
 
 
 class RecetaInsumo(db.Model):
@@ -329,7 +338,8 @@ class Produccion(db.Model):
         'Receta', back_populates='produccion')
     usuario: Mapped[Optional['usuario']] = relationship(
         'usuario', back_populates='produccion')
-    merma: Mapped[List['Merma']] = relationship('Merma', back_populates='produccion')
+    merma: Mapped[List['Merma']] = relationship(
+        'Merma', back_populates='produccion')
     produccion_insumo: Mapped[List['ProduccionInsumo']] = relationship(
         'ProduccionInsumo', back_populates='produccion')
 
@@ -378,7 +388,8 @@ class ProduccionInsumo(db.Model):
         Index('id_produccion', 'id_produccion')
     )
 
-    id_produccion_insumo: Mapped[int] = mapped_column(Integer, primary_key=True)
+    id_produccion_insumo: Mapped[int] = mapped_column(
+        Integer, primary_key=True)
     cantidad_usada: Mapped[float] = mapped_column(Float)
     id_produccion: Mapped[Optional[int]] = mapped_column(Integer)
     id_lote_insumo: Mapped[Optional[int]] = mapped_column(Integer)

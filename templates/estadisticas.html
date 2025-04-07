@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Flowbite Flask</title>
+    <link
+      rel="stylesheet"
+      href="{{url_for('static',filename='css/output.css')}}"
+    />
+    <link
+      rel="stylesheet"
+      href="{{url_for('static',filename='css/style.css')}}"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@400;700&family=Dancing+Script:wght@400..700&family=Kavoon&family=Parisienne&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+
+  <body>
+    <header class="encabezado">
+      <a href="../index.html">
+        <img src="../static/img/logo_goldenCookies.jpeg" class="logo" />
+      </a>
+    </header>
+    <div class="container-fluid px-4">
+      <h1 class="mt-4 mb-4">
+        <i class="fas fa-chart-bar me-2"></i> Estadísticas de Producción
+      </h1>
+      <a href="{{ url_for('produccion.index') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Volver
+      </a>
+
+      <div class="row mb-4">
+        <div class="col-12">
+          <div class="card">
+            <div class="card-header">
+              <i class="fas fa-tasks me-2"></i> Resumen de Producciones por
+              Estatus
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-6">
+                  <div style="position: relative; height: 180px; width: 100%">
+                    <canvas id="estatusChart"></canvas>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div
+                    class="d-flex flex-wrap justify-content-center align-items-center h-100"
+                  >
+                    {% for estatus, count in estatus_count %}
+                    <div
+                      class="badge bg-{{ 'secondary' if estatus == 'programada' else 'warning' if estatus == 'en_proceso' else 'success' if estatus == 'completada' else 'danger' }} p-2 m-1"
+                    >
+                      {{ estatus|capitalize }}: {{ count }} producciones
+                    </div>
+                    {% endfor %}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-6 mb-4">
+          <div class="card">
+            <div class="card-header">
+              <i class="fas fa-cookie-bite me-2"></i> Top 5 Galletas Más
+              Producidas
+            </div>
+            <div class="card-body">
+              <div style="position: relative; height: 150px; width: 100%">
+                <canvas id="galletasChart"></canvas>
+              </div>
+              <div class="table-responsive mt-3">
+                <table class="table table-sm table-hover">
+                  <thead>
+                    <tr>
+                      <th>Galleta</th>
+                      <th class="text-end">Cantidad</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for galleta, total in top_galletas %}
+                    <tr>
+                      <td>{{ galleta }}</td>
+                      <td class="text-end">{{ total }} unidades</td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
+          <div class="card">
+            <div class="card-header">
+              <i class="fas fa-wheat-awn me-2"></i> Top 5 Insumos Más Utilizados
+            </div>
+            <div class="card-body">
+              <div style="position: relative; height: 150px; width: 100%">
+                <canvas id="insumosChart"></canvas>
+              </div>
+              <div class="table-responsive mt-3">
+                <table class="table table-sm table-hover">
+                  <thead>
+                    <tr>
+                      <th>Insumo</th>
+                      <th class="text-end">Cantidad</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for insumo, total in top_insumos %}
+                    <tr>
+                      <td>{{ insumo }}</td>
+                      <td class="text-end">{{ total }} unidades</td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-12 mb-4">
+          <div class="card">
+            <div class="card-header">
+              <i class="fas fa-exclamation-triangle me-2"></i> Mermas por Tipo
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-7">
+                  <div style="position: relative; height: 180px; width: 100%">
+                    <canvas id="mermasChart"></canvas>
+                  </div>
+                </div>
+                <div class="col-md-5">
+                  <div class="table-responsive">
+                    <table class="table table-hover">
+                      <thead>
+                        <tr>
+                          <th>Tipo de Merma</th>
+                          <th class="text-end">Total</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for tipo, total in mermas %}
+                        <tr>
+                          <td>{{ tipo|replace('_', ' ')|capitalize }}</td>
+                          <td class="text-end">{{ total }} unidades</td>
+                        </tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+          const estatusLabels = [{% for estatus, count in estatus_count %} "{{ estatus|capitalize }}", {% endfor %}];
+          const estatusData = [{% for estatus, count in estatus_count %} {{ count }}, {% endfor %}];
+          const estatusColors = ['#6c757d', '#fd7e14', '#198754', '#dc3545'];
+
+          const galletasLabels = [{% for galleta, total in top_galletas %} "{{ galleta }}", {% endfor %}];
+          const galletasData = [{% for galleta, total in top_galletas %} {{ total }}, {% endfor %}];
+
+          const insumosLabels = [{% for insumo, total in top_insumos %} "{{ insumo }}", {% endfor %}];
+          const insumosData = [{% for insumo, total in top_insumos %} {{ total }}, {% endfor %}];
+
+          const mermasLabels = [{% for tipo, total in mermas %} "{{ tipo|replace('_', ' ')|capitalize }}", {% endfor %}];
+          const mermasData = [{% for tipo, total in mermas %} {{ total }}, {% endfor %}];
+          const mermasColors = ['#ff9800', '#e91e63', '#9c27b0', '#f44336', '#2196f3', '#009688', '#607d8b'];
+
+          // Opciones comunes para gráficos
+          const commonOptions = {
+              responsive: true,
+              maintainAspectRatio: false,
+              animation: {
+                  duration: 500
+              },
+              layout: {
+                  padding: 5
+              },
+              elements: {
+                  arc: {
+                      borderWidth: 1
+                  },
+                  bar: {
+                      borderWidth: 1
+                  }
+              }
+          };
+
+          if (typeof Chart === 'undefined') {
+              console.error('Chart.js no está cargado correctamente');
+              return;
+          }
+
+          try {
+              const estatusCtx = document.getElementById('estatusChart');
+              if (estatusCtx) {
+                  new Chart(estatusCtx, {
+                      type: 'doughnut',
+                      data: {
+                          labels: estatusLabels,
+                          datasets: [{
+                              data: estatusData,
+                              backgroundColor: estatusColors,
+                              borderWidth: 1
+                          }]
+                      },
+                      options: {
+                          ...commonOptions,
+                          plugins: {
+                              legend: {
+                                  position: 'right',
+                                  align: 'center',
+                                  labels: {
+                                      boxWidth: 10,
+                                      padding: 10,
+                                      font: {
+                                          size: 10
+                                      }
+                                  }
+                              }
+                          }
+                      }
+                  });
+              }
+
+              const galletasCtx = document.getElementById('galletasChart');
+              if (galletasCtx) {
+                  new Chart(galletasCtx, {
+                      type: 'bar',
+                      data: {
+                          labels: galletasLabels,
+                          datasets: [{
+                              label: 'Cantidad producida',
+                              data: galletasData,
+                              backgroundColor: '#8bbee8',
+                              borderColor: '#4287f5',
+                              borderWidth: 1
+                          }]
+                      },
+                      options: {
+                          ...commonOptions,
+                          plugins: {
+                              legend: {
+                                  display: false
+                              },
+                              tooltip: {
+                                  enabled: true
+                              }
+                          },
+                          scales: {
+                              y: {
+                                  beginAtZero: true,
+                                  ticks: {
+                                      font: {
+                                          size: 9
+                                      }
+                                  },
+                                  grid: {
+                                      display: false
+                                  }
+                              },
+                              x: {
+                                  ticks: {
+                                      font: {
+                                          size: 9
+                                      },
+                                      maxRotation: 45,
+                                      minRotation: 45
+                                  },
+                                  grid: {
+                                      display: false
+                                  }
+                              }
+                          }
+                      }
+                  });
+              }
+
+              const insumosCtx = document.getElementById('insumosChart');
+              if (insumosCtx) {
+                  new Chart(insumosCtx, {
+                      type: 'bar',
+                      data: {
+                          labels: insumosLabels,
+                          datasets: [{
+                              label: 'Cantidad utilizada',
+                              data: insumosData,
+                              backgroundColor: '#a5d6a7',
+                              borderColor: '#4caf50',
+                              borderWidth: 1
+                          }]
+                      },
+                      options: {
+                          ...commonOptions,
+                          plugins: {
+                              legend: {
+                                  display: false
+                              },
+                              tooltip: {
+                                  enabled: true
+                              }
+                          },
+                          scales: {
+                              y: {
+                                  beginAtZero: true,
+                                  ticks: {
+                                      font: {
+                                          size: 9
+                                      }
+                                  },
+                                  grid: {
+                                      display: false
+                                  }
+                              },
+                              x: {
+                                  ticks: {
+                                      font: {
+                                          size: 9
+                                      },
+                                      maxRotation: 45,
+                                      minRotation: 45
+                                  },
+                                  grid: {
+                                      display: false
+                                  }
+                              }
+                          }
+                      }
+                  });
+              }
+
+              const mermasCtx = document.getElementById('mermasChart');
+              if (mermasCtx) {
+                  new Chart(mermasCtx, {
+                      type: 'pie',
+                      data: {
+                          labels: mermasLabels,
+                          datasets: [{
+                              label: 'Cantidad',
+                              data: mermasData,
+                              backgroundColor: mermasColors,
+                              borderWidth: 1
+                          }]
+                      },
+                      options: {
+                          ...commonOptions,
+                          plugins: {
+                              legend: {
+                                  position: 'right',
+                                  align: 'center',
+                                  labels: {
+                                      boxWidth: 10,
+                                      padding: 6,
+                                      font: {
+                                          size: 9
+                                      }
+                                  }
+                              }
+                          }
+                      }
+                  });
+              }
+          } catch (error) {
+              console.error('Error al crear gráficos:', error);
+          }
+      });
+    </script>
+  </body>
+</html>

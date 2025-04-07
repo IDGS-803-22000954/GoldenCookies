@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Flowbite Flask</title>
+    <link
+      rel="stylesheet"
+      href="{{url_for('static',filename='css/output.css')}}"
+    />
+    <link
+      rel="stylesheet"
+      href="{{url_for('static',filename='css/style.css')}}"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@400;700&family=Dancing+Script:wght@400..700&family=Kavoon&family=Parisienne&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+
+  <body>
+    <header class="encabezado">
+      <a href="../index.html">
+        <img src="../static/img/logo_goldenCookies.jpeg" class="logo" />
+      </a>
+    </header>
+    <div class="flash-messages container">
+      {% with messages = get_flashed_messages(with_categories=true) %} {% if
+      messages %} {% for category, message in messages %}
+      <div
+        class="alert alert-{{ category }} alert-dismissible fade show"
+        role="alert"
+      >
+        {{ message }}
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="alert"
+          aria-label="Cerrar"
+        ></button>
+      </div>
+      {% endfor %} {% endif %} {% endwith %}
+    </div>
+    <div class="container mt-4">
+      <h2>Registrar Insumos para Producción #{{ produccion.id_produccion }}</h2>
+      <p>Galleta: <strong>{{ produccion.receta.galleta.nombre }}</strong></p>
+
+      <div class="card mb-4">
+        <div class="card-header">
+          <h4>Insumos Requeridos</h4>
+        </div>
+        <div class="card-body">
+          <table class="table table-striped">
+            <thead>
+              <tr>
+                <th>Insumo</th>
+                <th>Requerido</th>
+                <th>Usado</th>
+                <th>Faltante</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for insumo in insumos_info %}
+              <tr
+                class="{% if insumo.completado %}table-success{% elif insumo.faltante > 0 %}table-warning{% endif %}"
+              >
+                <td>
+                  {{ insumo.insumo.nombre }} ({{ insumo.insumo.unidad_medida }})
+                </td>
+                <td>{{ insumo.requerido }}</td>
+                <td>{{ insumo.usado }}</td>
+                <td>{{ insumo.faltante }}</td>
+                <td>
+                  {% if insumo.completado %}
+                  <span class="badge badge-success">Completo</span>
+                  {% else %}
+                  <span class="badge badge-warning">Incompleto</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h4>Agregar Insumo</h4>
+        </div>
+        <div class="card-body">
+          <form method="POST">
+            {{ form.hidden_tag() }}
+            <div class="form-group">
+              {{ form.lote_insumo.label }} {{
+              form.lote_insumo(class="form-control") }}
+            </div>
+            <div class="form-group">
+              {{ form.cantidad_usada.label }} {{
+              form.cantidad_usada(class="form-control") }}
+              <small class="form-text text-muted">
+                Solo se pueden agregar cantidades exactas según la receta
+              </small>
+            </div>
+            <button type="submit" class="btn btn-primary">
+              Registrar Insumo
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

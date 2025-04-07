@@ -1,29 +1,218 @@
-{# templates/index_B.html #} {% extends "layout_B.html" %} {% block main %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Flowbite Flask</title>
+    <link
+      rel="stylesheet"
+      href="{{url_for('static',filename='css/output.css')}}"
+    />
+    <link
+      rel="stylesheet"
+      href="{{url_for('static',filename='css/style.css')}}"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@400;700&family=Dancing+Script:wght@400..700&family=Kavoon&family=Parisienne&display=swap"
+      rel="stylesheet"
+    />
+  </head>
 
-<main class="row justify-content-center">
-    <div class="container-buttons d-flex justify-content-center flex-wrap">
-        <div class="row">
-            <a href="#" class="boton">
-                <img src="../static/img/compra_insumos.png" alt="Insumos" class="icono">
-                <p class="texto">Insumos</p>
-            </a>
-            <a href="#" class="boton">
-                <img src="../static/img/inventario.png" alt="Inventario" class="icono">
-                <p class="texto">Inventario</p>
-            </a>
-            <a href="#" class="boton">
-                <img src="../static/img/produccion.png" alt="Producción" class="icono">
-                <p class="texto">Producción</p>
-            </a>
-            <a href="#" class="boton">
-                <img src="../static/img/galleta.png" alt="Galletas" class="icono">
-                <p class="texto">Galletas</p>
-            </a>
-            <a href="#" class="boton">
-                <img src="../static/img/receta.png" alt="Recetas" class="icono">
-                <p class="texto">Recetas</p>
-            </a>
-        </div>
+  <body>
+    <header class="encabezado">
+      <a href="../index.html">
+        <img src="../static/img/logo_goldenCookies.jpeg" class="logo" />
+      </a>
+      <div class="logout-container">
+        <form method="POST" action="{{ url_for('auth.logout') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+          <button type="submit" class="btn btn-danger">
+            <i class="fas fa-sign-out-alt"></i> Cerrar sesión
+          </button>
+        </form>
+      </div>
+    </header>
+    <div class="flash-messages container">
+      {% with messages = get_flashed_messages(with_categories=true) %} {% if
+      messages %} {% for category, message in messages %}
+      <div
+        class="alert alert-{{ category }} alert-dismissible fade show"
+        role="alert"
+      >
+        {{ message }}
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="alert"
+          aria-label="Cerrar"
+        ></button>
+      </div>
+      {% endfor %} {% endif %} {% endwith %}
     </div>
-</main>
-{% endblock %}
+    <div class="container mt-4">
+      <h1>Gestión de Producción</h1>
+
+      <div class="row mb-4">
+        <div class="col-md-8">
+          <a
+            href="{{ url_for('produccion.crear') }}"
+            class="btn btn-primary mr-2"
+          >
+            <i class="fas fa-plus"></i> Nueva Producción
+          </a>
+          <a
+            href="{{ url_for('produccion.listar_mermas') }}"
+            class="btn btn-warning mr-2"
+          >
+            <i class="fas fa-trash-alt"></i> Mermas
+          </a>
+          <a
+            href="{{ url_for('produccion.estadisticas') }}"
+            class="btn btn-info mr-2"
+          >
+            <i class="fas fa-chart-bar"></i> Estadísticas
+          </a>
+        </div>
+      </div>
+
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5>Filtrar producciones</h5>
+        </div>
+        <div class="card-body">
+          <form method="POST" action="{{ url_for('produccion.index') }}">
+            {{ form.csrf_token }}
+            <div class="row">
+              <div class="col-md-3">
+                <div class="form-group">
+                  {{ form.estatus.label }} {{ form.estatus(class="form-control")
+                  }}
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="form-group">
+                  {{ form.fecha_inicio.label }} {{
+                  form.fecha_inicio(class="form-control", type="date") }}
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="form-group">
+                  {{ form.galleta.label }} {{ form.galleta(class="form-control")
+                  }}
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-12 text-right">
+                {{ form.submit(class="btn btn-primary") }}
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h5>Lista de Producciones</h5>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-striped">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Galleta</th>
+                  <th>Cantidad</th>
+                  <th>Responsable</th>
+                  <th>Estatus</th>
+                  <th>Fecha</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for produccion in producciones %}
+                <tr>
+                  <td>{{ produccion.id_produccion }}</td>
+                  <td>{{ produccion.receta.galleta.nombre }}</td>
+                  <td>{{ produccion.receta.cantidad_produccion }}</td>
+                  <td>{{ produccion.usuario.nombre }}</td>
+                  <td>
+                    {% if produccion.estatus == 'programada' %}
+                    <span class="badge badge-secondary">Programada</span>
+                    {% elif produccion.estatus == 'en_proceso' %}
+                    <span class="badge badge-primary">En Proceso</span>
+                    {% elif produccion.estatus == 'completada' %}
+                    <span class="badge badge-success">Completada</span>
+                    {% elif produccion.estatus == 'cancelada' %}
+                    <span class="badge badge-danger">Cancelada</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {{ produccion.created_at.strftime('%d/%m/%Y %H:%M') }}
+                  </td>
+                  <td>
+                    <a
+                      href="{{ url_for('produccion.detalle', id=produccion.id_produccion) }}"
+                      class="btn btn-sm btn-info"
+                    >
+                      <i class="fas fa-eye"></i>
+                    </a>
+
+                    {% if produccion.estatus == 'programada'%}
+                    <form
+                      method="POST"
+                      action="{{ url_for('produccion.iniciar', id=produccion.id_produccion) }}"
+                      class="d-inline"
+                    >
+                      <input
+                        type="hidden"
+                        name="csrf_token"
+                        value="{{ csrf_token() }}"
+                      />
+                      <button type="submit" class="btn btn-sm btn-success">
+                        <i class="fas fa-play"></i>
+                      </button>
+                    </form>
+                    {% endif %} {% if produccion.estatus == 'programada' or
+                    produccion.estatus=='en_proceso'%}
+                    <form
+                      method="POST"
+                      action="{{ url_for('produccion.cancelar', id=produccion.id_produccion) }}"
+                      class="d-inline"
+                    >
+                      <input
+                        type="hidden"
+                        name="csrf_token"
+                        value="{{ csrf_token() }}"
+                      />
+                      <button
+                        type="submit"
+                        class="btn btn-sm btn-danger"
+                        onclick="return confirm('¿Cancelar producción?')"
+                      >
+                        <i class="fas fa-times"></i>
+                      </button>
+                    </form>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% else %}
+                <tr>
+                  <td colspan="7" class="text-center">
+                    No hay producciones registradas
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
