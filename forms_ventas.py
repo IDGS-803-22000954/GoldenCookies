@@ -21,4 +21,3 @@ class VentaForm(FlaskForm):
         validators.DataRequired(message='Es requerida la cantidad'),
         validators.NumberRange(min=1, message='No puede haber cantidad negativas')
     ])
-    preciot = DecimalField('Precio')  

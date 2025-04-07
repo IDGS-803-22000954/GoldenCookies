@@ -1,6 +1,7 @@
 {# templates/venta.html #} {% extends "layout_B.html" %}
 {% block main %}
 <link rel="stylesheet" href="../static/css/venta.css">
+{{form.csrf_token}}
 
   <body class="bg-light">
     <header class="encabezado">
@@ -59,16 +60,9 @@
         <div class="mb-3">
           <label for="galleta" class="form-label">Galleta</label>
           <select id="galleta" name="galleta" class="form-select">
-            <option value="mantequilla">Galleta de mantequilla</option>
-            <option value="avena">Galleta de avena y plátano</option>
-            <option value="coco">Galleta de coco</option>
-            <option value="almendra">Galleta de almendra</option>
-            <option value="chocolate">Galleta de chocolate</option>
-            <option value="mani">Galleta de mantequilla de mani</option>
-            <option value="maicena">Galleta de maicena</option>
-            <option value="vainilla">Galleta de vainilla</option>
-            <option value="miel">Galleta de miel</option>
-            <option value="especial">Galleta Especial</option>
+            {% for galleta in galletas %}
+              <option value="{{galleta.id_galleta}}">{{galleta.nombre}}</option>
+            {% endfor %}
           </select>
         </div>
         <div class="mb-3">
@@ -89,10 +83,6 @@
             class="form-control"
             required
           />
-        </div>
-        <div class="mb-3">
-          <label id="precio-label" class="form-label">Precio</label>
-          <div id="precio" class="form-text">Selecciona una opción</div>
         </div>
         <input type="hidden" name="preciot" id="preciot" />
         <button class="btn btn-warning btn-add">Añadir</button>
@@ -115,8 +105,9 @@
                         <td>{{ venta.galleta }}</td>
                         <td>{{ venta.cantidad }}</td>
                         <td>{{ venta.precio}}</td>
-                        <form action="{{url_for('venta.eliminar_venta', indice=loop.index0)}}">
+                        <form method="post" action="{{url_for('venta.eliminar_venta', indice=loop.index0)}}">
                             <td>
+                                <input type="hidden" name="csrf_token" value="{{csrf_token()}}" />
                                 <button class="btn btn-danger btn-sm" style="background-color: #DC3545; border-radius:13px; border-color:black;">
                                     Eliminar
                                 </button>

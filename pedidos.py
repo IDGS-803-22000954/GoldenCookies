@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, session, Blueprint, make_response, jsonify, flash
 from flask_login import UserMixin, login_user, LoginManager, login_required, logout_user, current_user
 import forms_ventas
-from models import db, Venta, DetalleVenta
+from models import db, Venta, DetalleVenta, Galleta
 from datetime import date
 from auth import verificar_roles
 
@@ -13,8 +13,7 @@ pedidos = Blueprint('pedidos', __name__)
 @login_required
 def pedido():
     forms = forms_ventas.VentaForm(request.form)
-    pedidos_hechos = db.session.query(
-        Venta).filter(Venta.id_usuario == 3).all()
+    pedidos_hechos = db.session.query(Venta).filter(Venta.id_usuario == session.get('id_usuario')).all()
     return render_template('pedidos.html', pedidos=pedidos_hechos, form=forms)
 
 
@@ -23,7 +22,8 @@ def pedido():
 @login_required
 def nuevo_pedido():
     forms = forms_ventas.VentaForm(request.form)
-    return render_template('nuevo_pedido.html', form=forms, pedidos=session.get('pedidos_acumulados', []))
+    galletas = db.session.query(Galleta)
+    return render_template('nuevo_pedido.html', galletas=galletas, form=forms, pedidos=session.get('pedidos_acumulados', []))
 
 
 @pedidos.route("/procesar_t", methods=['POST'])
@@ -32,20 +32,27 @@ def nuevo_pedido():
 def procesar_t():
     form = forms_ventas.VentaForm(request.form)
     if request.method == 'POST' and form.validate_on_submit():
-        if 'pedidos_acumulados' not in session:
-            session['pedidos_acumulados'] = []
-        pedidos = session['pedidos_acumulados']
+        galleta = db.session.query(Galleta).filter_by(id_galleta=form.galleta.data).first()
+        cantidad = galleta.cantidad_galletas
+        c=form.cantidad.data
+        if c > cantidad:
+            flash(f"No hay suficientes galletas disponibles para '{galleta.nombre}'",'danger') 
+        else: 
+        
+            if 'pedidos_acumulados' not in session:
+                session['pedidos_acumulados'] = []
+            pedidos = session['pedidos_acumulados']
 
-        nueva_venta = {
-            "galleta": form.galleta.data,
-            "tipo_venta": form.tipo_venta.data,
-            "cantidad": form.cantidad.data,
-            "precio": form.preciot.data
-        }
+            nueva_venta = {
+                "id_galleta": galleta.id_galleta,
+                "galleta": galleta.nombre,
+                "tipo_venta": form.tipo_venta.data,
+                "cantidad": form.cantidad.data,
+                "precio": int(c)*int(galleta.precio_sugerido)
+            }
 
-        flash('ayuda llamen a dios', 'success')
-        pedidos.append(nueva_venta)
-        session['pedidos_acumulados'] = pedidos
+            pedidos.append(nueva_venta)
+            session['pedidos_acumulados'] = pedidos
 
         return redirect(url_for('pedidos.nuevo_pedido'))
 
@@ -86,7 +93,7 @@ def realizar_pedido():
                 tipo_venta='web',
                 total=ptotal,
                 metodo_pago='efectivo',
-                id_usuario=3,
+                id_usuario=session.get('id_usuario'),
                 created_at=date.today(),
                 estado='pendiente',
                 pagado=0
@@ -96,7 +103,15 @@ def realizar_pedido():
 
             idv = nuevo_pedido.id_venta
             for v in pe:
+                # Verifica si la galleta existe y la cantidad es suficiente
+                galleta = db.session.query(Galleta).filter_by(id_galleta=v["id_galleta"]).first()
+                if galleta:
+                    if galleta.cantidad_galletas < int(v["cantidad"]):
+                        flash(f"No hay suficientes galletas disponibles para '{galleta.nombre}'", 'warning')
+                        db.session.rollback()
+                        return redirect(url_for('pedidos.nuevo_pedido'))
 
+                # Agrega los detalles del pedido
                 nuevo_detalle = DetalleVenta(
                     cantidad=int(v["cantidad"]),
                     precio_unitario=float(v["precio"]),
@@ -105,7 +120,7 @@ def realizar_pedido():
                     created_at=date.today()
                 )
                 db.session.add(nuevo_detalle)
-
+            
             db.session.commit()
             flash('Pedido realizado con éxito', 'success')
             return redirect(url_for('pedidos.terminar_pedido'))
@@ -114,11 +129,9 @@ def realizar_pedido():
             flash(f'Error al realizar el pedido: {str(e)}', 'danger')
     return redirect(url_for('pedidos.pedido'))
 
-
 @pedidos.route("/detalles_pedido/<int:id_venta>", methods=['GET', 'POST'])
 @verificar_roles('admin', 'cliente')
 @login_required
 def detalles_pedido(id_venta):
-    pedidoss = db.session.query(DetalleVenta).filter(
-        DetalleVenta.id_venta == id_venta).all()
+    pedidoss = db.session.query(DetalleVenta).filter(DetalleVenta.id_venta == id_venta).all()
     return render_template('detalles_pedido.html', pedidos=pedidoss)

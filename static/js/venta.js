@@ -77,26 +77,6 @@ function agregarAlCarrito() {
     }
 }
 
-
-// Función para realizar la venta
-function realizarVenta() {
-
-    // Preguntar si se imprime el ticket
-    Swal.fire({
-        title: '¿Desea imprimir el ticket?',
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonText: 'Sí',
-        cancelButtonText: 'No',
-        confirmButtonColor: '#006BE5',
-        cancelButtonColor: '#E52A00'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            // Si elige "Sí", aquí puedes agregar la lógica para imprimir el ticket
-            console.log("Imprimir ticket");
-        }});
-}
-
 // Eventos
 //document.querySelector('.btn-add').addEventListener('click', agregarAlCarrito);
 //document.querySelector('.btn-warning:nth-child(2)').addEventListener('click', realizarVenta);

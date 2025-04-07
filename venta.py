@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, session, Blueprint, make_response, jsonify, flash
 from flask_login import UserMixin, login_user, LoginManager, login_required, logout_user, current_user
 import forms_ventas
-from models import db, Venta, DetalleVenta, usuario
+from models import db, Venta, DetalleVenta, usuario, Galleta
 from datetime import date
 from auth import verificar_roles
 
@@ -14,7 +14,8 @@ venta = Blueprint('venta', __name__)
 def ventas():
     ventas_acumuladas = session.get('ventas_acumuladas', [])
     forms = forms_ventas.VentaForm(request.form)
-    return render_template('venta.html', ventas=ventas_acumuladas, form=forms)
+    galletas = db.session.query(Galleta)
+    return render_template('venta.html', ventas=ventas_acumuladas, form=forms, galletas=galletas)
 
 
 @venta.route("/procesar_tabla", methods=['POST'])
@@ -23,23 +24,29 @@ def ventas():
 def procesar_tabla():
     form = forms_ventas.VentaForm(request.form)
     if request.method == 'POST' and form.validate_on_submit():
-        if 'ventas_acumuladas' not in session:
-            session['ventas_acumuladas'] = []
-        ventas = session['ventas_acumuladas']
+        galleta = db.session.query(Galleta).filter_by(id_galleta=form.galleta.data).first()
+        cantidad = galleta.cantidad_galletas
+        c=form.cantidad.data
+        if c > cantidad:
+            flash(f"No hay suficientes galletas disponibles para '{galleta.nombre}'",'danger') 
+        else: 
+            if 'ventas_acumuladas' not in session:
+                session['ventas_acumuladas'] = []
+            ventas = session['ventas_acumuladas']
 
-        nueva_venta = {
-            "galleta": form.galleta.data,
-            "tipo_venta": form.tipo_venta.data,
-            "cantidad": form.cantidad.data,
-            "precio": form.preciot.data
-        }
+            nueva_venta = {
+                "id_galleta":galleta.id_galleta,
+                "galleta": galleta.nombre,
+                "tipo_venta": form.tipo_venta.data,
+                "cantidad": form.cantidad.data,
+                "precio":int(c)*int(galleta.precio_sugerido)
+            }
 
-        ventas.append(nueva_venta)
-        print(ventas)
-        session['ventas_acumuladas'] = ventas
-        return redirect(url_for('venta.ventas'))
-
-    flash("Error al procesar la venta.", "danger")
+            ventas.append(nueva_venta)
+            session['ventas_acumuladas'] = ventas
+            return redirect(url_for('venta.ventas'))
+    else:
+        flash("Error al procesar la venta.", "danger")
     return redirect(url_for('venta.ventas'))
 
 
@@ -66,7 +73,7 @@ def eliminar_venta(indice):
 @login_required
 def realizar_venta():
     va = session.get('ventas_acumuladas', [])
-    if request.method == 'POST':
+    if request.method == 'POST' and va:
         try:
             ptotal = sum(float(venta["precio"]) for venta in va)
 
@@ -75,7 +82,7 @@ def realizar_venta():
                 tipo_venta='local',
                 total=ptotal,
                 metodo_pago='efectivo',
-                id_usuario=1,
+                id_usuario=session.get('id_usuario'),
                 created_at=date.today(),
                 fecha_recogida=date.today(),
                 pagado=1
@@ -85,7 +92,14 @@ def realizar_venta():
 
             idv = nueva_venta.id_venta
             for v in va:
-
+                galleta = db.session.query(Galleta).filter_by(id_galleta=v["id_galleta"]).first()
+                if galleta:
+                    if galleta.cantidad_galletas >= int(v["cantidad"]):
+                        galleta.cantidad_galletas -= int(v["cantidad"])
+                    else:
+                        flash(f"No hay suficientes galletas disponibles para '{galleta.nombre}'", 'warning')
+                        db.session.rollback()
+                        return redirect(url_for('venta.ventas'))
                 nuevo_detalle = DetalleVenta(
                     cantidad=int(v["cantidad"]),
                     precio_unitario=float(v["precio"]),
@@ -94,7 +108,7 @@ def realizar_venta():
                     created_at=date.today()
                 )
                 db.session.add(nuevo_detalle)
-
+        
             db.session.commit()
             flash('Venta realizada con éxito', 'success')
             session.pop('ventas_acumuladas', None)
@@ -103,6 +117,7 @@ def realizar_venta():
         except Exception as e:
             db.session.rollback()
             flash(f'Error al realizar la venta', 'danger')
+    flash('No se puede hacer una venta sin galletas', 'danger')
     return redirect(url_for('venta.ventas'))
 
 
@@ -124,11 +139,7 @@ def realizar_venta_pedido(id_venta):
         venta.estado = 'lista'
         venta.fecha_recogida = date.today()
         venta.pagado = 1
-        try:
-            db.session.commit()
-            flash('Venta realizada con exito', 'success')
-        except Exception as e:
-            db.session.rollback()
-            flash('Error al actualizar la venta', 'danger')
-
+        
     return redirect(url_for('venta.venta_pedido'))
+
+

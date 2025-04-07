@@ -35,16 +35,9 @@
             <div class="mb-3">
                 <label for="galleta" class="form-label">Galleta</label>
                 <select id="galleta" name="galleta" class="form-select">
-                    <option value="mantequilla">Galleta de mantequilla</option>
-                    <option value="avena">Galleta de avena y plátano</option>
-                    <option value="coco">Galleta de coco</option>
-                    <option value="almendra">Galleta de almendra</option>
-                    <option value="chocolate">Galleta de chocolate</option>
-                    <option value="mani">Galleta de mantequilla de mani</option>
-                    <option value="maicena">Galleta de maicena</option>
-                    <option value="vainilla">Galleta de vainilla</option>
-                    <option value="miel">Galleta de miel</option>
-                    <option value="especial">Galleta Especial</option>
+                    {% for galleta in galletas %}
+                        <option value="{{galleta.id_galleta}}">{{galleta.nombre}}</option>
+                    {% endfor %}
                 </select>
             </div>
             <div class="mb-3">
@@ -59,10 +52,6 @@
             <div class="mb-3">
                 <label for="cantidad" class="form-label">Cantidad</label>
                 <input type="number" id="cantidad" name="cantidad" class="form-control" required>
-            </div>
-            <div class="mb-3">
-                <label id="precio-label" class="form-label">Precio</label>
-                <div id="precio" class="form-text">Selecciona una opción</div>
             </div>
             <input type="hidden" name="preciot" id="preciot">
             <button class="btn btn-warning btn-add">Añadir</button>
