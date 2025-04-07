@@ -39,7 +39,7 @@ def procesar_tabla():
                 "galleta": galleta.nombre,
                 "tipo_venta": form.tipo_venta.data,
                 "cantidad": form.cantidad.data,
-                "precio":int(c)*int(galleta.precio_sugerido)
+                "precio":int(c)*int(galleta.precio)
             }
 
             ventas.append(nueva_venta)
@@ -78,10 +78,8 @@ def realizar_venta():
             ptotal = sum(float(venta["precio"]) for venta in va)
 
             nueva_venta = Venta(
-                fecha=date.today(),
                 tipo_venta='local',
                 total=ptotal,
-                metodo_pago='efectivo',
                 id_usuario=session.get('id_usuario'),
                 created_at=date.today(),
                 fecha_recogida=date.today(),
@@ -91,6 +89,7 @@ def realizar_venta():
             db.session.flush()
 
             idv = nueva_venta.id_venta
+
             for v in va:
                 galleta = db.session.query(Galleta).filter_by(id_galleta=v["id_galleta"]).first()
                 if galleta:
@@ -104,6 +103,7 @@ def realizar_venta():
                     cantidad=int(v["cantidad"]),
                     precio_unitario=float(v["precio"]),
                     tipo_venta=v["tipo_venta"],
+                    id_galleta=int(v['id_galleta']),
                     id_venta=idv,
                     created_at=date.today()
                 )
@@ -116,8 +116,8 @@ def realizar_venta():
 
         except Exception as e:
             db.session.rollback()
+            flash(f'{str(e)}', 'danger')
             flash(f'Error al realizar la venta', 'danger')
-    flash('No se puede hacer una venta sin galletas', 'danger')
     return redirect(url_for('venta.ventas'))
 
 
@@ -139,7 +139,45 @@ def realizar_venta_pedido(id_venta):
         venta.estado = 'lista'
         venta.fecha_recogida = date.today()
         venta.pagado = 1
+
+        detalles = db.session.query(DetalleVenta).filter_by(id_venta=id_venta).all()
+        try:
+            for detalle in detalles:
+                # Find the corresponding Galleta
+                galleta = db.session.query(Galleta).filter_by(id_galleta=detalle.id_galleta).first()
+                
+                if galleta:
+                    # Deduct the cantidad from galleta stock
+                    if galleta.cantidad_galletas >= detalle.cantidad:
+                        galleta.cantidad_galletas -= detalle.cantidad
+                    else:
+                        flash(f"No hay suficientes galletas disponibles para '{galleta.nombre}'.", 'warning')
+                        db.session.rollback()
+                        return redirect(url_for('venta.venta_pedido'))
+                else:
+                    flash(f"La galleta referenciada en el detalle de venta no existe.", 'danger')
+                    db.session.rollback()
+                    return redirect(url_for('venta.venta_pedido'))
+
+            # Commit the transaction
+            db.session.commit()
+            flash('Pedido procesado correctamente.', 'success')
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error al procesar el pedido', 'danger')
+
         
     return redirect(url_for('venta.venta_pedido'))
 
+
+@venta.route("/ganancias", methods=['POST', 'GET'])
+@verificar_roles('admin', 'ventas')
+@login_required
+def ganancias():
+    ventas = db.session.query(Venta).filter_by(fecha_recogida=date.today()).join(usuario).all()
+    total_ventas=len(ventas)
+    total_cantidad = sum(venta.total for venta in ventas)
+    print(total_cantidad)
+    print(total_ventas)
+    return render_template('ganancias.html', ventas=ventas, total_ventas=total_ventas, total_cantidad=total_cantidad)
 

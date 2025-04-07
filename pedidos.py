@@ -7,6 +7,14 @@ from auth import verificar_roles
 
 pedidos = Blueprint('pedidos', __name__)
 
+@pedidos.route("/catalogo", methods=['GET', 'POST'])
+def catalogo():
+    if 'pedidos_acumulados' not in session:
+        session['pedidos_acumulados'] = []
+    forms = forms_ventas.VentaForm(request.form)
+    usuario=session.get('id_usuario')
+    galletas=db.session.query(Galleta)
+    return render_template('Main.html', usuario=usuario, galletas=galletas, form=forms)
 
 @pedidos.route("/pedido", methods=['GET', 'POST'])
 @verificar_roles('admin', 'cliente')
@@ -17,21 +25,27 @@ def pedido():
     return render_template('pedidos.html', pedidos=pedidos_hechos, form=forms)
 
 
-@pedidos.route("/nuevo_pedido", methods=['GET', 'POST'])
+@pedidos.route("/carrito", methods=['GET', 'POST'])
 @verificar_roles('admin', 'cliente')
 @login_required
-def nuevo_pedido():
+def carrito():
+    if 'pedidos_acumulados' not in session:
+        session['pedidos_acumulados'] = []
     forms = forms_ventas.VentaForm(request.form)
-    galletas = db.session.query(Galleta)
-    return render_template('nuevo_pedido.html', galletas=galletas, form=forms, pedidos=session.get('pedidos_acumulados', []))
+    galletas = session['pedidos_acumulados']
+    ptotal = sum(float(galleta["precio"]) for galleta in galletas)
+    print(session)
+    return render_template('carrito.html', galletas=galletas, ptotal=ptotal, form=forms)
 
 
-@pedidos.route("/procesar_t", methods=['POST'])
+@pedidos.route("/procesar_t", methods=['POST', 'GET'])
 @verificar_roles('admin', 'cliente')
 @login_required
 def procesar_t():
     form = forms_ventas.VentaForm(request.form)
-    if request.method == 'POST' and form.validate_on_submit():
+    if request.method == 'POST':
+        cantidad=form.cantidad.data
+
         galleta = db.session.query(Galleta).filter_by(id_galleta=form.galleta.data).first()
         cantidad = galleta.cantidad_galletas
         c=form.cantidad.data
@@ -46,18 +60,20 @@ def procesar_t():
             nueva_venta = {
                 "id_galleta": galleta.id_galleta,
                 "galleta": galleta.nombre,
+                "imagen": galleta.imagen,
                 "tipo_venta": form.tipo_venta.data,
                 "cantidad": form.cantidad.data,
-                "precio": int(c)*int(galleta.precio_sugerido)
+                "precio": int(c)*int(galleta.precio)
             }
 
             pedidos.append(nueva_venta)
             session['pedidos_acumulados'] = pedidos
+            flash("Producto añadido al carrito con éxito", 'success')
 
-        return redirect(url_for('pedidos.nuevo_pedido'))
+        return redirect(url_for('pedidos.catalogo'))
 
     flash("Error al procesar el pedido.", "danger")
-    return render_template('nuevo_pedido.html', form=form, pedidos=session.get('pedidos_acumulados', []))
+    return redirect(url_for('pedidos.catalogo'))
 
 
 @pedidos.route("/terminar_pedido", methods=['POST', 'GET'])
@@ -76,7 +92,7 @@ def eliminar_pedido(indice):
     pe.pop(indice)
     session['pedidos_acumulados'] = pe
 
-    return redirect(url_for('pedidos.nuevo_pedido'))
+    return redirect(url_for('pedidos.carrito'))
 
 
 @pedidos.route("/realizar_pedido", methods=['POST', 'GET'])
@@ -88,11 +104,25 @@ def realizar_pedido():
         try:
             ptotal = sum(float(venta["precio"]) for venta in pe)
 
+            quantities = {}
+            for item in pe:
+                id_galleta = item["id_galleta"]
+                if id_galleta not in quantities:
+                    quantities[id_galleta] = 0
+                quantities[id_galleta] += item["cantidad"]
+
+            for id_galleta, total_quantity in quantities.items():
+                galleta = db.session.query(Galleta).filter_by(id_galleta=id_galleta).first()
+                if galleta:
+                    if total_quantity > galleta.cantidad_galletas:
+                        flash(f"No hay suficientes galletas disponibles para '{galleta.nombre}'. "
+                              f"Stock disponible: {galleta.cantidad_galletas}. Intentaste comprar: {total_quantity}",
+                              'warning')
+                        return redirect(url_for('pedidos.carrito'))
+
             nuevo_pedido = Venta(
-                fecha=date.today(),
-                tipo_venta='web',
+                tipo_venta='pedido',
                 total=ptotal,
-                metodo_pago='efectivo',
                 id_usuario=session.get('id_usuario'),
                 created_at=date.today(),
                 estado='pendiente',
@@ -103,35 +133,29 @@ def realizar_pedido():
 
             idv = nuevo_pedido.id_venta
             for v in pe:
-                # Verifica si la galleta existe y la cantidad es suficiente
-                galleta = db.session.query(Galleta).filter_by(id_galleta=v["id_galleta"]).first()
-                if galleta:
-                    if galleta.cantidad_galletas < int(v["cantidad"]):
-                        flash(f"No hay suficientes galletas disponibles para '{galleta.nombre}'", 'warning')
-                        db.session.rollback()
-                        return redirect(url_for('pedidos.nuevo_pedido'))
-
-                # Agrega los detalles del pedido
                 nuevo_detalle = DetalleVenta(
                     cantidad=int(v["cantidad"]),
                     precio_unitario=float(v["precio"]),
-                    tipo_venta=v["tipo_venta"],
+                    tipo_venta='unidad',
                     id_venta=idv,
+                    id_galleta=int(v['id_galleta']),
                     created_at=date.today()
                 )
                 db.session.add(nuevo_detalle)
-            
+
             db.session.commit()
             flash('Pedido realizado con éxito', 'success')
-            return redirect(url_for('pedidos.terminar_pedido'))
+            session.pop('pedidos_acumulados', None)
+            return redirect(url_for('pedidos.carrito'))
         except Exception as e:
             db.session.rollback()
             flash(f'Error al realizar el pedido: {str(e)}', 'danger')
-    return redirect(url_for('pedidos.pedido'))
+    return redirect(url_for('pedidos.carrito'))
 
 @pedidos.route("/detalles_pedido/<int:id_venta>", methods=['GET', 'POST'])
 @verificar_roles('admin', 'cliente')
 @login_required
 def detalles_pedido(id_venta):
-    pedidoss = db.session.query(DetalleVenta).filter(DetalleVenta.id_venta == id_venta).all()
+    pedidoss = db.session.query(DetalleVenta).filter(DetalleVenta.id_venta == id_venta).join(Galleta).all()
+    print(pedidoss)
     return render_template('detalles_pedido.html', pedidos=pedidoss)

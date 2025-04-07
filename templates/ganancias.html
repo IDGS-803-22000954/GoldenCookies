@@ -1,4 +1,4 @@
-{# templates/pedidos.html #} {% extends "layout_B.html" %}
+{# templates/ganancias.html #} {% extends "layout_B.html" %}
 {% block main %}
 <link rel="stylesheet" href="../static/css/venta.css">
 
@@ -15,7 +15,7 @@
         alt="Venta"
         class="icono"
       />
-      <h1>Tus Pedidos</h1>
+      <h1>Ganancias</h1>
     </div>
 
     {% with messages = get_flashed_messages(with_categories=true) %} {% if
@@ -41,6 +41,11 @@
     </div>
 
     <p></p>
+    <div style="margin: 0px 50px 0px 50px;">
+        <h5>Total ganado: {{total_cantidad}}</h5>
+        <h5>Ventas totales: {{total_ventas}}</h5>
+    </div>
+    
 
     <div class="venta-container" style="width: 100%">
       <!-- Formulario -->
@@ -50,34 +55,20 @@
         <table class="table table-bordered table-hover" style="width: 100%">
           <thead class="encabezado-tabla-venta">
             <tr>
-              <th>Id Pedido</th>
-              <th>Precio</th>
-              <th>Estatus</th>
-              <th>Fecha</th>
-              <th>Detalles</th>
+              <th>Id Venta</th>
+              <th>Tipo de Venta</th>
+              <th>Total</th>
+              <th>Nombre</th>
             </tr>
           </thead>
           <tbody id="grupo-table-body">
-            {% for pedido in pedidos %}
+            {% for venta in ventas %}
             <tr>
-              <td>{{ pedido.id_venta }}</td>
-              <td>{{ pedido.total }}</td>
-              <td>{{ pedido.estado}}</td>
-              <td>{{ pedido.created_at.strftime('%Y/%m/%d') }}</td>
-              <form action="{{url_for('pedidos.detalles_pedido', id_venta=pedido.id_venta)}}">
-                <td>
-                  <button
-                    class="btn btn-danger btn-sm"
-                    style="
-                      background-color: #dc3545;
-                      border-radius: 13px;
-                      border-color: black;
-                    "
-                  >
-                    Ver detalles
-                  </button>
-                </td>
-              </form>
+              <td>{{ venta.id_venta }}</td>
+              <td>{{ venta.tipo_venta }}</td>
+              <td>{{ venta.total }}</td>
+              <td>{{ venta.usuario.nombre }} ({{venta.usuario.rol}})</td>
+              
             </tr>
             {% endfor %}
           </tbody>

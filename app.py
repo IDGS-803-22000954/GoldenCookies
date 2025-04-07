@@ -13,6 +13,7 @@ from routes.compras import compras_bp
 from produccion.routes import produccion_bp
 from recetas.recetas import recetas_bp
 from recetas.galletas import galletas_bp
+from auth import verificar_roles
 
 app = Flask(__name__)
 app.config.from_object(DevelopmentConfig)
@@ -22,9 +23,11 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'auth.login'  # Ruta de inicio de sesión
 
+
 @login_manager.user_loader
 def load_user(user_id):
-    return usuario.query.get(int(user_id)) 
+    return usuario.query.get(int(user_id))
+
 
 @app.errorhandler(404)
 def page_not_found(e):
@@ -34,21 +37,26 @@ def page_not_found(e):
 def status_401(error):
     return redirect(url_for('login'))
 
+
 @app.route("/")
 @app.route("/index")
 def index():
 
-	return redirect('auth/login')
+    return redirect('auth/login')
+
 
 @app.route('/admin')
 @login_required
+@verificar_roles('admin')
 def admin():
     return render_template('admin.html')
 
 @app.route('/cliente')
+@verificar_roles('cliente','admin')
 @login_required
 def cliente():
     return render_template('cliente.html')
+
 
 app.register_blueprint(auth, url_prefix='/auth')
 app.register_blueprint(insumo_bp)

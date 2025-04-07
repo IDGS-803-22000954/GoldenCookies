@@ -21,3 +21,9 @@ class VentaForm(FlaskForm):
         validators.DataRequired(message='Es requerida la cantidad'),
         validators.NumberRange(min=1, message='No puede haber cantidad negativas')
     ])
+
+class PedidoForm(FlaskForm):
+    cantidad = IntegerField('Cantidad', [
+        validators.DataRequired(message='Es requerida la cantidad'),
+        validators.NumberRange(min=1, message='No puede haber cantidad negativas')
+    ])

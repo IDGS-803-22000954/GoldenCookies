@@ -3,28 +3,21 @@
 <link rel="stylesheet" href="../static/css/venta.css">
 {{form.csrf_token}}
 
-  <body class="bg-light">
-    <header class="encabezado">
-      <a href="../index.html">
-        <img src="../static/img/logo_goldenCookies.jpeg" class="logo" />
-      </a>
-      <div class="logout-container">
-        <form method="POST" action="{{ url_for('auth.logout') }}">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-          <button type="submit" class="btn btn-danger">
-            <i class="fas fa-sign-out-alt"></i> Cerrar sesión
-          </button>
-        </form>
-      </div>
-    </header>
-    <div style="margin-top: 55px;">  
+<body class="bg-light">
+  <header class="encabezado">
+    <a href="../index.html">
+      <img src="../static/img/logo_goldenCookies.jpeg" class="logo" />
+    </a>
+    <div class="logout-container">
+      <form method="POST" action="{{ url_for('auth.logout') }}">
+        
+      </form>
+    </div>
+  </header>
+  <div style="margin-top: 55px;">
 
     <div class="titulo">
-      <img
-        src="../static/img/carro-de-la-compra.png"
-        alt="Venta"
-        class="icono"
-      />
+      <img src="../static/img/carro-de-la-compra.png" alt="Venta" class="icono" />
       <h1>Venta</h1>
     </div>
 
@@ -32,36 +25,31 @@
     messages %}
     <div style="margin: 0px 40px 0px 40px">
       {% for category, message in messages %}
-      <div
-        class="alert alert-{{ category }} alert-dismissible fade show"
-        role="alert"
-      >
+      <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
         {{ message }}
-        <button
-          type="button"
-          class="btn-close"
-          data-bs-dismiss="alert"
-          aria-label="Close"
-        ></button>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
       </div>
       {% endfor %}
     </div>
     {% endif %} {% endwith %}
 
+    <div class="button-container d-flex">
+      <form class="mx-4" action="{{url_for('admin')}}">
+        <input type="hidden" name="csrf_token" value="{{csrf_token()}}" />
+        <button class="btn btn-warning">Regresar</button>
+      </form>
+    </div>
+
     <div class="venta-container">
       <!-- Formulario -->
-      <form
-        method="post"
-        class="formulario-venta"
-        action="{{url_for('venta.procesar_tabla')}}"
-      >
+      <form method="post" class="formulario-venta" action="{{url_for('venta.procesar_tabla')}}">
         {{form.csrf_token}}
         <input type="hidden" name="csrf_token" value="{{csrf_token()}}" />
         <div class="mb-3">
           <label for="galleta" class="form-label">Galleta</label>
           <select id="galleta" name="galleta" class="form-select">
             {% for galleta in galletas %}
-              <option value="{{galleta.id_galleta}}">{{galleta.nombre}}</option>
+            <option value="{{galleta.id_galleta}}">{{galleta.nombre}}</option>
             {% endfor %}
           </select>
         </div>
@@ -69,55 +57,47 @@
           <label for="tipo_venta" class="form-label">Tipo de venta</label>
           <select id="tipo_venta" name="tipo_venta" class="form-select">
             <option value="unidad">Unidad</option>
-            <option value="peso">Peso</option>
-            <option value="precio">Precio</option>
-            <option value="paquete">Paquete</option>
           </select>
         </div>
         <div class="mb-3">
           <label for="cantidad" class="form-label">Cantidad</label>
-          <input
-            type="number"
-            id="cantidad"
-            name="cantidad"
-            class="form-control"
-            required
-          />
+          <input type="number" id="cantidad" name="cantidad" class="form-control" min="1" required />
         </div>
         <input type="hidden" name="preciot" id="preciot" />
         <button class="btn btn-warning btn-add">Añadir</button>
       </form>
 
-        <!-- Tabla -->
-        <div class="tabla-derecha-ventas">
-            <table class="table table-bordered table-hover">
-                <thead class="encabezado-tabla-venta">
-                    <tr>
-                        <th>Galleta</th>
-                        <th>Cantidad</th>
-                        <th>Precio</th>
-                        <th>Eliminar</th>
-                    </tr>
-                </thead>
-                <tbody id="grupo-table-body">
-                    {% for venta in ventas %}
-                    <tr>
-                        <td>{{ venta.galleta }}</td>
-                        <td>{{ venta.cantidad }}</td>
-                        <td>{{ venta.precio}}</td>
-                        <form method="post" action="{{url_for('venta.eliminar_venta', indice=loop.index0)}}">
-                            <td>
-                                <input type="hidden" name="csrf_token" value="{{csrf_token()}}" />
-                                <button class="btn btn-danger btn-sm" style="background-color: #DC3545; border-radius:13px; border-color:black;">
-                                    Eliminar
-                                </button>
-                            </td>
-                        </form>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+      <!-- Tabla -->
+      <div class="tabla-derecha-ventas">
+        <table class="table table-bordered table-hover">
+          <thead class="encabezado-tabla-venta">
+            <tr>
+              <th>Galleta</th>
+              <th>Cantidad</th>
+              <th>Precio</th>
+              <th>Eliminar</th>
+            </tr>
+          </thead>
+          <tbody id="grupo-table-body">
+            {% for venta in ventas %}
+            <tr>
+              <td>{{ venta.galleta }}</td>
+              <td>{{ venta.cantidad }}</td>
+              <td>{{ venta.precio}}</td>
+              <form method="post" action="{{url_for('venta.eliminar_venta', indice=loop.index0)}}">
+                <td>
+                  <input type="hidden" name="csrf_token" value="{{csrf_token()}}" />
+                  <button class="btn btn-danger btn-sm"
+                    style="background-color: #DC3545; border-radius:13px; border-color:black;">
+                    Eliminar
+                  </button>
+                </td>
+              </form>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
     </div>
 
     <div class="button-container d-flex justify-content-between">

@@ -54,7 +54,7 @@
                         <td hidden>{{ pedido.id_venta }}</td>
                         <td>{{ pedido.usuario.nombre }}</td>
                         <td>{{ pedido.total }}</td>
-                        <td>{{ pedido.fecha }}</td>
+                        <td>{{ pedido.created_at.strftime('%Y/%m/%d') }}</td>
                         <form method="post"
                             action="{{url_for('venta.realizar_venta_pedido', id_venta=pedido.id_venta)}}">
                             <td>

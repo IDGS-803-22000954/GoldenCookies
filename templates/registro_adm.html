@@ -1,0 +1,167 @@
+{% extends './layout_B.html' %} {% block main %}
+
+<div class="container-rr">
+  <div class="login-box-rr">
+    <h2 class="text-center">Registro de Usuario</h2>
+
+    {% with messages = get_flashed_messages(with_categories=true) %} {% if
+    messages %}
+    <div class="mb-3">
+      {% for category, message in messages %}
+      <div
+        class="alert alert-{{ category }} alert-dismissible fade show"
+        role="alert"
+      >
+        <strong>{{ message }}</strong>
+        <button
+          type="button"
+          class="close"
+          data-dismiss="alert"
+          aria-label="Close"
+        >
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %} {% endwith %}
+
+    <form action="/auth/registro_adm" method="POST">
+      {{ form.hidden_tag() }}
+
+      <div class="form-container">
+        <div class="form-column">
+          <div class="mb-3">
+            {{ form.nombre.label(class="form-label fw-bold") }} {{
+            form.nombre(class="form-control custom-input", required=True) }} {%
+            if form.nombre.errors %} {% for error in form.nombre.errors %}
+            <div class="text-danger">{{ error }}</div>
+            {% endfor %} {% endif %}
+          </div>
+          <div class="mb-3">
+            {{ form.nombre_usuario.label(class="form-label fw-bold") }} {{
+            form.nombre_usuario(class="form-control custom-input",
+            required=True) }} {% if form.nombre_usuario.errors %} {% for error
+            in form.nombre_usuario.errors %}
+            <div class="text-danger">{{ error }}</div>
+            {% endfor %} {% endif %}
+          </div>
+          <div class="mb-3">
+            {{ form.telefono.label(class="form-label fw-bold") }} {{
+            form.telefono(class="form-control custom-input", required=True) }}
+            {% if form.telefono.errors %} {% for error in form.telefono.errors
+            %}
+            <div class="text-danger">{{ error }}</div>
+            {% endfor %} {% endif %}
+          </div>
+        </div>
+        <div class="form-column">
+          <div class="mb-3">
+            {{ form.email.label(class="form-label fw-bold") }} {{
+            form.email(class="form-control custom-input", required=True) }} {%
+            if form.email.errors %} {% for error in form.email.errors %}
+            <div class="text-danger">{{ error }}</div>
+            {% endfor %} {% endif %}
+          </div>
+          <div class="mb-3">
+            {{ form.contrasenia.label(class="form-label fw-bold") }} {{
+            form.contrasenia(class="form-control custom-input", required=True)
+            }} {% if form.contrasenia.errors %} {% for error in
+            form.contrasenia.errors %}
+            <div class="text-danger">{{ error }}</div>
+            {% endfor %} {% endif %}
+          </div>
+          <div class="mb-3">
+            {{ form.confirmar_contrasenia.label(class="form-label fw-bold") }}
+            {{ form.confirmar_contrasenia(class="form-control custom-input",
+            required=True) }} {% if form.confirmar_contrasenia.errors %} {% for
+            error in form.confirmar_contrasenia.errors %}
+            <div class="text-danger">{{ error }}</div>
+            {% endfor %} {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label for="rol">Selecciona un Rol:</label>
+        <select id="rol" name="rol" class="custom-input">
+          {% for value, label in form.rol.choices %}
+          <option value="{{ value }}">{{ label }}</option>
+          {% endfor %}
+        </select>
+        {% if form.rol.errors %} {% for error in form.rol.errors %}
+        <div class="text-danger">{{ error }}</div>
+        {% endfor %} {% endif %}
+      </div>
+
+      <div class="form-button">
+        {{ form.submit(class="btn custom-btn w-50") }}
+      </div>
+    </form>
+  </div>
+  <div style="margin-left: 5%; margin-right: 5%">
+    <!-- Barra de búsqueda y filtro por rol -->
+    <div class="search-filter" style="margin-top: 70px">
+      <input
+        type="text"
+        id="search"
+        class="custom-input"
+        placeholder="Buscar usuario..."
+      />
+      <select id="filter-role" class="custom-input">
+        <option value="">Todos los roles</option>
+        {% for value, label in form.rol.choices %}
+        <option value="{{ value }}">{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <!-- Tabla de usuarios -->
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Usuario</th>
+          <th>Email</th>
+          <th>Teléfono</th>
+          <th>Rol</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="user-table-body">
+        {% for usuario in usuario %}
+        <tr>
+          <td>{{ usuario.nombre }}</td>
+          <td>{{ usuario.nombre_usuario }}</td>
+          <td>{{ usuario.email }}</td>
+          <td>{{ usuario.telefono }}</td>
+          <td>{{ usuario.rol }}</td>
+          <td>
+            <form
+              method="POST"
+              action="{{ url_for('auth.eliminar_usuario', id=usuario.id_usuario) }}"
+              style="display: inline"
+            >
+              <input
+                type="hidden"
+                name="csrf_token"
+                value="{{ csrf_token() }}"
+              />
+              <button type="submit" class="btn btn-danger">Eliminar</button>
+            </form>
+            <form
+              method="GET"
+              action="{{ url_for('auth.obtener_usuario', id=usuario.id_usuario) }}"
+              style="display: inline"
+            >
+              <button type="submit" class="btn btn-warning">Editar</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% endblock %}
+</div>

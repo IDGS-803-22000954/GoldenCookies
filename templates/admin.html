@@ -25,20 +25,6 @@
                 <p class="texto">Ganancias</p>
             </a>
         </div>
-        <div class="row">
-            <a href="#" class="boton">
-                <img src="../static/img/receta.png" alt="Recetas" class="icono">
-                <p class="texto">Recetas</p>
-            </a>
-            <a href="{{url_for('venta.venta_pedido')}}" class="boton">
-                <img src="../static/img/pedido.png" alt="Pedidos" class="icono">
-                <p class="texto">Pedidos</p>
-            </a>
-            <a href="{{url_for('venta.ventas')}}" class="boton">
-                <img src="../static/img/ventas.png" alt="Ventas" class="icono">
-                <p class="texto">Ventas</p>
-            </a>
-        </div>
     </div>
   <div class="container-buttons d-flex justify-content-center flex-wrap">
     <div class="row">
@@ -92,7 +78,7 @@
         />
         <p class="texto">Recetas</p>
       </a>
-      <a href="{{ url_for('pedidos.pedido') }}" class="boton">
+      <a href="{{ url_for('venta.venta_pedido') }}" class="boton">
         <img
           src="{{ url_for('static', filename='img/pedido.png') }}"
           alt="Pedidos"
@@ -107,6 +93,14 @@
           class="icono"
         />
         <p class="texto">Ventas</p>
+      </a>
+      <a href="{{ url_for('auth.registro_adm') }}" class="boton">
+        <img
+          src="{{ url_for('static', filename='img/user.png') }}"
+          alt="Usuarios"
+          class="icono"
+        />
+        <p class="texto">Administración</p>
       </a>
     </div>
   </div>

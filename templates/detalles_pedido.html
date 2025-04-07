@@ -2,6 +2,12 @@
 {% block main %}
 <link rel="stylesheet" href="../static/css/venta.css">
 
+<style>
+    td {
+        align-content: center;
+    }
+</style>
+
 <header class="encabezado">
     <a href="../index.html">
         <img src="../static/img/logo_goldenCookies.jpeg" class="logo">
@@ -43,15 +49,18 @@
             <table class="table table-bordered table-hover" style="width:100%;">
                 <thead class="encabezado-tabla-venta">
                     <tr>
-                        <th>Tipo de venta</th>
-                        <th>Precio unitario</th>
+                        <th colspan="2">Galletas</th>
+                        <th>Precio</th>
                         <th>Cantidad</th>
                     </tr>
                 </thead>
                 <tbody id="grupo-table-body">
                     {% for pedido in pedidos %}
                     <tr>
-                        <td>{{ pedido.tipo_venta }}</td>
+                        <td>
+                            <img style="border-radius: 10px;" src="{{ pedido.galleta.imagen }}" height="60px" alt="">
+                        </td>
+                        <td>{{ pedido.galleta.nombre }}</td>
                         <td>{{ pedido.precio_unitario }}</td>
                         <td>{{ pedido.cantidad}}</td>
                     </tr>

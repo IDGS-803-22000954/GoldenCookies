@@ -1,68 +1,106 @@
-{% extends './layout_A.html' %}
+{% extends './layout_A.html' %} {% block main %}
+<div
+  class="container-r d-flex justify-content-center align-items-center vh-100"
+>
+  <div class="login-box-r p-4 rounded shadow">
+    <h2 class="text-center mb-4">Registro de Usuario</h2>
 
-{% block main %}
-<div class="container-r d-flex justify-content-center align-items-center vh-100">
-    <div class="login-box-r p-4 rounded shadow">
-        <h2 class="text-center mb-4">Registro de Usuario</h2>
-
-        {% with messages = get_flashed_messages() %}
-        {% if messages %}
-        <div class="mb-3">
-            {% for message in messages %}
-            <div class="alert alert-primary alert-dismissible fade show" role="alert">
-                <strong>{{ message }}</strong>
-                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            {% endfor %}
-        </div>
-        {% endif %}
-        {% endwith %}
-
-        <form action="/auth/registro" method="POST">
-            {{ form.hidden_tag() }} <!-- Para CSRF token -->
-            
-            <div class="mb-3">
-                {{ form.nombre.label(class="form-label fw-bold") }}  
-                {{ form.nombre(class="form-control custom-input", required=True) }}  
-            </div>
-
-            <div class="mb-3">
-                {{ form.nombre_usuario.label(class="form-label fw-bold") }}  
-                {{ form.nombre_usuario(class="form-control custom-input", required=True) }}  
-            </div>
-
-            <div class="mb-3">
-                {{ form.telefono.label(class="form-label fw-bold") }}  
-                {{ form.telefono(class="form-control custom-input", required=True) }}  
-            </div>
-
-            <div class="mb-3">
-                {{ form.email.label(class="form-label fw-bold") }}  
-                {{ form.email(class="form-control custom-input", required=True) }}  
-            </div>
-
-            <div class="mb-3">
-                {{ form.contrasenia.label(class="form-label fw-bold") }}  
-                {{ form.contrasenia(class="form-control custom-input", required=True) }}  
-            </div>
-
-            <div class="mb-3">
-                {{ form.confirmar_contrasenia.label(class="form-label fw-bold") }}  
-                {{ form.confirmar_contrasenia(class="form-control custom-input", required=True) }}  
-            </div>
-
-            <div class="text-center mb-3">
-                <div class="g-recaptcha" data-sitekey="6LcQ1QQrAAAAAKp-M8mPlG4YNSIiz-Rfy2-oOr8I"></div>
-            </div>
-
-            <div class="text-center mb-3">
-                <small>¿Ya tienes una cuenta? <a href="{{ url_for('auth.login') }}" class="fw-bold text-dark">Inicia sesión</a></small>
-            </div>
-
-            {{ form.submit(class="btn custom-btn w-100") }} <!-- Botón para registrar -->
-        </form>
+    {% with messages = get_flashed_messages(with_categories=true) %} {% if
+    messages %}
+    <div class="mb-3">
+      {% for category, message in messages %}
+      <div
+        class="alert alert-{{ category }} alert-dismissible fade show"
+        role="alert"
+      >
+        <strong>{{ message }}</strong>
+        <button
+          type="button"
+          class="close"
+          data-dismiss="alert"
+          aria-label="Close"
+        >
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      {% endfor %}
     </div>
+    {% endif %} {% endwith %}
+
+    <form action="/auth/registro" method="POST">
+      {{ form.hidden_tag() }}
+      <!-- Para CSRF token -->
+
+      <div class="mb-3">
+        {{ form.nombre.label(class="form-label fw-bold") }} {{
+        form.nombre(class="form-control custom-input", required=True) }} {% if
+        form.nombre.errors %} {% for error in form.nombre.errors %}
+        <div class="text-danger">{{ error }}</div>
+        {% endfor %} {% endif %}
+      </div>
+
+      <div class="mb-3">
+        {{ form.nombre_usuario.label(class="form-label fw-bold") }} {{
+        form.nombre_usuario(class="form-control custom-input", required=True) }}
+        {% if form.nombre_usuario.errors %} {% for error in
+        form.nombre_usuario.errors %}
+        <div class="text-danger">{{ error }}</div>
+        {% endfor %} {% endif %}
+      </div>
+
+      <div class="mb-3">
+        {{ form.telefono.label(class="form-label fw-bold") }} {{
+        form.telefono(class="form-control custom-input", required=True) }} {% if
+        form.telefono.errors %} {% for error in form.telefono.errors %}
+        <div class="text-danger">{{ error }}</div>
+        {% endfor %} {% endif %}
+      </div>
+
+      <div class="mb-3">
+        {{ form.email.label(class="form-label fw-bold") }} {{
+        form.email(class="form-control custom-input", required=True) }} {% if
+        form.email.errors %} {% for error in form.email.errors %}
+        <div class="text-danger">{{ error }}</div>
+        {% endfor %} {% endif %}
+      </div>
+
+      <div class="mb-3">
+        {{ form.contrasenia.label(class="form-label fw-bold") }} {{
+        form.contrasenia(class="form-control custom-input", required=True) }} {%
+        if form.contrasenia.errors %} {% for error in form.contrasenia.errors %}
+        <div class="text-danger">{{ error }}</div>
+        {% endfor %} {% endif %}
+      </div>
+
+      <div class="mb-3">
+        {{ form.confirmar_contrasenia.label(class="form-label fw-bold") }} {{
+        form.confirmar_contrasenia(class="form-control custom-input",
+        required=True) }} {% if form.confirmar_contrasenia.errors %} {% for
+        error in form.confirmar_contrasenia.errors %}
+        <div class="text-danger">{{ error }}</div>
+        {% endfor %} {% endif %}
+      </div>
+
+      <div class="text-center mb-3">
+        <div
+          class="g-recaptcha"
+          data-sitekey="6LcQ1QQrAAAAAKp-M8mPlG4YNSIiz-Rfy2-oOr8I"
+        ></div>
+      </div>
+
+      <div class="text-center mb-3">
+        <small
+          >¿Ya tienes una cuenta?
+          <a href="{{ url_for('auth.login') }}" class="fw-bold text-dark"
+            >Inicia sesión</a
+          ></small
+        >
+      </div>
+
+      {{ form.submit(class="btn custom-btn w-100") }}
+      <!-- Botón para registrar -->
+    </form>
+  </div>
 </div>
+
 {% endblock %}
