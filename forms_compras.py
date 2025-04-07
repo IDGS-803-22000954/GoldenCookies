@@ -31,12 +31,6 @@ class InsumoForm(FlaskForm):
         ]
     )
     
-    cantidad_insumo = StringField('Cantidad de insumo', [
-        validators.DataRequired(message='La cantidad de insumo es requerida'),
-        validators.Length(min=1, max=10),
-        validators.Regexp(r'^\d+(\.\d{1,2})?$',
-                         message='La cantidad debe ser un número con hasta 2 decimales y mayor o igual a 0')
-    ])
 
     
 

@@ -77,12 +77,14 @@
             
             <div class="column">
                 <div class="mb-4">
-                    {{ form.unidad_medida.label(class="block font-bold mb-2") }}
-                    {{ form.unidad_medida(style="background-color: #f3f4f6;", class="w-full p-2 border rounded bg-gray-100") }}
+                    
+                    {{ form.unidad_medida(style="background-color: #f3f4f6;", class="w-full p-2 border rounded bg-gray-100", type="hidden") }}
                 </div>
                 
                 <div class="mb-4">
-                    {{ form.cantidad_presentaciones.label(class="block font-bold mb-2") }}
+                    <label for="cantidad_presentaciones" class="block font-bold mb-2">
+                        Cantidad de <span id="tipo-presentacion-texto">presentaciones</span>
+                    </label>
                     {{ form.cantidad_presentaciones(style="background-color: white;", class="w-full p-2 border rounded") }}
                     {% for error in form.cantidad_presentaciones.errors %}
                         <p class="text-red-500 text-xs italic">{{ error }}</p>
@@ -90,7 +92,9 @@
                 </div>
                 
                 <div class="mb-4">
-                    {{ form.peso_unitario.label(class="block font-bold mb-2") }}
+                    <label for="peso_unitario" class="block font-bold mb-2">
+                        Peso Unitario <span id="unidad-peso-texto">(unidad)</span>
+                    </label>
                     {{ form.peso_unitario(style="background-color: white;", class="w-full p-2 border rounded") }}
                     {% for error in form.peso_unitario.errors %}
                         <p class="text-red-500 text-xs italic">{{ error }}</p>
@@ -123,9 +127,6 @@
             <button type="submit" style="background-color: #006BE5; border-radius:13px; border-color:black; color:black;" class="btn px-4 py-2">
                 Registrar Compra
             </button>
-            <a href="{{ url_for('compras_bp.listar_compras') }}" style="background-color: #DC3545; border-radius:13px; border-color:black; color:black;" class="btn px-4 py-2 ml-4">
-                Cancelar
-            </a>
         </div>
     </form>
     
@@ -188,16 +189,31 @@
 
 
 <script>
-    // Función para actualizar la unidad de medida cuando se selecciona un insumo
     function actualizarUnidadMedida() {
     const insumoSelect = document.getElementById('id_insumo');
     const selectedOption = insumoSelect.options[insumoSelect.selectedIndex];
     const unidadMedida = selectedOption.text.match(/\(([^)]+)\)/)[1];
+    
+    // Actualizar el campo de unidad de medida
     document.getElementById('unidad_medida').value = unidadMedida;
+    
+    // Actualizar el texto entre paréntesis en el label de peso unitario
+    document.getElementById('unidad-peso-texto').textContent = `(${unidadMedida})`;
+}
+
+function actualizarTipoPresentacion() {
+    const presentacionSelect = document.getElementById('presentacion');
+    const tipoPresentacion = presentacionSelect.options[presentacionSelect.selectedIndex].text;
+    document.getElementById('tipo-presentacion-texto').textContent = tipoPresentacion.toLowerCase();
 }
 
 document.addEventListener('DOMContentLoaded', function() {
     actualizarUnidadMedida();
+    actualizarTipoPresentacion();
+    
+    // Escuchar cambios en los selects
+    document.getElementById('id_insumo').addEventListener('change', actualizarUnidadMedida);
+    document.getElementById('presentacion').addEventListener('change', actualizarTipoPresentacion);
 });
     </script>
     <script src="https://cdn.jsdelivr.net/npm/flowbite@3.1.2/dist/flowbite.min.js"></script>

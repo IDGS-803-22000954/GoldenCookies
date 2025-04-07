@@ -20,7 +20,7 @@ def agregarInsumo():
         nuevo_insumo = Insumo(
             nombre=formulario.nombre.data,
             unidad_medida=formulario.unidad_medida.data,
-            cantidad_insumo=formulario.cantidad_insumo.data
+            cantidad_insumo=0,  # Inicializa la cantidad de insumo en 0
         )
         db.session.add(nuevo_insumo)
         db.session.commit()
