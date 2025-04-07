@@ -19,22 +19,7 @@
         />
         <p class="texto">Inventario</p>
       </a>
-      <a href="{{ url_for('produccion.index') }}" class="boton">
-        <img
-          src="{{ url_for('static', filename='img/produccion.png') }}"
-          alt="Producción"
-          class="icono"
-        />
-        <p class="texto">Producción</p>
-      </a>
-      <a href="{{ url_for('galletas.galleta') }}" class="boton">
-        <img
-          src="{{ url_for('static', filename='img/galleta.png') }}"
-          alt="Galletas"
-          class="icono"
-        />
-        <p class="texto">Galletas</p>
-      </a>
+
       <a href="{{ url_for('proveedor_bp.agregarProveedor') }}" class="boton">
         <img
           src="{{ url_for('static', filename='img/ganancia.png') }}"
@@ -44,31 +29,9 @@
         <p class="texto">Proveedores</p>
       </a>
     </div>
+    
     <div class="row">
-      <a href="{{ url_for('recetas.receta') }}" class="boton">
-        <img
-          src="{{ url_for('static', filename='img/receta.png') }}"
-          alt="Recetas"
-          class="icono"
-        />
-        <p class="texto">Recetas</p>
-      </a>
-      <a href="{{ url_for('pedidos.pedido') }}" class="boton">
-        <img
-          src="{{ url_for('static', filename='img/pedido.png') }}"
-          alt="Pedidos"
-          class="icono"
-        />
-        <p class="texto">Pedidos</p>
-      </a>
-      <a href="{{ url_for('venta.ventas') }}" class="boton">
-        <img
-          src="{{ url_for('static', filename='img/ventas.png') }}"
-          alt="Ventas"
-          class="icono"
-        />
-        <p class="texto">Ventas</p>
-      </a>
+
       <a href="{{ url_for('auth.registro_adm') }}" class="boton">
         <img
           src="{{ url_for('static', filename='img/user.png') }}"

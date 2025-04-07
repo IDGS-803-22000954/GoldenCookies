@@ -190,7 +190,8 @@ class CompraInsumo(db.Model):
 
     id_compra: Mapped[int] = mapped_column(Integer, primary_key=True)
     presentacion: Mapped[str] = mapped_column(String(50))
-    cantidad_normalizada: Mapped[float] = mapped_column(Float)
+    cantidad_presentaciones: Mapped[float] = mapped_column(Float)
+    precio_unitario: Mapped[float] = mapped_column(Float)
     precio_total: Mapped[float] = mapped_column(Float)
     id_proveedor: Mapped[Optional[int]] = mapped_column(Integer)
     id_lote_insumo: Mapped[Optional[int]] = mapped_column(Integer)
@@ -265,11 +266,7 @@ class RecetaInsumo(db.Model):
 class DetalleVenta(db.Model):
     __tablename__ = 'detalle_venta'
     __table_args__ = (
-        ForeignKeyConstraint(['id_galleta'], [
-                             'galleta.id_galleta'], name='detalle_venta_ibfk_2'),
-        ForeignKeyConstraint(['id_venta'], ['venta.id_venta'],
-                             name='detalle_venta_ibfk_1'),
-        Index('id_lote_galleta', 'id_lote_galleta'),
+        ForeignKeyConstraint(['id_venta'], ['venta.id_venta'], name='detalle_venta_ibfk_1'),
         Index('id_venta', 'id_venta')
     )
 
@@ -278,15 +275,11 @@ class DetalleVenta(db.Model):
     precio_unitario: Mapped[float] = mapped_column(Float)
     tipo_venta: Mapped[str] = mapped_column(String(50))
     id_venta: Mapped[Optional[int]] = mapped_column(Integer)
-    id_lote_galleta: Mapped[Optional[int]] = mapped_column(Integer)
-    created_at: Mapped[Optional[datetime.datetime]] = mapped_column(
-        TIMESTAMP, server_default=text('CURRENT_TIMESTAMP'))
+    id_lote_galleta: Mapped[Optional[int]] = mapped_column(Integer, db.ForeignKey('lote_galleta.id_lote_galleta'))  
+    created_at: Mapped[Optional[datetime.datetime]] = mapped_column(TIMESTAMP, server_default=text('CURRENT_TIMESTAMP'))
 
-    galleta: Mapped[Optional['Galleta']] = relationship(
-        'Galleta', back_populates='detalle_venta')
-    venta: Mapped[Optional['Venta']] = relationship(
-        'Venta', back_populates='detalle_venta')
-
+    lote_galleta: Mapped['LoteGalleta'] = relationship('LoteGalleta', back_populates='detalle_venta') 
+    venta: Mapped['Venta'] = relationship('Venta', back_populates='detalle_venta')
 
 class Produccion(db.Model):
     __tablename__ = 'produccion'

@@ -20,12 +20,16 @@ class InsumoForm(FlaskForm):
                          message='El nombre solo puede contener letras, números, espacios y guiones')
     ])
     
-    unidad_medida = StringField('Unidad de Medida', [
-        validators.DataRequired(message='La unidad de medida es requerida'),
-        validators.Length(min=1, max=60),
-        validators.Regexp(r'^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$',
-                         message='La unidad de medida solo puede contener letras y espacios')
-    ])
+    unidad_medida = SelectField('Unidad de Medida', 
+        choices=[
+            ('mililitros', 'Mililitros (ml)'),
+            ('gramos', 'Gramos (g)'),
+            ('unidades', 'Unidades (u)')
+        ],
+        validators=[
+            DataRequired(message='La unidad de medida es requerida')
+        ]
+    )
     
     cantidad_insumo = StringField('Cantidad de insumo', [
         validators.DataRequired(message='La cantidad de insumo es requerida'),
@@ -63,17 +67,35 @@ class ProveedorForm(FlaskForm):
 class CompraInsumoForm(FlaskForm):
     id_insumo = SelectField('Insumo', coerce=int, validators=[DataRequired()])
     id_proveedor = SelectField('Proveedor', coerce=int, validators=[DataRequired()])
-    cantidad = FloatField('Cantidad', validators=[
+    
+    # Cambiamos presentación a SelectField con opciones predefinidas
+    presentacion = SelectField('Presentación', choices=[
+        ('costal', 'Costal'),
+        ('bolsa', 'Bolsa'),
+        ('caja', 'Caja'),
+        ('bulto', 'Bulto'),
+        ('saco', 'Saco'),
+        ('botella', 'Botella'),
+        ('otro', 'Otro')
+    ], validators=[DataRequired()])
+    
+    cantidad_presentaciones = FloatField('Cantidad de Presentaciones', validators=[
         DataRequired(),
-        NumberRange(min=0.01, message='La cantidad debe ser mayor a cero')
+        NumberRange(min=1, message='Debe ser al menos 1')
     ])
-    costo_unitario = FloatField('Costo Unitario', validators=[
+    
+    peso_unitario = FloatField('Peso Unitario', validators=[
+        DataRequired(),
+        NumberRange(min=0.01, message='El peso debe ser mayor a cero')
+    ])
+    
+    precio_total = FloatField('Costo Total', validators=[
         DataRequired(),
         NumberRange(min=0.01, message='El costo debe ser mayor a cero')
     ])
-    presentacion = StringField('Presentación', validators=[
-        DataRequired(),
-        Length(min=2, max=50)
-    ])
+    
+    # Campo para mostrar la unidad de medida (no editable)
+    unidad_medida = StringField('Unidad de Medida', render_kw={'readonly': True})
+    
     fecha_compra = DateField('Fecha de Compra', default=datetime.today(), validators=[DataRequired()])
     fecha_caducidad = DateField('Fecha de Caducidad', validators=[DataRequired()])

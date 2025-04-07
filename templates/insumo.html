@@ -23,116 +23,136 @@
       <img src="../static/img/logo_goldenCookies.jpeg" class="logo">
       </a>
     </header>
+    {%with messages=get_flashed_messages()%}
+    {%if messages%}
+        {%for message in messages%}
+            <div style="background-color:mediumaquamarine; color:white" class="bg-red-500 text-white p-4 rounded-lg">
+                {{message}}
+            </div>
+        {%endfor%}
+    {%endif%}
+    {%endwith%}
     <div class="titulo">
       <img src="../static/img/carro-de-la-compra.png" alt="Venta" class="icono">
       <h1>Insumos</h1>
     </div>
 
+    <!-- Botones para mostrar formularios -->
+    
+    <center>
+      <button 
+        onclick="toggleForm('agregar-form')" 
+        style="background-color: #28a745; border-radius:13px; border-color:black; color:black;" 
+        class="btn btn-warning px-4 py-2">
+        Agregar Insumo
+      </button>
+    </center>
+      
+      
+
+    
+
     <!-- Contenedor para ambos formularios -->
-    <div class="flex flex-wrap justify-center gap-8">
-      <!-- Formulario de agregar insumos -->
-      <div class="form-container">
-        
-          <h2 class="text-2xl font-bold mb-6 text-center">Agregar Insumo</h2>
-          
-          <form method="post" action="{{ url_for('insumo_bp.agregarInsumo') }}" class="max-w-md mx-auto">
-              {{ formulario.hidden_tag() }}
-              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+    <div class="flex flex-col items-center gap-8">
+      <!-- Formulario de agregar insumos (oculto inicialmente) -->
+      <div id="agregar-form" class="form-container hidden w-full max-w-md">
+        <form method="post" action="{{ url_for('insumo_bp.agregarInsumo') }}" class="max-w-md mx-auto">
+            {{ formulario.hidden_tag() }}
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
 
-              <div class="mb-4">
-                  <label class="block text-sm font-bold mb-2">
-                      {{ formulario.nombre.label }}
-                  </label>
-                  {{ formulario.nombre(style="background-color: white;", class="w-full p-2 border rounded") }}
-                  {% if formulario.nombre.errors %}
-                      <div class="text-red-500 text-xs italic">
-                          {% for error in formulario.nombre.errors %}
-                              {{ error }}
-                          {% endfor %}
-                      </div>
-                  {% endif %}
-              </div>
-
-              <div class="mb-6">
-                  <label class="block text-sm font-bold mb-2">
-                      {{ formulario.unidad_medida.label }}
-                  </label>
-                  {{ formulario.unidad_medida(style="background-color: white;", class="w-full p-2 border rounded") }}
-                  {% if formulario.unidad_medida.errors %}
-                      <div class="text-red-500 text-xs italic">
-                          {% for error in formulario.unidad_medida.errors %}
-                              {{ error }}
-                          {% endfor %}
-                      </div>
-                  {% endif %}
-              </div>
-              
-              <div class="mb-6">
+            <div class="mb-4">
                 <label class="block text-sm font-bold mb-2">
-                    {{ formulario.cantidad_insumo.label }}
+                    {{ formulario.nombre.label }}
                 </label>
-                {{ formulario.cantidad_insumo(style="background-color: white;", class="w-full p-2 border rounded") }}
-                {% if formulario.cantidad_insumo.errors %}
+                {{ formulario.nombre(style="background-color: white;", class="w-full p-2 border rounded") }}
+                {% if formulario.nombre.errors %}
                     <div class="text-red-500 text-xs italic">
-                        {% for error in formulario.cantidad_insumo.errors %}
+                        {% for error in formulario.nombre.errors %}
                             {{ error }}
                         {% endfor %}
                     </div>
                 {% endif %}
-              </div>
-
-              <div class="button-container">
-              <div class="text-center">
-                  <button type="submit" style="background-color: #006BE5; border-radius:13px; border-color:black; color:black;" class="btn btn-warning">
-                      Guardar Insumo
-                  </button>
-              </div>
             </div>
-          </form>
-        
+
+            <div class="mb-6">
+                <label class="block text-sm font-bold mb-2">
+                    {{ formulario.unidad_medida.label }}
+                </label>
+                {{ formulario.unidad_medida(style="background-color: white;", class="w-full p-2 border rounded") }}
+                {% if formulario.unidad_medida.errors %}
+                    <div class="text-red-500 text-xs italic">
+                        {% for error in formulario.unidad_medida.errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            
+            <div class="mb-6">
+              <label class="block text-sm font-bold mb-2">
+                  {{ formulario.cantidad_insumo.label }}
+              </label>
+              {{ formulario.cantidad_insumo(style="background-color: white;", class="w-full p-2 border rounded") }}
+              {% if formulario.cantidad_insumo.errors %}
+                  <div class="text-red-500 text-xs italic">
+                      {% for error in formulario.cantidad_insumo.errors %}
+                          {{ error }}
+                      {% endfor %}
+                  </div>
+              {% endif %}
+            </div>
+
+            <div class="button-container flex justify-between">
+              <button type="submit" style="background-color: #006BE5; border-radius:13px; border-color:black; color:black;" class="btn px-4 py-2">
+                  Guardar Insumo
+              </button>
+              <button type="button" onclick="toggleForm('agregar-form')" style="background-color: #DC3545; border-radius:13px; border-color:black; color:black;" class="btn px-4 py-2">
+                  Cancelar
+              </button>
+            </div>
+        </form>
       </div>
 
-      <!-- Formulario de edición de insumos -->
-      <div class="form-container">
-          <h2 class="text-2xl font-bold mb-6 text-center">Editar Insumo</h2>
-          
-          <form method="post" action="{{ url_for('insumo_bp.editar_insumo') }}" class="max-w-md mx-auto">
-              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-              <input type="hidden" id="edit_id_insumo" name="id_insumo">
+      <!-- Formulario de edición de insumos (oculto inicialmente) -->
+      <div id="editar-form" class="form-container hidden w-full max-w-md">
+        <form method="post" action="{{ url_for('insumo_bp.editar_insumo') }}" class="max-w-md mx-auto">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <input type="hidden" id="edit_id_insumo" name="id_insumo">
 
-              <div class="mb-4">
-                  <label class="block text-sm font-bold mb-2" for="edit_nombre">
-                      Nombre
-                  </label>
-                  <input type="text" style="background-color: white;" id="edit_nombre" name="nombre" class="w-full p-2 border rounded">
-              </div>
-
-              <div class="mb-6">
-                  <label class="block  text-sm font-bold mb-2" for="edit_unidad_medida">
-                      Unidad de Medida
-                  </label>
-                  <input type="text" style="background-color: white;" id="edit_unidad_medida" name="unidad_medida" class="w-full p-2 border rounded">
-              </div>
-              
-              <div class="mb-6">
-                <label class="block text-sm font-bold mb-2" for="edit_cantidad_insumo">
-                    Cantidad
+            <div class="mb-4">
+                <label class="block text-sm font-bold mb-2" for="edit_nombre">
+                    Nombre
                 </label>
-                <input type="number" style="background-color: white;" step="0.01" id="edit_cantidad_insumo" name="cantidad_insumo" class="w-full p-2 border rounded">
-              </div>
-              <div class="button-container">
-              <div class="text-center">
-                  <button type="submit" style="background-color: #006BE5; border-radius:13px; border-color:black; color:black;" class="btn btn-warning">
-                      Guardar Cambios
-                  </button>
-              </div>
+                <input type="text" style="background-color: white;" id="edit_nombre" name="nombre" class="w-full p-2 border rounded">
             </div>
-                <div class="text-center mt-2">
-                    <button type="button" onclick="limpiarFormularioEditar()" style="background-color: #DC3545; border-radius:13px; border-color:black; color:black;" class="btn btn-warning">
-                        Cancelar
-                    </button>
-                </div>
-          </form>
+
+            <div class="mb-6">
+                <label class="block text-sm font-bold mb-2" for="edit_unidad_medida">
+                    Unidad de Medida
+                </label>
+                <select style="background-color: white;" id="edit_unidad_medida" name="unidad_medida" class="w-full p-2 border rounded">
+                    <option value="mililitros">Mililitros (ml)</option>
+                    <option value="gramos">Gramos (g)</option>
+                    <option value="unidades">Unidades (u)</option>
+                </select>
+            </div>
+            
+            <div class="mb-6">
+              <label class="block text-sm font-bold mb-2" for="edit_cantidad_insumo">
+                  Cantidad
+              </label>
+              <input type="number" style="background-color: white;" step="0.01" id="edit_cantidad_insumo" name="cantidad_insumo" class="w-full p-2 border rounded">
+            </div>
+            
+            <div class="button-container flex justify-between">
+              <button type="submit" style="background-color: #006BE5; border-radius:13px; border-color:black; color:black;" class="btn px-4 py-2">
+                  Guardar Cambios
+              </button>
+              <button type="button" onclick="limpiarYocultarFormularioEditar()" style="background-color: #DC3545; border-radius:13px; border-color:black; color:black;" class="btn px-4 py-2">
+                  Cancelar
+              </button>
+            </div>
+        </form>
       </div>
     </div>
 
@@ -160,8 +180,8 @@
                   <td>{{ insumo.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
                   <td>
                       <button onclick="cargarDatosEdicion('{{ insumo.id_insumo }}', '{{ insumo.nombre }}', '{{ insumo.unidad_medida }}', '{{ insumo.cantidad_insumo }}')" 
-                       class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded" class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded">
-                       <img src="../static/img/editar.png" alt="Mantequilla de maní" style="max-width: 50px; width: 100%; height: auto;">
+                       class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded">
+                       <img src="../static/img/editar.png" alt="Editar" style="max-width: 50px; width: 100%; height: auto;">
                       </button>
                   </td>
               </tr>
@@ -173,21 +193,48 @@
 
     <script>
     function cargarDatosEdicion(id, nombre, unidad_medida, cantidad) {
-        document.getElementById('edit_id_insumo').value = id;
-        document.getElementById('edit_nombre').value = nombre;
-        document.getElementById('edit_unidad_medida').value = unidad_medida;
-        document.getElementById('edit_cantidad_insumo').value = cantidad;
-        
-
-        document.querySelector('.flex.flex-wrap.justify-center.gap-8').scrollIntoView({
-            behavior: 'smooth'
-        });
-    }
-    function limpiarFormularioEditar() {
+    document.getElementById('edit_id_insumo').value = id;
+    document.getElementById('edit_nombre').value = nombre;
+    document.getElementById('edit_unidad_medida').value = unidad_medida;
+    document.getElementById('edit_cantidad_insumo').value = cantidad;
+    
+    // Mostrar el formulario de edición y ocultar el de agregar
+    document.getElementById('agregar-form').classList.add('hidden');
+    document.getElementById('editar-form').classList.remove('hidden');
+    
+    // Desplazarse al formulario
+    document.getElementById('editar-form').scrollIntoView({
+        behavior: 'smooth'
+    });
+}
+    
+    function limpiarYocultarFormularioEditar() {
         document.getElementById('edit_id_insumo').value = '';
         document.getElementById('edit_nombre').value = '';
         document.getElementById('edit_unidad_medida').value = '';
         document.getElementById('edit_cantidad_insumo').value = '';
+        document.getElementById('editar-form').classList.add('hidden');
+    }
+    
+    function toggleForm(formId) {
+        const form = document.getElementById(formId);
+        
+        // Ocultar el otro formulario
+        const otherFormId = formId === 'agregar-form' ? 'editar-form' : 'agregar-form';
+        document.getElementById(otherFormId).classList.add('hidden');
+        
+        // Alternar la visibilidad del formulario solicitado
+        form.classList.toggle('hidden');
+        
+        // Si se está mostrando, desplazarse a él
+        if (!form.classList.contains('hidden')) {
+            form.scrollIntoView({behavior: 'smooth'});
+        }
+        
+        // Limpiar formulario de edición si se está mostrando el de agregar
+        if (formId === 'agregar-form' && !form.classList.contains('hidden')) {
+            limpiarYocultarFormularioEditar();
+        }
     }
     </script>
 

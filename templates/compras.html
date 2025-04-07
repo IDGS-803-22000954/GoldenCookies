@@ -23,10 +23,20 @@
       <img src="../static/img/logo_goldenCookies.jpeg" class="logo">
       </a>
   </header>
+  {%with messages=get_flashed_messages()%}
+    {%if messages%}
+        {%for message in messages%}
+            <div style="background-color:mediumaquamarine; color:white" class="bg-red-500 text-white p-4 rounded-lg">
+                {{message}}
+            </div>
+        {%endfor%}
+    {%endif%}
+    {%endwith%}
   <div class="titulo">
     <img src="../static/img/carro-de-la-compra.png" alt="Venta" class="icono">
     <h1>Compras</h1>
   </div>
+  
 
   <!-- Formulario de compra de insumos -->
   <div class="form-container">
@@ -34,16 +44,15 @@
 
     
     
-        <form method="POST" action="{{ url_for('compras_bp.listar_compras') }}">
-            {{ form.hidden_tag() }}
-              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="form-columns">
+    <form method="POST" action="{{ url_for('compras_bp.listar_compras') }}" id="compraForm">
+        {{ form.hidden_tag() }}
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="column">
-            
                 <div class="mb-4">
                     {{ form.id_insumo.label(class="block font-bold mb-2") }}
-                    {{ form.id_insumo(style="background-color: white;", class="w-full p-2 border rounded") }}
+                    {{ form.id_insumo(style="background-color: white;", class="w-full p-2 border rounded", onchange="actualizarUnidadMedida()") }}
                     {% for error in form.id_insumo.errors %}
                         <p class="text-red-500 text-xs italic">{{ error }}</p>
                     {% endfor %}
@@ -58,89 +67,95 @@
                 </div>
                 
                 <div class="mb-4">
-                    {{ form.cantidad.label(class="block font-bold mb-2") }}
-                    {{ form.cantidad(style="background-color: white;", class="w-full p-2 border rounded") }}
-                    {% for error in form.cantidad.errors %}
-                        <p class="text-red-500 text-xs italic">{{ error }}</p>
-                    {% endfor %}
-                </div>
-                
-                <div class="mb-4">
-                    {{ form.costo_unitario.label(class="block font-bold mb-2") }}
-                    {{ form.costo_unitario(style="background-color: white;", class="w-full p-2 border rounded") }}
-                    {% for error in form.costo_unitario.errors %}
-                        <p class="text-red-500 text-xs italic">{{ error }}</p>
-                    {% endfor %}
-                </div>
-            </div>
-            <div class="column">
-                <div class="mb-4">
                     {{ form.presentacion.label(class="block font-bold mb-2") }}
                     {{ form.presentacion(style="background-color: white;", class="w-full p-2 border rounded") }}
                     {% for error in form.presentacion.errors %}
                         <p class="text-red-500 text-xs italic">{{ error }}</p>
                     {% endfor %}
                 </div>
+            </div>
+            
+            <div class="column">
+                <div class="mb-4">
+                    {{ form.unidad_medida.label(class="block font-bold mb-2") }}
+                    {{ form.unidad_medida(style="background-color: #f3f4f6;", class="w-full p-2 border rounded bg-gray-100") }}
+                </div>
                 
                 <div class="mb-4">
-                    {{ form.fecha_compra.label(class="block font-bold mb-2") }}
-                    {{ form.fecha_compra(style="background-color: white;", class="w-full p-2 border rounded") }}
-                    {% for error in form.fecha_compra.errors %}
+                    {{ form.cantidad_presentaciones.label(class="block font-bold mb-2") }}
+                    {{ form.cantidad_presentaciones(style="background-color: white;", class="w-full p-2 border rounded") }}
+                    {% for error in form.cantidad_presentaciones.errors %}
                         <p class="text-red-500 text-xs italic">{{ error }}</p>
                     {% endfor %}
                 </div>
                 
                 <div class="mb-4">
-                    {{ form.fecha_caducidad.label(class="block font-bold mb-2") }}
-                    {{ form.fecha_caducidad(style="background-color: white;", class="w-full p-2 border rounded") }}
-                    {% for error in form.fecha_caducidad.errors %}
+                    {{ form.peso_unitario.label(class="block font-bold mb-2") }}
+                    {{ form.peso_unitario(style="background-color: white;", class="w-full p-2 border rounded") }}
+                    {% for error in form.peso_unitario.errors %}
+                        <p class="text-red-500 text-xs italic">{{ error }}</p>
+                    {% endfor %}
+                </div>
+                
+                <div class="mb-4">
+                    {{ form.precio_total.label(class="block font-bold mb-2") }}
+                    {{ form.precio_total(style="background-color: white;", class="w-full p-2 border rounded") }}
+                    {% for error in form.precio_total.errors %}
                         <p class="text-red-500 text-xs italic">{{ error }}</p>
                     {% endfor %}
                 </div>
             </div>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+            
+            
+            <div class="mb-4">
+                {{ form.fecha_caducidad.label(class="block font-bold mb-2") }}
+                {{ form.fecha_caducidad(style="background-color: white;", class="w-full p-2 border rounded") }}
+                {% for error in form.fecha_caducidad.errors %}
+                    <p class="text-red-500 text-xs italic">{{ error }}</p>
+                {% endfor %}
             </div>
         </div>
-            <div class="button-container">
-            
-                <button type="submit"  style="background-color: #006BE5; border-radius:13px; border-color:black; color:black;" class="btn btn-warning">
-                    Registrar Compra
-                </button>
-                <a href="{{ url_for('compras_bp.listar_compras') }}" style="background-color: #DC3545; border-radius:13px; border-color:black; color:black;" class="btn btn-warning">
-                    Cancelar
-                </a>
-            
+        
+        <div class="button-container mt-6">
+            <button type="submit" style="background-color: #006BE5; border-radius:13px; border-color:black; color:black;" class="btn px-4 py-2">
+                Registrar Compra
+            </button>
+            <a href="{{ url_for('compras_bp.listar_compras') }}" style="background-color: #DC3545; border-radius:13px; border-color:black; color:black;" class="btn px-4 py-2 ml-4">
+                Cancelar
+            </a>
         </div>
-        </form>
+    </form>
     
 </div>
 </div>
 
-<center>
+
     <div class="container mx-auto px-4 py-8">
-        <div class="flex justify-between items-center mb-6">
+        <div class="flex justify-center items-center mb-6">
             <h1 class="text-2xl font-bold">Listado de Compras de Insumos</h1>
-            <a href="{{ url_for('compras_bp.listar_compras') }}" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
-                Nueva Compra
-            </a>
         </div>
+    
         
-        <div class="bg-white shadow-md rounded-lg overflow-hidden">
-            <table class="table table-striped table-hover">
+        <div class="shadow-md rounded-lg overflow-hidden">
+            <table class="table table-striped table-hover text-center">
                 <thead>
                     <tr>
-                        <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-xs font-semibold text-gray-600 uppercase tracking-wider">
                             Fecha
                         </th>
-                        <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-xs font-semibold text-gray-600 uppercase tracking-wider">
                             Insumo
                         </th>
-                        <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-xs font-semibold text-gray-600 uppercase tracking-wider">
                             Proveedor
                         </th>
-                        <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-xs font-semibold text-gray-600 uppercase tracking-wider">
                             Cantidad
                         </th>
-                        <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-xs font-semibold text-gray-600 uppercase tracking-wider">
                             Precio Total
                         </th>
                     </tr>
@@ -149,7 +164,7 @@
                     {% for compra in compras %}
                     <tr>
                         <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                            {{ compra.lote_insumo.fecha_compra.strftime('%d/%m/%Y') }}
+                        {{ compra.lote_insumo.created_at.strftime('%d/%m/%Y') }}
                         </td>
                         <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
                             {{ compra.lote_insumo.insumo.nombre }}
@@ -170,8 +185,21 @@
             </table>
         </div>
     </div>
-</center>
 
+
+<script>
+    // Función para actualizar la unidad de medida cuando se selecciona un insumo
+    function actualizarUnidadMedida() {
+    const insumoSelect = document.getElementById('id_insumo');
+    const selectedOption = insumoSelect.options[insumoSelect.selectedIndex];
+    const unidadMedida = selectedOption.text.match(/\(([^)]+)\)/)[1];
+    document.getElementById('unidad_medida').value = unidadMedida;
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    actualizarUnidadMedida();
+});
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/flowbite@3.1.2/dist/flowbite.min.js"></script>
   </body>
 </html>
