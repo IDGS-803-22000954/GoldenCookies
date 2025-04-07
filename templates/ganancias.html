@@ -34,7 +34,7 @@
     {% endif %} {% endwith %}
 
     <div class="button-container d-flex justify-content-between">
-      <form class="mx-4" action="{{url_for('pedidos.catalogo')}}">
+      <form class="mx-4" action="{{url_for('admin')}}">
         <input type="hidden" name="csrf_token" value="{{csrf_token()}}" />
         <button class="btn btn-warning">Regresar</button>
       </form>
