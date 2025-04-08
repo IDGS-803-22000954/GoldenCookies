@@ -1,124 +1,222 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_wtf.csrf import CSRFProtect
 from config import DevelopmentConfig
-from models import db, Receta, RecetaInsumo, Insumo, Galleta
+from models import db, Receta, RecetaInsumo, CompraInsumo, Galleta, Insumo
 from flask import session
 from flask import g
 from recetas.forms_recetas import RecetaForm, RecetaInsumoForm
 from flask import g
+from flask import current_app
+from werkzeug.utils import secure_filename
+import os
 from flask import jsonify
 
-
-
 recetas_bp = Blueprint('recetas', __name__, url_prefix='/recetas')
+
+UPLOAD_FOLDER = 'static/uploads'
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def calcular_precio_galleta(id_galleta):
+    receta = Receta.query.filter_by(id_galleta=id_galleta).first()
+    if not receta:
+        return 0.0
+
+    insumos_receta = RecetaInsumo.query.filter_by(id_receta=receta.id_receta).all()
+    costo_total = 0.0
+
+    for ri in insumos_receta:
+        insumo = Insumo.query.get(ri.id_insumo)
+
+        compra = (
+            CompraInsumo.query
+            .join(CompraInsumo.lote_insumo)
+            .filter(CompraInsumo.lote_insumo.has(id_insumo=insumo.id_insumo))
+            .order_by(CompraInsumo.created_at.desc())
+            .first()
+        )
+
+        if not compra:
+            continue
+
+        precio_unitario = compra.precio_unitario
+        cantidad_usada = ri.cantidad_insumo
+
+        costo_insumo = cantidad_usada * precio_unitario
+        costo_total += costo_insumo
+
+    if receta.cantidad_produccion == 0:
+        return 0.0
+
+    precio_unitario_galleta = (costo_total / receta.cantidad_produccion) * 1.25
+    precio = round(precio_unitario_galleta, 2)
+    return precio
 
 @recetas_bp.route("/", methods=['GET', 'POST'])
 def receta():
     form = RecetaForm()
-    form.cargar_opciones()  # Instancia del formulario
-    if request.method == 'POST':
-        return insertar_receta()  # Llama a la función de inserción
+    form.cargar_opciones()
 
+    if request.method == 'POST':
+        return insertar_receta(form)
+
+    recetas = Receta.query.all()
     insumos = Insumo.query.all()
     galletas = Galleta.query.all()
-    recetas = Receta.query.options(db.joinedload(Receta.receta_insumo)).all()
 
-    return render_template('recetas.html', form=form, insumos=insumos, galletas=galletas, recetas=recetas)
-
+    return render_template('recetas.html', form=form, recetas=recetas, insumos=insumos, galletas=galletas)
 
 @recetas_bp.route('/insertar_receta', methods=['GET', 'POST'])
 def insertar_receta():
-    nombre = request.form.get('nombre')
-    descripcion = request.form.get('descripcion')
-    cantidad_produccion = request.form.get('cantidad_produccion')
-    id_galleta = request.form.get('id_galleta')
+    form = RecetaForm()
+    form.cargar_opciones()
 
-    if not nombre or not id_galleta:
-        flash("El nombre y la galleta son obligatorios", "danger")
+    if request.method == 'POST':
+        nombre = form.nombre.data
+        detalles = form.detalles.data
+        cantidad_produccion = form.cantidad_produccion.data
+        peso_unidad = form.peso_unidad.data
+        descripcion = form.descripcion.data
+        imagen_file = form.imagen_galleta.data
+
+        nombre_imagen = None
+        if imagen_file:
+            upload_folder = current_app.config['UPLOAD_FOLDER']
+            os.makedirs(upload_folder, exist_ok=True)
+            imagen_file.stream.seek(0)
+            nuevo_nombre = secure_filename(imagen_file.filename)
+            ruta_img = os.path.join(upload_folder, nuevo_nombre)
+            imagen_file.save(ruta_img)
+            nombre_imagen = nuevo_nombre
+
+        nueva_galleta = Galleta(
+            nombre=nombre,
+            precio=0.0,
+            cantidad_galletas=0,
+            descripcion=descripcion,
+            peso_unidad=peso_unidad,
+            imagen=nombre_imagen
+        )
+        db.session.add(nueva_galleta)
+        db.session.commit()
+
+        nueva_receta = Receta(
+            nombre=nombre,
+            detalles=detalles,
+            cantidad_produccion=cantidad_produccion,
+            id_galleta=nueva_galleta.id_galleta
+        )
+        db.session.add(nueva_receta)
+        db.session.commit()
+
+        for insumo in Insumo.query.all():
+            insumo_id = insumo.id_insumo
+            if f'insumo_{insumo_id}' in request.form:
+                try:
+                    cantidad = float(request.form[f'cantidad_{insumo_id}'].replace(',', '.'))
+                except ValueError:
+                    cantidad = 0.0
+
+                if cantidad > 0:
+                    receta_insumo = RecetaInsumo(
+                        id_receta=nueva_receta.id_receta,
+                        id_insumo=insumo_id,
+                        cantidad_insumo=cantidad
+                    )
+                    db.session.add(receta_insumo)
+
+        db.session.commit()
+
+        nueva_galleta.precio = calcular_precio_galleta(nueva_galleta.id_galleta)
+        db.session.commit()
+
+        flash("Receta y galleta agregadas con éxito", "success")
         return redirect(url_for('recetas.receta'))
 
-    nueva_receta = Receta(
-        nombre=nombre,
-        descripcion=descripcion,
-        cantidad_produccion=cantidad_produccion,
-        id_galleta=id_galleta
-    )
-    db.session.add(nueva_receta)
-    db.session.commit()
-
-    
-    for insumo_id in request.form:
-        if insumo_id.startswith('insumo_'):
-            id_insumo = int(insumo_id.split('_')[1])
-            
-            try:
-                cantidad_insumo = float(request.form[f'cantidad_{id_insumo}'].replace(',', '.'))
-            except ValueError:
-                cantidad_insumo = 0.0
-            
-            if cantidad_insumo > 0:
-                receta_insumo = RecetaInsumo(
-                    id_receta=nueva_receta.id_receta,  
-                    id_insumo=id_insumo,
-                    cantidad_insumo=cantidad_insumo
-                )
-                db.session.add(receta_insumo)
-
-    db.session.commit()
-    flash('Receta agregada con éxito', 'success')
     return redirect(url_for('recetas.receta'))
 
-
-@recetas_bp.route('/modificar_receta/<int:id_receta>', methods=['GET', 'POST'])
+@recetas_bp.route('/modificar/<int:id_receta>', methods=['GET', 'POST'])
 def modificar_receta(id_receta):
-    if request.method == 'GET':
-        receta = Receta.query.get_or_404(id_receta)
-        return jsonify({
-            'nombre': receta.nombre,
-            'descripcion': receta.descripcion,
-            'cantidad_produccion': receta.cantidad_produccion,
-            'id_galleta': receta.id_galleta,
-            'insumos': [
-                {
-                    'id_insumo': ri.id_insumo,
-                    'nombre': ri.insumo.nombre,
-                    'cantidad': ri.cantidad_insumo,
-                    'unidad_medida': ri.insumo.unidad_medida
-                }
-                for ri in receta.receta_insumo
-            ]
-        })
+    receta = Receta.query.get_or_404(id_receta)
+    galleta = Galleta.query.get_or_404(receta.id_galleta)
+    insumos = Insumo.query.all()
 
-    # Manejo de la modificación de la receta
-    nombre = request.form.get('nombre')
-    descripcion = request.form.get('descripcion')
-    cantidad_produccion = request.form.get('cantidad_produccion')
-    id_galleta = request.form.get('id_galleta')
+    if request.method == 'POST':
+        receta.nombre = request.form.get('nombre')
+        receta.detalles = request.form.get('detalles')
+        receta.cantidad_produccion = int(request.form.get('cantidad_produccion'))
 
-    if not nombre or not id_galleta:
-        flash("El nombre y la galleta son obligatorios", "danger")
+        galleta.nombre = receta.nombre
+        galleta.descripcion = galleta.descripcion
+        galleta.peso_unidad = float(request.form.get('peso_unidad') or 0)
+
+        imagen_file = request.files.get('imagen_galleta')
+        if imagen_file and imagen_file.filename != '':
+            upload_folder = current_app.config['UPLOAD_FOLDER']
+            os.makedirs(upload_folder, exist_ok=True)
+            imagen_file.stream.seek(0)
+            nuevo_nombre = secure_filename(imagen_file.filename)
+            ruta_img = os.path.join(upload_folder, nuevo_nombre)
+            imagen_file.save(ruta_img)
+            galleta.imagen = nuevo_nombre
+
+        db.session.commit()
+
+        RecetaInsumo.query.filter_by(id_receta=receta.id_receta).delete()
+        db.session.commit()
+
+        for insumo in insumos:
+            insumo_id = insumo.id_insumo
+            if f'insumo_{insumo_id}' in request.form:
+                try:
+                    cantidad = float(request.form[f'cantidad_{insumo_id}'].replace(',', '.'))
+                except ValueError:
+                    cantidad = 0.0
+
+                if cantidad > 0:
+                    nueva_ri = RecetaInsumo(
+                        id_receta=receta.id_receta,
+                        id_insumo=insumo_id,
+                        cantidad_insumo=cantidad
+                    )
+                    db.session.add(nueva_ri)
+
+        db.session.commit()
+
+        galleta.precio = calcular_precio_galleta(galleta.id_galleta)
+        db.session.commit()
+
+        flash("Receta y galleta modificadas correctamente", "success")
         return redirect(url_for('recetas.receta'))
 
-    receta = Receta.query.get_or_404(id_receta)
-    receta.nombre = nombre
-    receta.descripcion = descripcion
-    receta.cantidad_produccion = cantidad_produccion
-    receta.id_galleta = id_galleta
+    # Construir el JSON para la respuesta
+    receta_insumos = {ri.id_insumo: ri.cantidad_insumo for ri in receta.receta_insumo}
+    
+    # Añadir los insumos con sus cantidades asociadas
+    insumos_data = [
+        {
+            'id_insumo': insumo.id_insumo,
+            'nombre': insumo.nombre,
+            'unidad_medida': insumo.unidad_medida,
+            'cantidad': receta_insumos.get(insumo.id_insumo, 0)  # Obtener la cantidad si existe
+        }
+        for insumo in insumos
+    ]
 
-    # Eliminar insumos existentes
-    RecetaInsumo.query.filter_by(id_receta=id_receta).delete()
-
-    # Agregar nuevos insumos
-    for insumo_id in request.form:
-        if insumo_id.startswith('insumo_'):
-            id_insumo = int(insumo_id.split('_')[1])
-            cantidad_insumo = float(request.form.get(f'cantidad_{id_insumo}', '0').replace(',', '.'))
-            nuevo_insumo = RecetaInsumo(id_receta=id_receta, id_insumo=id_insumo, cantidad_insumo=cantidad_insumo)
-            db.session.add(nuevo_insumo)
-
-    db.session.commit()
-    flash('Receta modificada con éxito', 'info')
-    return redirect(url_for('recetas.receta'))
-
-
-
+    return jsonify({
+        'receta': {
+            'id': receta.id_receta,
+            'nombre': receta.nombre,
+            'detalles': receta.detalles,
+            'cantidad_produccion': receta.cantidad_produccion
+        },
+        'galleta': {
+            'nombre': galleta.nombre,
+            'descripcion': galleta.descripcion,
+            'peso_unidad': galleta.peso_unidad,
+            'imagen': galleta.imagen
+        },
+        'insumos': insumos_data  # Asegurarse de incluir la lista de insumos
+    })

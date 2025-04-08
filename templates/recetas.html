@@ -12,14 +12,14 @@
     <link rel="stylesheet" href="../static/css/recetas.css">
 </head>
 <body>
-    <header class="encabezado ">
+    <header class="encabezado">
         <div class="container d-flex justify-content-between align-items-center">
             <a href="../index.html">
                 <img src="../static/img/logo_goldenCookies.jpg" alt="Logo" class="logo">
             </a>
         </div>
     </header>
-    
+
     <div class="container my-5">
         <div class="text-center">
             <img src="../static/img/libro-de-cocina.png" alt="Receta" class="icono">
@@ -31,27 +31,29 @@
             </button>
         </div>
 
+        <!-- Formulario para agregar receta -->
         <div id="formAgregar" class="mt-4" style="display: none;">
             <h5>Agregar Receta</h5>
-            <form id="agregarForm" method="POST" action="{{ url_for('recetas.insertar_receta') }}">
+            <form id="agregarForm" method="POST" action="{{ url_for('recetas.insertar_receta') }}" enctype="multipart/form-data">
                 {{ form.hidden_tag() }}
                 <label>Nombre:</label>
                 <input type="text" class="form-control" name="nombre" required>
-                
-                <label>Descripción:</label>
-                <textarea class="form-control" name="descripcion" required></textarea>
-                
+
+                <label>Detalles de la receta:</label>
+                <textarea class="form-control" name="detalles" required></textarea>
+
                 <label>Cantidad Producida:</label>
                 <input type="number" class="form-control" name="cantidad_produccion" required>
-                
-                <label>Galleta:</label>
-                <select class="form-select" name="id_galleta" required>
-                    <option value="">Seleccione una galleta</option>
-                    {% for galleta in galletas %}
-                        <option value="{{ galleta.id_galleta }}">{{ galleta.nombre }}</option>
-                    {% endfor %}
-                </select>
-                
+
+                <label>Peso por unidad(gr):</label>
+                <input type="number" class="form-control" name="peso_unidad" required>
+
+                <label>Descripción de la galleta</label>
+                <textarea class="form-control" name="descripcion" required></textarea>
+
+                <label>Imagen de la Galleta:</label>
+                <input type="file" class="form-control" name="imagen_galleta" accept="image/*">
+
                 <label>Insumos:</label>
                 <div id="insumosContainer">
                     {% for insumo in insumos %}
@@ -62,33 +64,40 @@
                         </div>
                     {% endfor %}
                 </div>
-                
+
                 <button type="submit" class="btn btn-primary">Guardar</button>
                 <button type="button" class="btn btn-secondary" id="btnCancelarAgregar">Cancelar</button>
-            </form>            
+            </form>
         </div>
 
-        <!-- Formulario de modificar receta -->
+        <!-- Formulario para modificar receta -->
         <div id="formModificar" class="mt-4" style="display: none;">
             <h5>Modificar Receta</h5>
-            <form id="modificarForm" method="POST" action="">   
-                {{ form.hidden_tag() }}       
+            <form id="modificarForm" method="POST" action="" enctype="multipart/form-data">
+                {{ form.hidden_tag() }}
                 <input type="hidden" name="id_receta" id="modificarId">
+
                 <label>Nombre:</label>
                 <input type="text" class="form-control" name="nombre" id="modificarNombre" required>
-                <label>Descripción:</label>
-                <textarea class="form-control" name="descripcion" id="modificarDescripcion" required></textarea>
+
+                <label>Detalles de la receta:</label>
+                <textarea class="form-control" name="detalles" id="modificarDescripcion" required></textarea>
+
                 <label>Cantidad Producida:</label>
                 <input type="number" class="form-control" name="cantidad_produccion" id="modificarCantidad" required>
-                <label>Galleta:</label>
-                <select class="form-select" name="id_galleta" id="modificarGalleta" required>
-                    <option value="">Seleccione una galleta</option>
-                    {% for galleta in galletas %}
-                        <option value="{{ galleta.id_galleta }}">{{ galleta.nombre }}</option>
-                    {% endfor %}
-                </select>
+
+                <label>Peso por unidad(gr):</label>
+                <input type="number" class="form-control" name="peso_unidad" id="modificarPesoUnidad" required>
+
+                <label>Descripción de la galleta</label>
+                <textarea class="form-control" name="descripcion_galleta" id="modificarDescripcionGalleta" required></textarea>
+
+                <label>Imagen de la Galleta:</label>
+                <input type="file" class="form-control" name="imagen_galleta" accept="image/*">
+
                 <label>Insumos:</label>
                 <div id="modificarInsumosContainer"></div>
+
                 <button type="submit" class="btn btn-primary">Guardar</button>
                 <button type="button" class="btn btn-secondary" id="btnCancelarModificar">Cancelar</button>
             </form>
@@ -99,9 +108,13 @@
             <thead>
                 <tr>
                     <th>Receta</th>
-                    <th>Descripción</th>
+                    <th>Detalles</th>
                     <th>Cantidad</th>
                     <th>Galleta</th>
+                    <th>Precio por galleta</th>
+                    <th>Peso por galletas(gr)</th>
+                    <th>Descripción de la galleta</th>
+                    <th>Imagen</th> <!-- Nueva columna para la imagen -->
                     <th>Insumos</th>
                     <th>Modificar</th>
                 </tr>
@@ -110,16 +123,26 @@
                 {% for receta in recetas %}
                 <tr>
                     <td>{{ receta.nombre }}</td>
-                    <td>{{ receta.descripcion }}</td>
+                    <td>{{ receta.detalles }}</td>
                     <td>{{ receta.cantidad_produccion }}</td>
                     <td>{{ receta.galleta.nombre }}</td>
+                    <td>{{ receta.galleta.precio }}</td>
+                    <td>{{ receta.galleta.peso_unidad }}</td>
+                    <td>{{ receta.galleta.descripcion }}</td>
+                    <td>
+                        {% if receta.galleta.imagen %}
+                            <img src="{{ url_for('static', filename='uploads/' + receta.galleta.imagen) }}" alt="Imagen de la Galleta" style="max-width: 100px; max-height: 100px;">
+                        {% else %}
+                            <p>No imagen</p>
+                        {% endif %}
+                    </td>
                     <td>
                         <ul>
                             {% for ri in receta.receta_insumo %}
                                 <li>{{ ri.insumo.nombre }}: {{ ri.cantidad_insumo }} {{ ri.insumo.unidad_medida }}</li>
                             {% endfor %}
                         </ul>
-                    </td>                    
+                    </td>
                     <td>
                         <button class="btn btn-primary btnModificar" data-id="{{ receta.id_receta }}">
                             <i class="fas fa-edit"></i>
@@ -133,66 +156,73 @@
 
     <script>
         document.getElementById('btnAgregarReceta').addEventListener('click', function() {
-    document.getElementById('formAgregar').style.display = 'block';
-    document.getElementById('formModificar').style.display = 'none';
-});
+            document.getElementById('formAgregar').style.display = 'block';
+            document.getElementById('formModificar').style.display = 'none';
+        });
 
-document.getElementById('btnCancelarAgregar').addEventListener('click', function() {
-    document.getElementById('formAgregar').style.display = 'none';
-});
+        document.getElementById('btnCancelarAgregar').addEventListener('click', function() {
+            document.getElementById('formAgregar').style.display = 'none';
+        });
 
-document.getElementById('btnCancelarModificar').addEventListener('click', function() {
-    document.getElementById('formModificar').style.display = 'none';
-});
+        document.getElementById('btnCancelarModificar').addEventListener('click', function() {
+            document.getElementById('formModificar').style.display = 'none';
+        });
 
-document.querySelectorAll('.btnModificar').forEach(button => {
-    button.addEventListener('click', function() {
-        let idReceta = this.getAttribute('data-id');
-        let formModificar = document.getElementById('modificarForm');
-        formModificar.action = `/recetas/modificar_receta/${idReceta}`; // Establecer la acción aquí
+        document.querySelectorAll('.btnModificar').forEach(button => {
+            button.addEventListener('click', function() {
+                let idReceta = this.getAttribute('data-id');
+                let formModificar = document.getElementById('modificarForm');
+                formModificar.action = `/recetas/modificar/${idReceta}`;
 
-        fetch(`/recetas/modificar_receta/${idReceta}`)
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('modificarId').value = idReceta;
-                document.getElementById('modificarNombre').value = data.nombre;
-                document.getElementById('modificarDescripcion').value = data.descripcion;
-                document.getElementById('modificarCantidad').value = data.cantidad_produccion;
-                document.getElementById('modificarGalleta').value = data.id_galleta;
+                fetch(`/recetas/modificar/${idReceta}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        document.getElementById('modificarId').value = idReceta;
+                        document.getElementById('modificarNombre').value = data.nombre;
+                        document.getElementById('modificarDescripcion').value = data.descripcion;
+                        document.getElementById('modificarCantidad').value = data.cantidad_produccion;
+                        document.getElementById('modificarPesoUnidad').value = data.peso_unidad;
 
-                let insumosContainer = document.getElementById('modificarInsumosContainer');
-                insumosContainer.innerHTML = '';
+                        let insumosContainer = document.getElementById('modificarInsumosContainer');
+                        insumosContainer.innerHTML = '';
 
-                // Cargar insumos existentes
-                data.insumos.forEach(insumo => {
-                    let div = document.createElement('div');
-                    div.innerHTML = `
-                        <input type="checkbox" name="insumo_${insumo.id_insumo}" checked>
-                        <label>${insumo.nombre} (${insumo.unidad_medida})</label>
-                        <input type="number" step="any" name="cantidad_${insumo.id_insumo}" value="${insumo.cantidad}">
-                    `;
-                    insumosContainer.appendChild(div);
-                });
+                        // Cargar insumos existentes
+                        data.insumos.forEach(insumo => {
+                            let div = document.createElement('div');
+                            div.innerHTML =
+                                `<input type="checkbox" name="insumo_${insumo.id_insumo}" checked>
+                                <label>${insumo.nombre} (${insumo.unidad_medida})</label>
+                                <input type="number" step="any" name="cantidad_${insumo.id_insumo}" value="${insumo.cantidad}">`;
+                            insumosContainer.appendChild(div);
+                        });
 
-                // Mostrar el formulario de modificación
-                document.getElementById('formModificar').style.display = 'block';
-                document.getElementById('formAgregar').style.display = 'none';
-            })
-            .catch(error => console.error('Error al cargar receta:', error));
-    });
-});
-document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
-    checkbox.addEventListener('change', function() {
-        let cantidadInput = this.nextElementSibling.nextElementSibling; // Selecciona el input de cantidad
-        if (this.checked) {
-            cantidadInput.disabled = false;
-        } else {
-            cantidadInput.disabled = true;
-            cantidadInput.value = ''; // Limpiar el valor cuando se desmarca
-        }
-    });
-});
+                        if (data.imagen) {
+                        let imagenPreview = document.createElement('img');
+                        imagenPreview.src = `/static/uploads/${data.imagen}`;
+                        imagenPreview.style.maxWidth = '200px';
+                        imagenPreview.style.maxHeight = '200px';
+                        document.getElementById('modificarForm').prepend(imagenPreview);
+                }
 
+
+                        document.getElementById('formModificar').style.display = 'block';
+                        document.getElementById('formAgregar').style.display = 'none';
+                    })
+                    .catch(error => console.error('Error al cargar receta:', error));
+            });
+        });
+
+        document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                let cantidadInput = this.nextElementSibling.nextElementSibling;
+                if (this.checked) {
+                    cantidadInput.disabled = false;
+                } else {
+                    cantidadInput.disabled = true;
+                    cantidadInput.value = '';
+                }
+            });
+        });
     </script>
 </body>
 </html>

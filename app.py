@@ -4,23 +4,23 @@ from flask_wtf.csrf import CSRFProtect
 from config import DevelopmentConfig
 from flask import g
 from models import db
+from flask import current_app
 #from flask_login import LoginManager, login_user, logout_user, login_reqd
 import json
 
 from config import DevelopmentConfig
 
 from recetas.recetas import recetas_bp
-from recetas.galletas import galletas_bp
 
 app = Flask(__name__)
 app.config.from_object(DevelopmentConfig)
+app.config['UPLOAD_FOLDER'] = 'static/uploads'
 csrf = CSRFProtect(app)
 db.init_app(app)
 
 
 
-
-app.register_blueprint(galletas_bp, url_prefix='/galletas')  # Agregado
+  
 app.register_blueprint(recetas_bp, url_prefix='/recetas')   
 
 
