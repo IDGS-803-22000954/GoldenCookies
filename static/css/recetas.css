@@ -163,6 +163,90 @@ h5 {
   border-radius: 10px;
 }
 
+/* Contenedor del formulario */
+    .fomulario {
+        background-color: #4a3520;
+        padding: 25px;
+        margin: 30px auto;
+        border-radius: 12px;
+        max-width: 700px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        color: #ffffff;
+    }
+
+    .fomulario h5 {
+        margin-bottom: 20px;
+        font-weight: bold;
+        color: #f8e7d0;
+    }
+
+    .fomulario label {
+        font-weight: 600;
+        margin-top: 10px;
+        display: block;
+    }
+
+    .fomulario input[type="text"],
+    .fomulario input[type="number"],
+    .fomulario input[type="file"],
+    .fomulario textarea {
+        width: 100%;
+        padding: 8px 12px;
+        margin-top: 5px;
+        margin-bottom: 15px;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+    }
+
+    .fomulario textarea {
+        resize: vertical;
+    }
+
+    .fomulario .btn {
+        margin-top: 15px;
+        padding: 10px 20px;
+        border-radius: 6px;
+        font-weight: bold;
+    }
+
+    .fomulario .btn-primary {
+        background-color: #8c5e3d;
+        border: none;
+    }
+
+    .fomulario .btn-primary:hover {
+        background-color: #6f4b2e;
+    }
+
+    .fomulario .btn-secondary {
+        background-color: #bca58c;
+        border: none;
+        margin-left: 10px;
+    }
+
+    .fomulario .btn-secondary:hover {
+        background-color: #9f8c77;
+    }
+
+    /* Estilo para cada grupo de insumo */
+    #insumosContainer div,
+    #modificarInsumosContainer div {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 10px;
+    }
+
+    .fomulario input[type="checkbox"] {
+        transform: scale(1.3);
+        cursor: pointer;
+    }
+
+    .fomulario input[type="number"][name^="cantidad_"] {
+        width: 100px;
+        margin-left: auto;
+    }
+
 /* Table styles */
 .table {
   width: 100%;
@@ -290,4 +374,31 @@ h5 {
 .form-control,
 .btn {
   animation: fadeIn 0.5s ease;
+}
+
+.card {
+  transition: transform 0.2s;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.card-img-top {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.card-footer {
+  border-top: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+/* Agregar en tu archivo CSS */
+#modificarInsumosContainer .form-check {
+  margin-bottom: 5px;
+}
+
+#modificarInsumosContainer input[type="number"] {
+  margin-bottom: 15px;
 }

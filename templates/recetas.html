@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -25,6 +26,18 @@
             <img src="../static/img/libro-de-cocina.png" alt="Receta" class="icono">
             <h1 class="display-4 fw-bold">Recetas</h1>
         </div>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div style="margin: 0px 40px 0px 40px;">
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
         <div class="text-center mt-4">
             <button class="btn btn-warning text-white fw-bold" id="btnAgregarReceta">
                 <i class="fas fa-plus"></i> Agregar Receta
@@ -32,7 +45,7 @@
         </div>
 
         <!-- Formulario para agregar receta -->
-        <div id="formAgregar" class="mt-4" style="display: none;">
+        <div id="formAgregar" class="formulario mt-4" style="display: none;">
             <h5>Agregar Receta</h5>
             <form id="agregarForm" method="POST" action="{{ url_for('recetas.insertar_receta') }}" enctype="multipart/form-data">
                 {{ form.hidden_tag() }}
@@ -71,7 +84,7 @@
         </div>
 
         <!-- Formulario para modificar receta -->
-        <div id="formModificar" class="mt-4" style="display: none;">
+        <div id="formModificar" class="formulario mt-4" style="display: none;">
             <h5>Modificar Receta</h5>
             <form id="modificarForm" method="POST" action="" enctype="multipart/form-data">
                 {{ form.hidden_tag() }}
@@ -103,55 +116,118 @@
             </form>
         </div>
 
-        <!-- Tabla de recetas -->
-        <table class="table mt-4">
-            <thead>
-                <tr>
-                    <th>Receta</th>
-                    <th>Detalles</th>
-                    <th>Cantidad</th>
-                    <th>Galleta</th>
-                    <th>Precio por galleta</th>
-                    <th>Peso por galletas(gr)</th>
-                    <th>Descripción de la galleta</th>
-                    <th>Imagen</th> <!-- Nueva columna para la imagen -->
-                    <th>Insumos</th>
-                    <th>Modificar</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for receta in recetas %}
-                <tr>
-                    <td>{{ receta.nombre }}</td>
-                    <td>{{ receta.detalles }}</td>
-                    <td>{{ receta.cantidad_produccion }}</td>
-                    <td>{{ receta.galleta.nombre }}</td>
-                    <td>{{ receta.galleta.precio }}</td>
-                    <td>{{ receta.galleta.peso_unidad }}</td>
-                    <td>{{ receta.galleta.descripcion }}</td>
-                    <td>
-                        {% if receta.galleta.imagen %}
-                            <img src="{{ url_for('static', filename='uploads/' + receta.galleta.imagen) }}" alt="Imagen de la Galleta" style="max-width: 100px; max-height: 100px;">
-                        {% else %}
-                            <p>No imagen</p>
-                        {% endif %}
-                    </td>
-                    <td>
+        <!-- Cards de recetas -->
+    <div class="row mt-4">
+        {% for receta in recetas %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <!-- Imagen de la galleta -->
+                {% if receta.galleta.imagen %}
+                <img src="{{ url_for('static', filename='uploads/' + receta.galleta.imagen) }}" 
+                     class="card-img-top" 
+                     alt="{{ receta.galleta.nombre }}"
+                     style="height: 200px; object-fit: cover;">
+                {% else %}
+                <div class="card-img-top bg-light d-flex align-items-center justify-content-center" 
+                     style="height: 200px;">
+                    <i class="fas fa-cookie fa-5x text-secondary"></i>
+                </div>
+                {% endif %}
+                
+                <div class="card-body">
+                    <h5 class="card-title">{{ receta.nombre }}</h5>
+                    <p class="card-text">
+                        <strong>Producción:</strong> {{ receta.cantidad_produccion }} unidades<br>
+                        <strong>Peso por galleta:</strong> {{ receta.galleta.peso_unidad }} gr
+                    </p>
+                </div>
+                
+                <div class="card-footer bg-white">
+                    <div class="d-flex justify-content-between">
+                        <!-- Botón para ver detalles de la receta -->
+                        <button class="btn btn-outline-primary btn-sm" 
+                                data-bs-toggle="modal" 
+                                data-bs-target="#modalDetalles{{ receta.id_receta }}">
+                            <i class="fas fa-book-open"></i> Receta
+                        </button>
+                        
+                        <!-- Botón para ver detalles de la galleta -->
+                        <button class="btn btn-outline-info btn-sm" 
+                                data-bs-toggle="modal" 
+                                data-bs-target="#modalGalleta{{ receta.id_receta }}">
+                            <i class="fas fa-cookie"></i> Galleta
+                        </button>
+                        
+                        <!-- Botón para modificar -->
+                        <button class="btn btn-outline-warning btn-sm btnModificar" 
+                                data-id="{{ receta.id_receta }}">
+                            <i class="fas fa-edit"></i> Editar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal para detalles de la receta -->
+        <div class="modal fade" id="modalDetalles{{ receta.id_receta }}" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Detalles de la receta: {{ receta.nombre }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <h6>Instrucciones:</h6>
+                        <p>{{ receta.detalles }}</p>
+                        
+                        <h6 class="mt-3">Insumos utilizados:</h6>
                         <ul>
                             {% for ri in receta.receta_insumo %}
-                                <li>{{ ri.insumo.nombre }}: {{ ri.cantidad_insumo }} {{ ri.insumo.unidad_medida }}</li>
+                            <li>{{ ri.insumo.nombre }}: {{ ri.cantidad_insumo }} {{ ri.insumo.unidad_medida }}</li>
                             {% endfor %}
                         </ul>
-                    </td>
-                    <td>
-                        <button class="btn btn-primary btnModificar" data-id="{{ receta.id_receta }}">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal para detalles de la galleta -->
+        <div class="modal fade" id="modalGalleta{{ receta.id_receta }}" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Detalles de la galleta: {{ receta.galleta.nombre }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            {% if receta.galleta.imagen %}
+                            <div class="col-md-6">
+                                <img src="{{ url_for('static', filename='uploads/' + receta.galleta.imagen) }}" 
+                                     class="img-fluid rounded" 
+                                     alt="{{ receta.galleta.nombre }}">
+                            </div>
+                            {% endif %}
+                            <div class="col-md-{% if receta.galleta.imagen %}6{% else %}12{% endif %}">
+                                <p><strong>Precio:</strong> ${{ receta.galleta.precio }}</p>
+                                <p><strong>Peso por unidad:</strong> {{ receta.galleta.peso_unidad }} gr</p>
+                                <p><strong>Descripción:</strong></p>
+                                <p>{{ receta.galleta.descripcion }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
     </div>
 
     <script>
@@ -168,49 +244,79 @@
             document.getElementById('formModificar').style.display = 'none';
         });
 
+        
         document.querySelectorAll('.btnModificar').forEach(button => {
-            button.addEventListener('click', function() {
-                let idReceta = this.getAttribute('data-id');
-                let formModificar = document.getElementById('modificarForm');
-                formModificar.action = `/recetas/modificar/${idReceta}`;
+    button.addEventListener('click', function() {
+        let idReceta = this.getAttribute('data-id');
+        let formModificar = document.getElementById('modificarForm');
+        formModificar.action = `/recetas/modificar/${idReceta}`;
 
-                fetch(`/recetas/modificar/${idReceta}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        document.getElementById('modificarId').value = idReceta;
-                        document.getElementById('modificarNombre').value = data.nombre;
-                        document.getElementById('modificarDescripcion').value = data.descripcion;
-                        document.getElementById('modificarCantidad').value = data.cantidad_produccion;
-                        document.getElementById('modificarPesoUnidad').value = data.peso_unidad;
+        fetch(`/recetas/modificar/${idReceta}`)
+            .then(response => response.json())
+            .then(data => {
+                // Llenar datos de la receta
+                document.getElementById('modificarId').value = idReceta;
+                document.getElementById('modificarNombre').value = data.receta.nombre;
+                document.getElementById('modificarDescripcion').value = data.receta.detalles;
+                document.getElementById('modificarCantidad').value = data.receta.cantidad_produccion;
+                
+                // Llenar datos de la galleta
+                document.getElementById('modificarPesoUnidad').value = data.galleta.peso_unidad;
+                document.getElementById('modificarDescripcionGalleta').value = data.galleta.descripcion;
 
-                        let insumosContainer = document.getElementById('modificarInsumosContainer');
-                        insumosContainer.innerHTML = '';
+                // Limpiar el contenedor de insumos
+                let insumosContainer = document.getElementById('modificarInsumosContainer');
+                insumosContainer.innerHTML = '';
 
-                        // Cargar insumos existentes
-                        data.insumos.forEach(insumo => {
-                            let div = document.createElement('div');
-                            div.innerHTML =
-                                `<input type="checkbox" name="insumo_${insumo.id_insumo}" checked>
-                                <label>${insumo.nombre} (${insumo.unidad_medida})</label>
-                                <input type="number" step="any" name="cantidad_${insumo.id_insumo}" value="${insumo.cantidad}">`;
-                            insumosContainer.appendChild(div);
-                        });
+                // Cargar insumos existentes
+                data.insumos.forEach(insumo => {
+                    let div = document.createElement('div');
+                    div.className = 'mb-2';
+                    div.innerHTML = `
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="insumo_${insumo.id_insumo}" 
+                                   id="insumo_${insumo.id_insumo}" checked>
+                            <label class="form-check-label" for="insumo_${insumo.id_insumo}">
+                                ${insumo.nombre} (${insumo.unidad_medida})
+                            </label>
+                        </div>
+                        <input type="number" class="form-control" step="any" 
+                               name="cantidad_${insumo.id_insumo}" 
+                               value="${insumo.cantidad}">`;
+                    insumosContainer.appendChild(div);
+                });
 
-                        if (data.imagen) {
-                        let imagenPreview = document.createElement('img');
-                        imagenPreview.src = `/static/uploads/${data.imagen}`;
-                        imagenPreview.style.maxWidth = '200px';
-                        imagenPreview.style.maxHeight = '200px';
-                        document.getElementById('modificarForm').prepend(imagenPreview);
+                // Mostrar vista previa de la imagen si existe
+                let existingPreview = document.querySelector('#modificarForm img');
+                if (existingPreview) {
+                    existingPreview.remove();
+                }
+                
+                if (data.galleta.imagen) {
+                    let imagenPreview = document.createElement('img');
+                    imagenPreview.src = `/static/uploads/${data.galleta.imagen}`;
+                    imagenPreview.className = 'img-thumbnail mb-3';
+                    imagenPreview.style.maxWidth = '200px';
+                    imagenPreview.style.maxHeight = '200px';
+                    imagenPreview.alt = 'Imagen actual';
+                    
+                    // Insertar después del título "Modificar Receta"
+                    let title = document.querySelector('#formModificar h5');
+                    title.parentNode.insertBefore(imagenPreview, title.nextSibling);
+                    
+                    // Agregar texto "Imagen actual"
+                    let currentImageText = document.createElement('p');
+                    currentImageText.textContent = 'Imagen actual:';
+                    title.parentNode.insertBefore(currentImageText, imagenPreview);
                 }
 
-
-                        document.getElementById('formModificar').style.display = 'block';
-                        document.getElementById('formAgregar').style.display = 'none';
-                    })
-                    .catch(error => console.error('Error al cargar receta:', error));
-            });
-        });
+                // Mostrar el formulario de modificación
+                document.getElementById('formModificar').style.display = 'block';
+                document.getElementById('formAgregar').style.display = 'none';
+            })
+            .catch(error => console.error('Error al cargar receta:', error));
+    });
+});
 
         document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
             checkbox.addEventListener('change', function() {
@@ -224,5 +330,10 @@
             });
         });
     </script>
+
+<!-- JS de Bootstrap y Popper.js (necesario para los modales) -->
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js"></script>
+
 </body>
 </html>
