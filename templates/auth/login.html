@@ -1,49 +1,188 @@
-{% extends './layout_A.html' %}
+{% extends "layout.html" %} {% block title %}Iniciar Sesión - Golden Cookies{%
+endblock %} {% block main %}
+<div class="min-h-screen bg-cookie-50 flex items-center justify-center p-4">
+  <div class="max-w-md w-full bg-white rounded-lg shadow-lg p-8">
+    <!-- Logo y Título -->
+    <div class="text-center mb-8">
+      <img
+        src="{{ url_for('static', filename='img/logo.webp') }}"
+        alt="Golden Cookies Logo"
+        class="mx-auto h-20 mb-4"
+      />
+      <h1 class="text-3xl font-kavoon text-cookie-800">Golden Cookies</h1>
+      <p class="text-cookie-600">Inicia sesión para acceder</p>
+    </div>
 
+    <!-- Flash messages -->
+    <div id="flash-messages" class="mb-6">
+      {% with messages = get_flashed_messages(with_categories=true) %} {% if
+      messages %} {% for category, message in messages %}
+      <div
+        id="flash-{{ loop.index }}"
+        class="p-4 mb-4 rounded-lg flex justify-between items-center {% if category == 'success' %}bg-green-100 text-green-800{% elif category == 'danger' %}bg-red-100 text-red-800{% elif category == 'warning' %}bg-yellow-100 text-yellow-800{% else %}bg-blue-100 text-blue-800{% endif %}"
+        role="alert"
+      >
+        <div>
+          {% if category == 'success' %}
+          <i class="fas fa-check-circle mr-2"></i>
+          {% elif category == 'danger' %}
+          <i class="fas fa-exclamation-circle mr-2"></i>
+          {% elif category == 'warning' %}
+          <i class="fas fa-exclamation-triangle mr-2"></i>
+          {% else %}
+          <i class="fas fa-info-circle mr-2"></i>
+          {% endif %} {{ message }}
+        </div>
+        <button
+          type="button"
+          onclick="closeFlash('flash-{{ loop.index }}')"
+          class="text-gray-500 hover:text-gray-700 focus:outline-none"
+        >
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      {% endfor %} {% endif %} {% endwith %}
+    </div>
 
-{% block main %}
-<div class="container">
-    <div class="login-box p-4 rounded shadow">
-        <h2 class="text-center mb-4">Inicio de Sesión</h2>
+    <!-- Login Form -->
+    <form method="POST" action="{{ url_for('auth.login') }}">
+      {{ form.csrf_token }}
 
-        {% with messages = get_flashed_messages() %}
-        {% if messages %}
-        <div class="mb-3">
-            {% for message in messages %}
-            <div class="alert alert-primary alert-dismissible fade show" role="alert">
-                <strong>{{ message }}</strong>
-                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            {% endfor %}
+      <div class="mb-6">
+        <label for="username" class="block text-cookie-700 mb-2"
+          >Nombre de Usuario</label
+        >
+        <div class="relative">
+          {{ form.username(class="w-full p-3 pl-10 border border-cookie-300
+          rounded-md focus:ring focus:ring-cookie-400 focus:border-cookie-500",
+          placeholder="Ingresa tu nombre de usuario", required=true) }}
+          <div
+            class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"
+          >
+            <i class="fas fa-user text-cookie-400"></i>
+          </div>
+        </div>
+        {% if form.username.errors %}
+        <div class="text-red-600 text-sm mt-1">
+          {% for error in form.username.errors %} {{ error }} {% endfor %}
         </div>
         {% endif %}
-        {% endwith %}
+      </div>
 
-        <form action="/auth/login" method="POST">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+      <div class="mb-6">
+        <label for="password" class="block text-cookie-700 mb-2"
+          >Contraseña</label
+        >
+        <div class="relative">
+          {{ form.password(class="w-full p-3 pl-10 border border-cookie-300
+          rounded-md focus:ring focus:ring-cookie-400 focus:border-cookie-500",
+          placeholder="Ingresa tu contraseña", required=true) }}
+          <div
+            class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"
+          >
+            <i class="fas fa-lock text-cookie-400"></i>
+          </div>
+          <button
+            type="button"
+            onclick="togglePasswordVisibility('password')"
+            class="absolute inset-y-0 right-0 flex items-center pr-3"
+          >
+            <i id="password-toggle-icon" class="fas fa-eye text-cookie-400"></i>
+          </button>
+        </div>
+        {% if form.password.errors %}
+        <div class="text-red-600 text-sm mt-1">
+          {% for error in form.password.errors %} {{ error }} {% endfor %}
+        </div>
+        {% endif %}
+      </div>
 
-            <div class="mb-3">
-                {{ form.username.label(class="form-label fw-bold") }}  
-                {{ form.username(class="form-control custom-input", size=32) }}  
-            </div>
+      <div class="mb-6">
+        <div class="flex items-center">
+          <input
+            type="checkbox"
+            id="remember"
+            name="remember"
+            class="h-4 w-4 text-cookie-600 focus:ring-cookie-500 border-cookie-300 rounded"
+          />
+          <label for="remember" class="ml-2 block text-sm text-cookie-700">
+            Recordar sesión
+          </label>
+        </div>
+      </div>
 
-            <div class="mb-3">
-                {{ form.password.label(class="form-label fw-bold") }}  
-                {{ form.password(class="form-control custom-input", size=32) }}  
-            </div>
+      <button
+        type="submit"
+        class="w-full bg-cookie-600 text-white py-3 px-4 rounded-md hover:bg-cookie-700 transition-colors font-medium"
+      >
+        <i class="fas fa-sign-in-alt mr-2"></i>Iniciar Sesión
+      </button>
+    </form>
 
-            <div class="text-center mb-3">
-                <div class="g-recaptcha" data-sitekey="6LcQ1QQrAAAAAKp-M8mPlG4YNSIiz-Rfy2-oOr8I"></div>
-            </div>
-
-            <div class="text-center mb-3">
-                <small>¿No tienes una cuenta? <a href="{{ url_for('auth.registro') }}" class="fw-bold text-dark">Regístrate como cliente</a></small>
-            </div>
-
-            <button type="submit" class="btn custom-btn w-100">Aceptar</button>
-        </form>
+    <!-- Links -->
+    <div class="mt-6 text-center">
+      <p class="text-cookie-600">
+        ¿No tienes una cuenta?
+        <a
+          href="{{ url_for('auth.registro') }}"
+          class="text-cookie-700 hover:text-cookie-800 font-medium"
+        >
+          Regístrate
+        </a>
+      </p>
     </div>
+
+    <!-- Cookie Decoration -->
+    <div class="mt-8 flex justify-center">
+      <img
+        src="{{ url_for('static', filename='img/cookie-decoration.png') }}"
+        alt="Cookie Decoration"
+        class="h-12 opacity-60"
+      />
+    </div>
+  </div>
 </div>
+
+<script>
+  // Cerrar mensaje flash
+  function closeFlash(id) {
+    const flashElement = document.getElementById(id);
+    if (flashElement) {
+      flashElement.style.opacity = "0";
+      setTimeout(() => {
+        flashElement.style.display = "none";
+      }, 300);
+    }
+  }
+
+  // Cerrar mensajes flash automáticamente después de 5 segundos
+  document.addEventListener("DOMContentLoaded", function () {
+    const flashMessages = document.querySelectorAll('[id^="flash-"]');
+    flashMessages.forEach((message) => {
+      // Añadir transición para efecto de desvanecimiento
+      message.style.transition = "opacity 0.3s ease";
+
+      // Cerrar automáticamente después de 5 segundos
+      setTimeout(() => {
+        closeFlash(message.id);
+      }, 5000);
+    });
+  });
+
+  // Función para mostrar/ocultar contraseña
+  function togglePasswordVisibility(inputId) {
+    const passwordInput = document.getElementById(inputId);
+    const icon = document.getElementById("password-toggle-icon");
+
+    if (passwordInput.type === "password") {
+      passwordInput.type = "text";
+      icon.classList.remove("fa-eye");
+      icon.classList.add("fa-eye-slash");
+    } else {
+      passwordInput.type = "password";
+      icon.classList.remove("fa-eye-slash");
+      icon.classList.add("fa-eye");
+    }
+  }
+</script>
 {% endblock %}

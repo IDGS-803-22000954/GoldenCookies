@@ -1,0 +1,92 @@
+{# templates/nuevo_pedido.html #} {% extends "layout_B.html" %} {% block main %}
+<link rel="stylesheet" href="../static/css/venta.css" />
+
+<style>
+  td {
+    align-content: center;
+  }
+</style>
+
+<header class="encabezado">
+  <a href="../index.html">
+    <img src="../static/img/logo_goldenCookies.jpeg" class="logo" />
+  </a>
+</header>
+<div style="margin-top: 55px">
+  <div class="titulo">
+    <img src="../static/img/carro-de-la-compra.png" alt="Venta" class="icono" />
+    <h1>Detalles de tu pedido</h1>
+  </div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %} {% if
+  messages %}
+  <div style="margin: 0px 40px 0px 40px">
+    {% for category, message in messages %}
+    <div
+      class="alert alert-{{ category }} alert-dismissible fade show"
+      role="alert"
+    >
+      {{ message }}
+      <button
+        type="button"
+        class="btn-close"
+        data-bs-dismiss="alert"
+        aria-label="Close"
+      ></button>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %} {% endwith %}
+
+  <div class="button-container d-flex">
+    <form class="mx-4" action="{{url_for('pedidos.pedido')}}">
+      <input type="hidden" name="csrf_token" value="{{csrf_token()}}" />
+      <button class="btn btn-warning">Regresar</button>
+    </form>
+  </div>
+
+  <p></p>
+
+  <div class="venta-container" style="width: 100%">
+    <!-- Formulario -->
+
+    <!-- Tabla -->
+    <div class="tabla-derecha-ventas" style="width: 100%; margin-right: 50px">
+      <table class="table table-bordered table-hover" style="width: 100%">
+        <thead class="encabezado-tabla-venta">
+          <tr>
+            <th colspan="2">Galletas</th>
+            <th>Precio</th>
+            <th>Cantidad</th>
+          </tr>
+        </thead>
+        <tbody id="grupo-table-body">
+          {% for pedido in pedidos %}
+          <tr>
+            <td>
+              <img
+                style="border-radius: 10px"
+                src="{{ pedido.galleta.imagen }}"
+                height="60px"
+                alt=""
+              />
+            </td>
+            <td>{{ pedido.galleta.nombre }}</td>
+            <td>{{ pedido.precio_unitario }}</td>
+            <td>{{ pedido.cantidad}}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="../static/js/venta.js"></script>
+<!-- Archivo JS -->
+
+{% endblock %}

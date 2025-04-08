@@ -1,0 +1,287 @@
+{% extends "layout.html" %} {% block title %}Registrar Merma de Galleta - Golden
+Cookies{% endblock %} {% block main %}
+<div class="p-4 sm:ml-64">
+  <div class="p-4 md:p-6 lg:p-8">
+    <!-- Mobile sidebar toggle -->
+    <button
+      type="button"
+      onclick="toggleSidebar()"
+      class="md:hidden inline-flex items-center p-2 mb-4 text-cookie-700 rounded-lg hover:bg-cookie-200 focus:outline-none"
+    >
+      <i class="fas fa-bars text-lg"></i>
+      <span class="ml-2">Menú</span>
+    </button>
+
+    <!-- Title and navigation -->
+    <div class="flex items-center space-x-2 mb-8">
+      <a
+        href="{{ url_for('produccion.listar_mermas') }}"
+        class="text-cookie-600 hover:text-cookie-800"
+      >
+        <i class="fas fa-arrow-left"></i>
+      </a>
+      <div>
+        <h1 class="text-3xl font-kavoon text-cookie-800">
+          Registrar Merma de Galleta
+        </h1>
+        <p class="text-cookie-600">
+          Reporta galletas dañadas, caducadas o con defectos
+        </p>
+      </div>
+    </div>
+
+    <!-- Flash messages -->
+    <div id="flash-messages" class="mb-6">
+      {% with messages = get_flashed_messages(with_categories=true) %} {% if
+      messages %} {% for category, message in messages %}
+      <div
+        id="flash-{{ loop.index }}"
+        class="p-4 mb-4 rounded-lg flex justify-between items-center {% if category == 'success' %}bg-green-100 text-green-800{% elif category == 'danger' %}bg-red-100 text-red-800{% elif category == 'warning' %}bg-yellow-100 text-yellow-800{% else %}bg-blue-100 text-blue-800{% endif %}"
+        role="alert"
+      >
+        <div>
+          {% if category == 'success' %}
+          <i class="fas fa-check-circle mr-2"></i>
+          {% elif category == 'danger' %}
+          <i class="fas fa-exclamation-circle mr-2"></i>
+          {% elif category == 'warning' %}
+          <i class="fas fa-exclamation-triangle mr-2"></i>
+          {% else %}
+          <i class="fas fa-info-circle mr-2"></i>
+          {% endif %} {{ message }}
+        </div>
+        <button
+          type="button"
+          onclick="closeFlash('flash-{{ loop.index }}')"
+          class="text-gray-500 hover:text-gray-700 focus:outline-none"
+        >
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      {% endfor %} {% endif %} {% endwith %}
+    </div>
+
+    <!-- Merma Galleta Form -->
+    <div class="max-w-3xl mx-auto">
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-xl font-kavoon text-cookie-700 mb-4">
+          Formulario de Registro de Merma
+        </h2>
+
+        <form method="POST" action="{{ url_for('produccion.merma_galleta') }}">
+          {{ form.csrf_token }}
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div>
+              <label for="lote_galleta" class="block text-cookie-700 mb-2"
+                >Galleta</label
+              >
+              <div class="relative">
+                {{ form.lote_galleta(class="w-full p-2 pl-10 border
+                border-cookie-300 rounded-md focus:ring focus:ring-cookie-400
+                focus:border-cookie-500", required=true) }}
+                <div
+                  class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"
+                >
+                  <i class="fas fa-cookie text-cookie-400"></i>
+                </div>
+              </div>
+              {% if form.lote_galleta.errors %}
+              <div class="text-red-600 text-sm mt-1">
+                {% for error in form.lote_galleta.errors %} {{ error }} {%
+                endfor %}
+              </div>
+              {% endif %}
+              <p class="text-sm text-cookie-500 mt-1">
+                Seleccione el lote específico de galletas
+              </p>
+            </div>
+
+            <div>
+              <label for="cantidad" class="block text-cookie-700 mb-2"
+                >Cantidad (unidades)</label
+              >
+              <div class="relative">
+                {{ form.cantidad(class="w-full p-2 pl-10 border
+                border-cookie-300 rounded-md focus:ring focus:ring-cookie-400
+                focus:border-cookie-500", required=true, min=1, type="number")
+                }}
+                <div
+                  class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"
+                >
+                  <i class="fas fa-sort-numeric-up text-cookie-400"></i>
+                </div>
+              </div>
+              {% if form.cantidad.errors %}
+              <div class="text-red-600 text-sm mt-1">
+                {% for error in form.cantidad.errors %} {{ error }} {% endfor %}
+              </div>
+              {% endif %}
+              <p class="text-sm text-cookie-500 mt-1" id="disponible">
+                Disponible: - unidades
+              </p>
+            </div>
+
+            <div>
+              <label for="tipo_merma" class="block text-cookie-700 mb-2"
+                >Tipo de Merma</label
+              >
+              <div class="relative">
+                {{ form.tipo_merma(class="w-full p-2 pl-10 border
+                border-cookie-300 rounded-md focus:ring focus:ring-cookie-400
+                focus:border-cookie-500", required=true) }}
+                <div
+                  class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"
+                >
+                  <i class="fas fa-tag text-cookie-400"></i>
+                </div>
+              </div>
+              {% if form.tipo_merma.errors %}
+              <div class="text-red-600 text-sm mt-1">
+                {% for error in form.tipo_merma.errors %} {{ error }} {% endfor
+                %}
+              </div>
+              {% endif %}
+            </div>
+
+            <div>
+              <label for="fecha_registro" class="block text-cookie-700 mb-2"
+                >Fecha</label
+              >
+              <div class="relative">
+                {{ form.fecha_registro(class="w-full p-2 pl-10 border
+                border-cookie-300 rounded-md focus:ring focus:ring-cookie-400
+                focus:border-cookie-500", required=true, type="date") }}
+                <div
+                  class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"
+                >
+                  <i class="fas fa-calendar-alt text-cookie-400"></i>
+                </div>
+              </div>
+              {% if form.fecha_registro.errors %}
+              <div class="text-red-600 text-sm mt-1">
+                {% for error in form.fecha_registro.errors %} {{ error }} {%
+                endfor %}
+              </div>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="mb-6">
+            <label for="produccion" class="block text-cookie-700 mb-2"
+              >Producción Asociada (Opcional)</label
+            >
+            <div class="relative">
+              {{ form.produccion(class="w-full p-2 pl-10 border
+              border-cookie-300 rounded-md focus:ring focus:ring-cookie-400
+              focus:border-cookie-500") }}
+              <div
+                class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"
+              >
+                <i class="fas fa-industry text-cookie-400"></i>
+              </div>
+            </div>
+            {% if form.produccion.errors %}
+            <div class="text-red-600 text-sm mt-1">
+              {% for error in form.produccion.errors %} {{ error }} {% endfor %}
+            </div>
+            {% endif %}
+            <p class="text-sm text-cookie-500 mt-1">
+              Selecciona solo si la merma ocurrió durante una producción
+              específica
+            </p>
+          </div>
+
+          <div class="mb-6">
+            <label for="motivo" class="block text-cookie-700 mb-2"
+              >Motivo</label
+            >
+            {{ form.motivo(class="w-full p-2 border border-cookie-300 rounded-md
+            focus:ring focus:ring-cookie-400 focus:border-cookie-500", rows=3,
+            required=true) }} {% if form.motivo.errors %}
+            <div class="text-red-600 text-sm mt-1">
+              {% for error in form.motivo.errors %} {{ error }} {% endfor %}
+            </div>
+            {% endif %}
+            <p class="text-sm text-cookie-500 mt-1">
+              Describe brevemente la razón de la merma
+            </p>
+          </div>
+
+          <div class="border-t border-cookie-200 pt-6">
+            <div
+              class="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-3 sm:space-y-0"
+            >
+              <a
+                href="{{ url_for('produccion.listar_mermas') }}"
+                class="text-cookie-600 hover:text-cookie-800"
+              >
+                <i class="fas fa-arrow-left mr-2"></i>Volver
+              </a>
+              <button
+                type="submit"
+                class="px-6 py-2 bg-cookie-600 text-white rounded-md hover:bg-cookie-700 transition-colors"
+              >
+                <i class="fas fa-save mr-2"></i>Registrar Merma
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Cerrar mensaje flash
+  function closeFlash(id) {
+    const flashElement = document.getElementById(id);
+    if (flashElement) {
+      flashElement.style.opacity = "0";
+      setTimeout(() => {
+        flashElement.style.display = "none";
+      }, 300);
+    }
+  }
+
+  // Cerrar mensajes flash automáticamente después de 5 segundos
+  document.addEventListener("DOMContentLoaded", function () {
+    const flashMessages = document.querySelectorAll('[id^="flash-"]');
+    flashMessages.forEach((message) => {
+      // Añadir transición para efecto de desvanecimiento
+      message.style.transition = "opacity 0.3s ease";
+
+      // Cerrar automáticamente después de 5 segundos
+      setTimeout(() => {
+        closeFlash(message.id);
+      }, 5000);
+    });
+
+    // Actualizar la cantidad disponible cuando cambia la galleta seleccionada
+    const loteGalletaSelect = document.querySelector("#lote_galleta");
+    const disponibleText = document.querySelector("#disponible");
+
+    if (loteGalletaSelect) {
+      loteGalletaSelect.addEventListener("change", function () {
+        // En un entorno real, harías una solicitud AJAX para obtener la cantidad disponible
+        // Este es un ejemplo simplificado
+        const option = this.options[this.selectedIndex];
+        const disponible = option.getAttribute("data-disponible");
+
+        if (disponible) {
+          disponibleText.textContent = `Disponible: ${disponible} unidades`;
+          document.querySelector("#cantidad").setAttribute("max", disponible);
+        } else {
+          disponibleText.textContent = "Disponible: - unidades";
+        }
+      });
+
+      // Disparar el evento change para establecer la disponibilidad inicial
+      if (loteGalletaSelect.value) {
+        const event = new Event("change");
+        loteGalletaSelect.dispatchEvent(event);
+      }
+    }
+  });
+</script>
+{% endblock %}

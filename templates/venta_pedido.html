@@ -1,0 +1,214 @@
+{% extends "layout.html" %} {% block title %}Pedidos Pendientes - Golden
+Cookies{% endblock %} {% block main %}
+<div class="p-4 sm:ml-64">
+  <div class="p-4 md:p-6 lg:p-8">
+    <!-- Mobile sidebar toggle -->
+    <button
+      type="button"
+      onclick="toggleSidebar()"
+      class="md:hidden inline-flex items-center p-2 mb-4 text-cookie-700 rounded-lg hover:bg-cookie-200 focus:outline-none"
+    >
+      <i class="fas fa-bars text-lg"></i>
+      <span class="ml-2">Menú</span>
+    </button>
+
+    <!-- Title and breadcrumbs -->
+    <div class="mb-8">
+      <div class="flex items-center mb-2">
+        <a
+          href="{{ url_for('venta.ventas') }}"
+          class="text-cookie-600 hover:text-cookie-800"
+        >
+          <i class="fas fa-arrow-left mr-2"></i>Volver a Ventas
+        </a>
+      </div>
+      <h1 class="text-3xl font-kavoon text-cookie-800">Pedidos Pendientes</h1>
+      <p class="text-cookie-600">Gestión y procesamiento de pedidos en línea</p>
+    </div>
+
+    <!-- Flash messages -->
+    <div id="flash-messages" class="mb-6">
+      {% with messages = get_flashed_messages(with_categories=true) %} {% if
+      messages %} {% for category, message in messages %}
+      <div
+        id="flash-{{ loop.index }}"
+        class="p-4 mb-4 rounded-lg flex justify-between items-center {% if category == 'success' %}bg-green-100 text-green-800{% elif category == 'danger' %}bg-red-100 text-red-800{% elif category == 'warning' %}bg-yellow-100 text-yellow-800{% else %}bg-blue-100 text-blue-800{% endif %}"
+        role="alert"
+      >
+        <div>
+          {% if category == 'success' %}
+          <i class="fas fa-check-circle mr-2"></i>
+          {% elif category == 'danger' %}
+          <i class="fas fa-exclamation-circle mr-2"></i>
+          {% elif category == 'warning' %}
+          <i class="fas fa-exclamation-triangle mr-2"></i>
+          {% else %}
+          <i class="fas fa-info-circle mr-2"></i>
+          {% endif %} {{ message }}
+        </div>
+        <button
+          type="button"
+          onclick="closeFlash('flash-{{ loop.index }}')"
+          class="text-gray-500 hover:text-gray-700 focus:outline-none"
+        >
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      {% endfor %} {% endif %} {% endwith %}
+    </div>
+
+    <!-- Pending orders -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <h2 class="text-xl font-kavoon text-cookie-700 mb-4">Lista de Pedidos</h2>
+
+      {% if pedidos|length > 0 %}
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm text-left">
+          <thead class="text-xs text-cookie-700 uppercase bg-cookie-100">
+            <tr>
+              <th class="px-4 py-3">ID</th>
+              <th class="px-4 py-3">Cliente</th>
+              <th class="px-4 py-3">Fecha Pedido</th>
+              <th class="px-4 py-3">Total</th>
+              <th class="px-4 py-3">Pagado</th>
+              <th class="px-4 py-3">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for pedido in pedidos %}
+            <tr class="border-b border-cookie-200 hover:bg-cookie-50">
+              <td class="px-4 py-3">#{{ pedido.id_venta }}</td>
+              <td class="px-4 py-3">{{ pedido.usuario.nombre }}</td>
+              <td class="px-4 py-3">
+                {{ pedido.created_at.strftime('%d/%m/%Y') }}
+              </td>
+              <td class="px-4 py-3">${{ pedido.total }}</td>
+              <td class="px-4 py-3">
+                {% if pedido.pagado %}
+                <span
+                  class="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full"
+                  >Sí</span
+                >
+                {% else %}
+                <span
+                  class="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full"
+                  >No</span
+                >
+                {% endif %}
+              </td>
+              <td class="px-4 py-3">
+                <button
+                  type="button"
+                  onclick="abrirModal('modal-{{ pedido.id_venta }}')"
+                  class="text-cookie-700 hover:text-cookie-900 mr-2"
+                >
+                  <i class="fas fa-eye"></i>
+                </button>
+
+                <form
+                  method="POST"
+                  action="{{ url_for('venta.realizar_venta_pedido', id_venta=pedido.id_venta) }}"
+                  class="inline"
+                >
+                  <button
+                    type="submit"
+                    class="text-green-600 hover:text-green-800"
+                    onclick="return confirm('¿Está seguro de procesar este pedido? Esto reducirá el inventario de galletas.')"
+                  >
+                    <i class="fas fa-check"></i>
+                  </button>
+                </form>
+              </td>
+            </tr>
+
+            <!-- Modal for order details -->
+            <div
+              id="modal-{{ pedido.id_venta }}"
+              class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center"
+            >
+              <div
+                class="bg-white rounded-lg shadow-xl max-w-2xl w-full m-4 max-h-full overflow-y-auto"
+              >
+                <div class="p-6">
+                  <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-kavoon text-cookie-800">
+                      Detalles del Pedido #{{ pedido.id_venta }}
+                    </h3>
+                    <button
+                      type="button"
+                      onclick="cerrarModal('modal-{{ pedido.id_venta }}')"
+                      class="text-cookie-600 hover:text-cookie-800"
+                    >
+                      <i class="fas fa-times"></i>
+                    </button>
+                  </div>
+
+                  <div class="mb-4">
+                    <p><strong>Cliente:</strong> {{ pedido.usuario.nombre }}</p>
+                    <p>
+                      <strong>Fecha:</strong> {{
+                      pedido.created_at.strftime('%d/%m/%Y') }}
+                    </p>
+                    <p><strong>Estado:</strong> {{ pedido.estado }}</p>
+                    <p><strong>Total:</strong> ${{ pedido.total }}</p>
+                  </div>
+
+                  <h4 class="font-semibold text-cookie-700 mb-2">Productos:</h4>
+                  <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                      <thead class="text-xs uppercase bg-cookie-100">
+                        <tr>
+                          <th class="px-3 py-2 text-left">Galleta</th>
+                          <th class="px-3 py-2 text-left">Tipo</th>
+                          <th class="px-3 py-2 text-left">Cantidad</th>
+                          <th class="px-3 py-2 text-left">Precio</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for detalle in pedido.detalle_venta %}
+                        <tr class="border-b border-cookie-200">
+                          <td class="px-3 py-2">
+                            {{ detalle.galleta.nombre }}
+                          </td>
+                          <td class="px-3 py-2">{{ detalle.tipo_venta }}</td>
+                          <td class="px-3 py-2">{{ detalle.cantidad }}</td>
+                          <td class="px-3 py-2">
+                            ${{ detalle.precio_unitario }}
+                          </td>
+                        </tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <div class="mt-6 flex justify-end">
+                    <form
+                      method="POST"
+                      action="{{ url_for('venta.realizar_venta_pedido', id_venta=pedido.id_venta) }}"
+                    >
+                      <button
+                        type="submit"
+                        class="bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-colors"
+                        onclick="return confirm('¿Está seguro de procesar este pedido?')"
+                      >
+                        <i class="fas fa-check mr-2"></i>Procesar Pedido
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="text-center py-12 text-cookie-600">
+        <i class="fas fa-clipboard-check text-5xl mb-4"></i>
+        <p>No hay pedidos pendientes</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

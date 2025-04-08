@@ -1,0 +1,449 @@
+{% extends "layout.html" %} {% block title %}Estadísticas de Producción - Golden
+Cookies{% endblock %} {% block main %}
+<div class="p-4 sm:ml-64">
+  <div class="p-4 md:p-6 lg:p-8">
+    <!-- Mobile sidebar toggle -->
+    <button
+      type="button"
+      onclick="toggleSidebar()"
+      class="md:hidden inline-flex items-center p-2 mb-4 text-cookie-700 rounded-lg hover:bg-cookie-200 focus:outline-none"
+    >
+      <i class="fas fa-bars text-lg"></i>
+      <span class="ml-2">Menú</span>
+    </button>
+
+    <!-- Title and navigation -->
+    <div class="flex items-center space-x-2 mb-8">
+      <a
+        href="{{ url_for('produccion.index') }}"
+        class="text-cookie-600 hover:text-cookie-800"
+      >
+        <i class="fas fa-arrow-left"></i>
+      </a>
+      <div>
+        <h1 class="text-3xl font-kavoon text-cookie-800">
+          Estadísticas de Producción
+        </h1>
+        <p class="text-cookie-600">Análisis de producción y rendimiento</p>
+      </div>
+    </div>
+
+    <!-- Dashboard Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <!-- Total Producciones Card -->
+      <div
+        class="bg-white rounded-lg shadow-md p-6 flex flex-col items-center justify-center text-center"
+      >
+        <div class="rounded-full bg-cookie-100 p-4 mb-4">
+          <i class="fas fa-cookie-bite text-cookie-600 text-3xl"></i>
+        </div>
+        <h3 class="text-xl font-bold text-cookie-800">Total Producciones</h3>
+        {% set total_producciones = 0 %} {% for estatus, count in estatus_count
+        %} {% set total_producciones = total_producciones + count %} {% endfor
+        %}
+        <p class="text-3xl font-kavoon text-cookie-700 mt-2">
+          {{ total_producciones }}
+        </p>
+        <p class="text-cookie-500 mt-1">Registros totales</p>
+      </div>
+
+      <!-- Producciones Completadas Card -->
+      <div
+        class="bg-white rounded-lg shadow-md p-6 flex flex-col items-center justify-center text-center"
+      >
+        <div class="rounded-full bg-green-100 p-4 mb-4">
+          <i class="fas fa-check-circle text-green-600 text-3xl"></i>
+        </div>
+        <h3 class="text-xl font-bold text-cookie-800">Completadas</h3>
+        {% set completadas = 0 %} {% for estatus, count in estatus_count %} {%
+        if estatus == 'completada' %} {% set completadas = count %} {% endif %}
+        {% endfor %}
+        <p class="text-3xl font-kavoon text-green-600 mt-2">
+          {{ completadas }}
+        </p>
+        <p class="text-cookie-500 mt-1">Producciones finalizadas</p>
+      </div>
+
+      <!-- Producciones en Proceso Card -->
+      <div
+        class="bg-white rounded-lg shadow-md p-6 flex flex-col items-center justify-center text-center"
+      >
+        <div class="rounded-full bg-yellow-100 p-4 mb-4">
+          <i class="fas fa-hourglass-half text-yellow-600 text-3xl"></i>
+        </div>
+        <h3 class="text-xl font-bold text-cookie-800">En Proceso</h3>
+        {% set en_proceso = 0 %} {% for estatus, count in estatus_count %} {% if
+        estatus == 'en_proceso' %} {% set en_proceso = count %} {% endif %} {%
+        endfor %}
+        <p class="text-3xl font-kavoon text-yellow-600 mt-2">
+          {{ en_proceso }}
+        </p>
+        <p class="text-cookie-500 mt-1">Producciones activas</p>
+      </div>
+
+      <!-- Producciones Programadas Card -->
+      <div
+        class="bg-white rounded-lg shadow-md p-6 flex flex-col items-center justify-center text-center"
+      >
+        <div class="rounded-full bg-blue-100 p-4 mb-4">
+          <i class="fas fa-calendar-alt text-blue-600 text-3xl"></i>
+        </div>
+        <h3 class="text-xl font-bold text-cookie-800">Programadas</h3>
+        {% set programadas = 0 %} {% for estatus, count in estatus_count %} {%
+        if estatus == 'programada' %} {% set programadas = count %} {% endif %}
+        {% endfor %}
+        <p class="text-3xl font-kavoon text-blue-600 mt-2">{{ programadas }}</p>
+        <p class="text-cookie-500 mt-1">Pendientes de iniciar</p>
+      </div>
+    </div>
+
+    <!-- Charts and Tables -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+      <!-- Top Galletas -->
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-xl font-kavoon text-cookie-700 mb-4">
+          Top Galletas Producidas
+        </h2>
+
+        <div class="h-64 mb-4" id="galletasChart">
+          <!-- Chart will be inserted here by JS -->
+          {% if not top_galletas %}
+          <div class="flex items-center justify-center h-full">
+            <p class="text-cookie-500">No hay datos disponibles</p>
+          </div>
+          {% endif %}
+        </div>
+
+        {% if top_galletas %}
+        <div class="overflow-x-auto mt-4">
+          <table class="w-full text-sm text-left">
+            <thead class="text-xs text-cookie-700 uppercase bg-cookie-100">
+              <tr>
+                <th class="px-4 py-2">Galleta</th>
+                <th class="px-4 py-2">Cantidad</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for galleta, total in top_galletas %}
+              <tr class="border-b border-cookie-200 hover:bg-cookie-50">
+                <td class="px-4 py-2">{{ galleta }}</td>
+                <td class="px-4 py-2">{{ total }} unidades</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Top Insumos -->
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-xl font-kavoon text-cookie-700 mb-4">
+          Top Insumos Utilizados
+        </h2>
+
+        <div class="h-64 mb-4" id="insumosChart">
+          <!-- Chart will be inserted here by JS -->
+          {% if not top_insumos %}
+          <div class="flex items-center justify-center h-full">
+            <p class="text-cookie-500">No hay datos disponibles</p>
+          </div>
+          {% endif %}
+        </div>
+
+        {% if top_insumos %}
+        <div class="overflow-x-auto mt-4">
+          <table class="w-full text-sm text-left">
+            <thead class="text-xs text-cookie-700 uppercase bg-cookie-100">
+              <tr>
+                <th class="px-4 py-2">Insumo</th>
+                <th class="px-4 py-2">Cantidad</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for insumo, total in top_insumos %}
+              <tr class="border-b border-cookie-200 hover:bg-cookie-50">
+                <td class="px-4 py-2">{{ insumo }}</td>
+                <td class="px-4 py-2">{{ total }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Additional Charts -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+      <!-- Estado de Producciones -->
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-xl font-kavoon text-cookie-700 mb-4">
+          Estado de Producciones
+        </h2>
+
+        <div class="h-64 mb-4" id="estatusChart">
+          <!-- Chart will be inserted here by JS -->
+          {% if not estatus_count %}
+          <div class="flex items-center justify-center h-full">
+            <p class="text-cookie-500">No hay datos disponibles</p>
+          </div>
+          {% endif %}
+        </div>
+
+        {% if estatus_count %}
+        <div class="overflow-x-auto mt-4">
+          <table class="w-full text-sm text-left">
+            <thead class="text-xs text-cookie-700 uppercase bg-cookie-100">
+              <tr>
+                <th class="px-4 py-2">Estado</th>
+                <th class="px-4 py-2">Cantidad</th>
+                <th class="px-4 py-2">Porcentaje</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for estatus, count in estatus_count %}
+              <tr class="border-b border-cookie-200 hover:bg-cookie-50">
+                <td class="px-4 py-2">
+                  <span
+                    class="px-2 py-1 rounded-full text-xs font-medium {% if estatus == 'programada' %}bg-blue-100 text-blue-800 {% elif estatus == 'en_proceso' %}bg-yellow-100 text-yellow-800 {% elif estatus == 'completada' %}bg-green-100 text-green-800 {% elif estatus == 'cancelada' %}bg-red-100 text-red-800 {% endif %}"
+                  >
+                    {% if estatus == 'programada' %}Programada {% elif estatus
+                    == 'en_proceso' %}En proceso {% elif estatus == 'completada'
+                    %}Completada {% elif estatus == 'cancelada' %}Cancelada {%
+                    else %}{{ estatus }}{% endif %}
+                  </span>
+                </td>
+                <td class="px-4 py-2">{{ count }}</td>
+                <td class="px-4 py-2">
+                  {{ (count / total_producciones * 100)|round(1) if
+                  total_producciones > 0 else 0 }}%
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Mermas -->
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-xl font-kavoon text-cookie-700 mb-4">
+          Mermas por Tipo
+        </h2>
+
+        <div class="h-64 mb-4" id="mermasChart">
+          <!-- Chart will be inserted here by JS -->
+          {% if not mermas %}
+          <div class="flex items-center justify-center h-full">
+            <p class="text-cookie-500">No hay datos disponibles</p>
+          </div>
+          {% endif %}
+        </div>
+
+        {% if mermas %}
+        <div class="overflow-x-auto mt-4">
+          <table class="w-full text-sm text-left">
+            <thead class="text-xs text-cookie-700 uppercase bg-cookie-100">
+              <tr>
+                <th class="px-4 py-2">Tipo de Merma</th>
+                <th class="px-4 py-2">Cantidad</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for tipo, total in mermas %}
+              <tr class="border-b border-cookie-200 hover:bg-cookie-50">
+                <td class="px-4 py-2">
+                  <span
+                    class="px-2 py-1 rounded-full text-xs font-medium {% if tipo == 'caducado' %}bg-red-100 text-red-800 {% elif tipo == 'dañado' %}bg-orange-100 text-orange-800 {% elif tipo == 'defecto' %}bg-yellow-100 text-yellow-800 {% else %}bg-gray-100 text-gray-800 {% endif %}"
+                  >
+                    {{ tipo }}
+                  </span>
+                </td>
+                <td class="px-4 py-2">{{ total }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Include Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Datos para los gráficos
+    {% if top_galletas %}
+    const galletasData = {
+      labels: [{% for galleta, _ in top_galletas %}'{{ galleta }}',{% endfor %}],
+      datasets: [{
+        label: 'Cantidad Producida',
+        data: [{% for _, total in top_galletas %}{{ total }},{% endfor %}],
+        backgroundColor: [
+          'rgba(255, 159, 64, 0.7)',
+          'rgba(255, 205, 86, 0.7)',
+          'rgba(75, 192, 192, 0.7)',
+          'rgba(54, 162, 235, 0.7)',
+          'rgba(153, 102, 255, 0.7)'
+        ],
+        borderColor: [
+          'rgb(255, 159, 64)',
+          'rgb(255, 205, 86)',
+          'rgb(75, 192, 192)',
+          'rgb(54, 162, 235)',
+          'rgb(153, 102, 255)'
+        ],
+        borderWidth: 1
+      }]
+    };
+
+    // Crear gráfico de galletas
+    const galletasCtx = document.getElementById('galletasChart').getContext('2d');
+    new Chart(galletasCtx, {
+      type: 'bar',
+      data: galletasData,
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: {
+            beginAtZero: true
+          }
+        }
+      }
+    });
+    {% endif %}
+
+    {% if top_insumos %}
+    const insumosData = {
+      labels: [{% for insumo, _ in top_insumos %}'{{ insumo }}',{% endfor %}],
+      datasets: [{
+        label: 'Cantidad Utilizada',
+        data: [{% for _, total in top_insumos %}{{ total }},{% endfor %}],
+        backgroundColor: [
+          'rgba(75, 192, 192, 0.7)',
+          'rgba(54, 162, 235, 0.7)',
+          'rgba(153, 102, 255, 0.7)',
+          'rgba(255, 159, 64, 0.7)',
+          'rgba(255, 205, 86, 0.7)'
+        ],
+        borderColor: [
+          'rgb(75, 192, 192)',
+          'rgb(54, 162, 235)',
+          'rgb(153, 102, 255)',
+          'rgb(255, 159, 64)',
+          'rgb(255, 205, 86)'
+        ],
+        borderWidth: 1
+      }]
+    };
+
+    // Crear gráfico de insumos
+    const insumosCtx = document.getElementById('insumosChart').getContext('2d');
+    new Chart(insumosCtx, {
+      type: 'bar',
+      data: insumosData,
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: {
+            beginAtZero: true
+          }
+        }
+      }
+    });
+    {% endif %}
+
+    {% if estatus_count %}
+    const estatusData = {
+      labels: [
+        {% for estatus, _ in estatus_count %}
+          {% if estatus == 'programada' %}'Programada'
+          {% elif estatus == 'en_proceso' %}'En proceso'
+          {% elif estatus == 'completada' %}'Completada'
+          {% elif estatus == 'cancelada' %}'Cancelada'
+          {% else %}'{{ estatus }}'{% endif %},
+        {% endfor %}
+      ],
+      datasets: [{
+        data: [{% for _, count in estatus_count %}{{ count }},{% endfor %}],
+        backgroundColor: [
+          'rgba(54, 162, 235, 0.7)',   // Azul para programada
+          'rgba(255, 205, 86, 0.7)',   // Amarillo para en proceso
+          'rgba(75, 192, 192, 0.7)',   // Verde para completada
+          'rgba(255, 99, 132, 0.7)'    // Rojo para cancelada
+        ],
+        borderColor: [
+          'rgb(54, 162, 235)',
+          'rgb(255, 205, 86)',
+          'rgb(75, 192, 192)',
+          'rgb(255, 99, 132)'
+        ],
+        borderWidth: 1
+      }]
+    };
+
+    // Crear gráfico de estatus
+    const estatusCtx = document.getElementById('estatusChart').getContext('2d');
+    new Chart(estatusCtx, {
+      type: 'pie',
+      data: estatusData,
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'right'
+          }
+        }
+      }
+    });
+    {% endif %}
+
+    {% if mermas %}
+    const mermasData = {
+      labels: [{% for tipo, _ in mermas %}'{{ tipo }}',{% endfor %}],
+      datasets: [{
+        data: [{% for _, total in mermas %}{{ total }},{% endfor %}],
+        backgroundColor: [
+          'rgba(255, 99, 132, 0.7)',   // Rojo para caducado
+          'rgba(255, 159, 64, 0.7)',   // Naranja para dañado
+          'rgba(255, 205, 86, 0.7)',   // Amarillo para defecto
+          'rgba(153, 102, 255, 0.7)'   // Morado para otros
+        ],
+        borderColor: [
+          'rgb(255, 99, 132)',
+          'rgb(255, 159, 64)',
+          'rgb(255, 205, 86)',
+          'rgb(153, 102, 255)'
+        ],
+        borderWidth: 1
+      }]
+    };
+
+    // Crear gráfico de mermas
+    const mermasCtx = document.getElementById('mermasChart').getContext('2d');
+    new Chart(mermasCtx, {
+      type: 'doughnut',
+      data: mermasData,
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'right'
+          }
+        }
+      }
+    });
+    {% endif %}
+  });
+</script>
+{% endblock %}

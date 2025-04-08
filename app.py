@@ -8,9 +8,13 @@ from routes.insumos import insumo_bp
 from routes.proveedores import proveedor_bp
 from routes.compras import compras_bp
 from auth import verificar_roles
+from venta import venta
+from recetas.recetas import recetas_bp
+from produccion.routes import produccion_bp
 
 app = Flask(__name__)
 app.config.from_object(DevelopmentConfig)
+app.config['UPLOAD_FOLDER'] = 'static/uploads'
 csrf = CSRFProtect(app)
 
 login_manager = LoginManager()
@@ -56,6 +60,9 @@ app.register_blueprint(auth, url_prefix='/auth')
 app.register_blueprint(insumo_bp)
 app.register_blueprint(proveedor_bp)
 app.register_blueprint(compras_bp, url_prefix='/compras')
+app.register_blueprint(venta, url_prefix='/venta')
+app.register_blueprint(recetas_bp, url_prefix='/recetas')
+app.register_blueprint(produccion_bp, url_prefix='/produccion')
 
 
 if __name__ == '__main__':

@@ -1,0 +1,243 @@
+{% extends "layout.html" %} {% block title %}Nueva Producción - Golden Cookies{%
+endblock %} {% block main %}
+<div class="p-4 sm:ml-64">
+  <div class="p-4 md:p-6 lg:p-8">
+    <!-- Mobile sidebar toggle -->
+    <button
+      type="button"
+      onclick="toggleSidebar()"
+      class="md:hidden inline-flex items-center p-2 mb-4 text-cookie-700 rounded-lg hover:bg-cookie-200 focus:outline-none"
+    >
+      <i class="fas fa-bars text-lg"></i>
+      <span class="ml-2">Menú</span>
+    </button>
+
+    <!-- Title and navigation -->
+    <div class="flex items-center space-x-2 mb-8">
+      <a
+        href="{{ url_for('produccion.index') }}"
+        class="text-cookie-600 hover:text-cookie-800"
+      >
+        <i class="fas fa-arrow-left"></i>
+      </a>
+      <div>
+        <h1 class="text-3xl font-kavoon text-cookie-800">Nueva Producción</h1>
+        <p class="text-cookie-600">Programa la elaboración de galletas</p>
+      </div>
+    </div>
+
+    <!-- Flash messages -->
+    <div id="flash-messages" class="mb-6">
+      {% with messages = get_flashed_messages(with_categories=true) %} {% if
+      messages %} {% for category, message in messages %}
+      <div
+        id="flash-{{ loop.index }}"
+        class="p-4 mb-4 rounded-lg flex justify-between items-center {% if category == 'success' %}bg-green-100 text-green-800{% elif category == 'danger' %}bg-red-100 text-red-800{% elif category == 'warning' %}bg-yellow-100 text-yellow-800{% else %}bg-blue-100 text-blue-800{% endif %}"
+        role="alert"
+      >
+        <div>
+          {% if category == 'success' %}
+          <i class="fas fa-check-circle mr-2"></i>
+          {% elif category == 'danger' %}
+          <i class="fas fa-exclamation-circle mr-2"></i>
+          {% elif category == 'warning' %}
+          <i class="fas fa-exclamation-triangle mr-2"></i>
+          {% else %}
+          <i class="fas fa-info-circle mr-2"></i>
+          {% endif %} {{ message }}
+        </div>
+        <button
+          type="button"
+          onclick="closeFlash('flash-{{ loop.index }}')"
+          class="text-gray-500 hover:text-gray-700 focus:outline-none"
+        >
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      {% endfor %} {% endif %} {% endwith %}
+    </div>
+
+    <!-- Production Form -->
+    <div class="max-w-3xl mx-auto">
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-xl font-kavoon text-cookie-700 mb-4">
+          Programar Nueva Producción
+        </h2>
+
+        <form method="POST" action="{{ url_for('produccion.crear') }}">
+          {{ form.csrf_token }}
+
+          <div class="mb-6">
+            <label for="receta" class="block text-cookie-700 mb-2"
+              >Receta a Producir</label
+            >
+            <div class="relative">
+              {{ form.receta(class="w-full p-2 pl-10 border border-cookie-300
+              rounded-md focus:ring focus:ring-cookie-400
+              focus:border-cookie-500", required=true) }}
+              <div
+                class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"
+              >
+                <i class="fas fa-cookie text-cookie-400"></i>
+              </div>
+            </div>
+            {% if form.receta.errors %}
+            <div class="text-red-600 text-sm mt-1">
+              {% for error in form.receta.errors %} {{ error }} {% endfor %}
+            </div>
+            {% endif %}
+            <p class="text-sm text-cookie-500 mt-1">
+              Selecciona la receta que deseas producir. Esto determinará los
+              insumos necesarios.
+            </p>
+          </div>
+
+          <div class="mb-6">
+            <label for="estatus" class="block text-cookie-700 mb-2"
+              >Estado Inicial</label
+            >
+            <div class="relative">
+              {{ form.estatus(class="w-full p-2 pl-10 border border-cookie-300
+              rounded-md focus:ring focus:ring-cookie-400
+              focus:border-cookie-500", required=true) }}
+              <div
+                class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"
+              >
+                <i class="fas fa-tasks text-cookie-400"></i>
+              </div>
+            </div>
+            {% if form.estatus.errors %}
+            <div class="text-red-600 text-sm mt-1">
+              {% for error in form.estatus.errors %} {{ error }} {% endfor %}
+            </div>
+            {% endif %}
+            <p class="text-sm text-cookie-500 mt-1">
+              Estado inicial de la producción
+            </p>
+          </div>
+
+          <div class="border-t border-cookie-200 pt-6">
+            <div
+              class="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-3 sm:space-y-0"
+            >
+              <a
+                href="{{ url_for('produccion.index') }}"
+                class="text-cookie-600 hover:text-cookie-800"
+              >
+                <i class="fas fa-arrow-left mr-2"></i>Volver
+              </a>
+              <button
+                type="submit"
+                class="px-6 py-2 bg-cookie-600 text-white rounded-md hover:bg-cookie-700 transition-colors"
+              >
+                <i class="fas fa-plus-circle mr-2"></i>Crear Producción
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- Recipe info preview (only shows when a recipe is selected) -->
+      <div
+        id="recipe-preview"
+        class="mt-6 bg-cookie-50 rounded-lg shadow-md p-6 hidden"
+      >
+        <h3 class="text-lg font-kavoon text-cookie-700 mb-3">
+          Vista Previa de la Receta
+        </h3>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <h4 class="font-medium text-cookie-700">Detalles:</h4>
+            <p id="recipe-details" class="text-cookie-600">-</p>
+          </div>
+
+          <div>
+            <h4 class="font-medium text-cookie-700">Cantidad a producir:</h4>
+            <p id="recipe-quantity" class="text-cookie-600">- unidades</p>
+          </div>
+
+          <div>
+            <h4 class="font-medium text-cookie-700">Peso por unidad:</h4>
+            <p id="recipe-weight" class="text-cookie-600">- g</p>
+          </div>
+
+          <div>
+            <h4 class="font-medium text-cookie-700">Precio sugerido:</h4>
+            <p id="recipe-price" class="text-cookie-600">$-</p>
+          </div>
+        </div>
+
+        <h4 class="font-medium text-cookie-700 mt-4">Insumos requeridos:</h4>
+        <ul
+          id="recipe-ingredients"
+          class="list-disc list-inside text-cookie-600"
+        >
+          <li>Cargando insumos...</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Cerrar mensaje flash
+  function closeFlash(id) {
+    const flashElement = document.getElementById(id);
+    if (flashElement) {
+      flashElement.style.opacity = "0";
+      setTimeout(() => {
+        flashElement.style.display = "none";
+      }, 300);
+    }
+  }
+
+  // Cerrar mensajes flash automáticamente después de 5 segundos
+  document.addEventListener("DOMContentLoaded", function () {
+    const flashMessages = document.querySelectorAll('[id^="flash-"]');
+    flashMessages.forEach((message) => {
+      // Añadir transición para efecto de desvanecimiento
+      message.style.transition = "opacity 0.3s ease";
+
+      // Cerrar automáticamente después de 5 segundos
+      setTimeout(() => {
+        closeFlash(message.id);
+      }, 5000);
+    });
+
+    // Recipe preview functionality
+    const recipeSelect = document.querySelector("#receta");
+    const recipePreview = document.querySelector("#recipe-preview");
+
+    if (recipeSelect) {
+      recipeSelect.addEventListener("change", function () {
+        if (this.value) {
+          // Show the preview section
+          recipePreview.classList.remove("hidden");
+
+          // Here you would fetch the recipe details via AJAX and update the preview
+          // This is a placeholder - in a real implementation you'd use fetch() to get data from your server
+
+          // Example placeholder:
+          document.querySelector("#recipe-details").textContent =
+            "Detalles de la receta seleccionada...";
+          document.querySelector("#recipe-quantity").textContent = "X unidades";
+          document.querySelector("#recipe-weight").textContent = "XX g";
+          document.querySelector("#recipe-price").textContent = "$X.XX";
+
+          // Update ingredients list
+          const ingredientsList = document.querySelector("#recipe-ingredients");
+          ingredientsList.innerHTML = `
+              <li>Ingrediente 1: X unidades</li>
+              <li>Ingrediente 2: X unidades</li>
+              <li>Ingrediente 3: X unidades</li>
+            `;
+        } else {
+          // Hide the preview section if no recipe is selected
+          recipePreview.classList.add("hidden");
+        }
+      });
+    }
+  });
+</script>
+{% endblock %}

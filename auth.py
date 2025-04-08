@@ -1,13 +1,10 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from flask_login import login_user, logout_user, login_required
-import requests
 from models import usuario
 from werkzeug.security import check_password_hash, generate_password_hash
-from utils import generar_codigo_2fa  # Importa funciones auxiliares
 from models import db
 from forms import loginForm, RegistroForm, RegistroForm_adm
 from functools import wraps
-from flask import jsonify
 from datetime import datetime, timedelta
 
 auth = Blueprint('auth', __name__)
@@ -33,21 +30,6 @@ def verificar_roles(*roles_permitidos):
 def login():
     form = loginForm()
     if form.validate_on_submit():
-        # Validar reCAPTCHA
-        recaptcha_response = request.form['g-recaptcha-response']
-        secret_key = '6LcQ1QQrAAAAAJyd5S8evLqIYJOeqIiuacXJ9b_M'
-        payload = {
-            'response': recaptcha_response,
-            'secret': secret_key
-        }
-        response = requests.post(
-            'https://www.google.com/recaptcha/api/siteverify', data=payload)
-        result = response.json()
-
-        if not result.get('success'):
-            flash('Por favor completa el reCAPTCHA.', 'danger')
-            return redirect(url_for('auth.login'))
-
         nombre_usuario = form.username.data
         contrasenia = form.password.data
 
@@ -74,14 +56,26 @@ def login():
         user.ultimo_login = datetime.now()
         db.session.commit()
 
+        # Iniciar sesión directamente
+        login_user(user)
+
         session['id_usuario'] = user.id_usuario
         session['expiracion_sesion'] = (
             datetime.now() + timedelta(seconds=30)).timestamp()
         session['rol'] = user.rol.lower()
 
-        generar_codigo_2fa(user)
-
-        return redirect(url_for('auth.verificar_codigo_2fa'))
+        # Redirigir según el rol del usuario
+        if user.rol.lower() == 'admin':
+            return redirect(url_for('admin'))
+        elif user.rol.lower() == 'produccion':
+            return redirect(url_for('produccion.index'))
+        elif user.rol.lower() == 'ventas':
+            return redirect(url_for('venta.ventas'))
+        elif user.rol.lower() == 'cliente':
+            return redirect(url_for('cliente'))
+        else:
+            flash('Rol no reconocido.', 'danger')
+            return redirect(url_for('auth.login'))
 
     return render_template('auth/login.html', form=form)
 
@@ -91,27 +85,12 @@ def registro():
     form = RegistroForm()
 
     if form.validate_on_submit():
-        # Validar reCAPTCHA
-        recaptcha_response = request.form['g-recaptcha-response']
-        secret_key = '6LcQ1QQrAAAAAJyd5S8evLqIYJOeqIiuacXJ9b_M'
-        payload = {
-            'response': recaptcha_response,
-            'secret': secret_key
-        }
-        response = requests.post(
-            'https://www.google.com/recaptcha/api/siteverify', data=payload)
-        result = response.json()
-
-        if not result.get('success'):
-            flash('Por favor completa el reCAPTCHA.', 'danger')
-            return redirect(url_for('auth.registro'))
-
-            # Verificar si el nombre de usuario ya existe en la base de datos
+        # Verificar si el nombre de usuario ya existe en la base de datos
         usuario_existente = usuario.query.filter_by(
             nombre_usuario=form.nombre_usuario.data).first()
         if usuario_existente:
             flash('El nombre de usuario ya está en uso. Por favor, elige otro.', 'danger')
-            return redirect(url_for('auth.registro_adm'))
+            return redirect(url_for('auth.registro'))
 
         # Hashear la contraseña antes de almacenarla
         hashed_password = generate_password_hash(form.contrasenia.data)
@@ -150,54 +129,6 @@ def logout():
     session.pop('rol', None)
     session.pop('expiracion_sesion', None)  # Elimina la expiración de sesión
     return redirect(url_for('auth.login'))
-
-
-@auth.route('/verificar_2fa', methods=['GET', 'POST'])
-def verificar_codigo_2fa():
-    user = usuario.query.get(session.get('id_usuario'))
-    if not user:
-        flash('Usuario no encontrado. Inicia sesión de nuevo.', 'danger')
-        return redirect(url_for('auth.login'))
-
-    if request.method == 'POST':
-        codigo_ingresado = request.form.get('codigo_2fa')
-
-        # Verificar si el código ingresado coincide con el código en la sesión
-        if codigo_ingresado == session.get('codigo_2fa'):
-            login_user(user)
-            user.codigo_2fa = ''
-            db.session.commit()
-
-            if user.rol.lower() == 'admin':
-                return redirect(url_for('admin'))
-            elif user.rol.lower() == 'produccion':
-                return redirect(url_for('produccion.index'))
-            elif user.rol.lower() == 'ventas':
-                return redirect(url_for('venta.ventas'))
-            elif user.rol.lower() == 'cliente':
-                return redirect(url_for('cliente'))
-            else:
-                flash('Rol no reconocido.', 'danger')
-                return redirect(url_for('auth.login'))
-        else:
-            flash('Código incorrecto. Inténtalo de nuevo.', 'danger')
-
-    return render_template('auth/verificar_2fa.html')
-
-
-@auth.route('/reenviar_codigo', methods=['GET', 'POST'])
-def reenviar_codigo():
-    """Endpoint para reenviar el código 2FA."""
-    user_id = session.get('id_usuario')
-    user = usuario.query.get(user_id)
-
-    if user:
-        generar_codigo_2fa(user)  # Regenerar el código y enviarlo de nuevo
-        # Redirigir a la página de verificación
-        return redirect(url_for('auth.verificar_codigo_2fa'))
-    else:
-        flash('Usuario no encontrado. Inicia sesión nuevamente.', 'danger')
-        return redirect(url_for('auth.login'))
 
 
 @auth.route('/perfil', methods=['GET', 'POST'])
@@ -252,16 +183,36 @@ def redirigir():
 def registro_adm():
     form = RegistroForm_adm()
 
+    # Obtener lista de usuarios con filtrado si existe
+    filtro_rol = request.args.get('rol', '')
+    busqueda = request.args.get('q', '')
+
+    query = usuario.query
+
+    if filtro_rol:
+        query = query.filter_by(rol=filtro_rol)
+
+    if busqueda:
+        query = query.filter(
+            (usuario.nombre.ilike(f"%{busqueda}%")) |
+            (usuario.nombre_usuario.ilike(f"%{busqueda}%")) |
+            (usuario.telefono.ilike(f"%{busqueda}%")) |
+            (usuario.email.ilike(f"%{busqueda}%")) |
+            (usuario.rol.ilike(f"%{busqueda}%"))
+        )
+
+    # Obtener todos los usuarios según los filtros
+    usuarios_lista = query.all()
+
     roles_permitidos = ['admin', 'cliente', 'ventas', 'produccion']
 
     if form.validate_on_submit():
-
         rol_seleccionado = form.rol.data
         if rol_seleccionado not in roles_permitidos:
             flash('Rol no válido.', 'danger')
             return redirect(url_for('auth.registro_adm'))
 
-            # Verificar si el nombre de usuario ya existe en la base de datos
+        # Verificar si el nombre de usuario ya existe en la base de datos
         usuario_existente = usuario.query.filter_by(
             nombre_usuario=form.nombre_usuario.data).first()
         if usuario_existente:
@@ -271,7 +222,7 @@ def registro_adm():
         # Hashear la contraseña antes de almacenarla
         hashed_password = generate_password_hash(form.contrasenia.data)
 
-        user = usuario(
+        nuevo_usuario = usuario(
             nombre=form.nombre.data,
             nombre_usuario=form.nombre_usuario.data,
             telefono=form.telefono.data,
@@ -280,16 +231,13 @@ def registro_adm():
             rol=rol_seleccionado
         )
 
-        db.session.add(user)
+        db.session.add(nuevo_usuario)
         db.session.commit()
 
-        # Autenticar al usuario recién registrado
-        login_user(user)
+        flash('Usuario registrado con éxito!', 'success')
+        return redirect(url_for('auth.registro_adm'))
 
-        flash('Usuario registrado y autenticado con éxito!', 'success')
-        return render_template('/registro_adm.html', form=form)
-
-    return render_template('/registro_adm.html', form=form)
+    return render_template('/registro_adm.html', form=form, usuarios=usuarios_lista)
 
 
 @auth.route('/expirada')

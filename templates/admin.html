@@ -1,47 +1,246 @@
-{# templates/index_B.html #} {% extends "layout_B.html" %} {% block main %}
+{# templates/index.html #} {% extends "layout.html" %} {% block main %}
 
-<main class="row justify-content-center">
-  <div class="container-buttons d-flex justify-content-center flex-wrap">
-    <div class="row">
-      <a href="{{ url_for('insumo_bp.agregarInsumo') }}" class="boton">
-        <img
-          src="{{ url_for('static', filename='img/compra_insumos.png') }}"
-          alt="Insumos"
-          class="icono"
-        />
-        <p class="texto">Insumos</p>
-      </a>
-      <a href="{{ url_for('compras_bp.listar_compras') }}" class="boton">
-        <img
-          src="{{ url_for('static', filename='img/inventario.png') }}"
-          alt="Inventario"
-          class="icono"
-        />
-        <p class="texto">Inventario</p>
-      </a>
-
-      <a href="{{ url_for('proveedor_bp.agregarProveedor') }}" class="boton">
-        <img
-          src="{{ url_for('static', filename='img/ganancia.png') }}"
-          alt="Ganancias"
-          class="icono"
-        />
-        <p class="texto">Proveedores</p>
-      </a>
+<div class="p-4 sm:ml-64 bg-cookie-50 min-h-screen pt-10">
+  <div class="p-4 mt-14">
+    <!-- Título principal -->
+    <div class="text-center mb-8">
+      <h1 class="text-4xl font-kavoon text-cookie-700 mb-2">
+        Panel de Control
+      </h1>
+      <div class="w-24 h-1 bg-cookie-500 mx-auto rounded-full"></div>
     </div>
-    
-    <div class="row">
 
-      <a href="{{ url_for('auth.registro_adm') }}" class="boton">
-        <img
-          src="{{ url_for('static', filename='img/user.png') }}"
-          alt="Usuarios"
-          class="icono"
-        />
-        <p class="texto">Administración</p>
-      </a>
+    <!-- Grid de módulos -->
+    <div
+      class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+    >
+      <!-- Insumos -->
+      <div class="bg-white rounded-lg shadow hover:shadow-lg transition-all">
+        <div
+          class="p-5 border-b border-cookie-100 bg-gradient-to-r from-cookie-50 to-white"
+        >
+          <div class="flex items-center">
+            <div class="p-3 rounded-full bg-cookie-100 text-cookie-600 mr-4">
+              <i class="fas fa-boxes fa-lg"></i>
+            </div>
+            <h2 class="text-xl font-kavoon text-cookie-800">Insumos</h2>
+          </div>
+        </div>
+        <div class="p-5">
+          <a
+            href="{{ url_for('insumo_bp.agregarInsumo') }}"
+            class="flex items-center p-2 text-cookie-700 hover:bg-cookie-50 rounded-lg group mb-3"
+          >
+            <i class="fas fa-plus-circle text-cookie-500 mr-3"></i>
+            <span>Agregar Insumos</span>
+          </a>
+          <a
+            href="{{ url_for('compras_bp.listar_compras') }}"
+            class="flex items-center p-2 text-cookie-700 hover:bg-cookie-50 rounded-lg group"
+          >
+            <i class="fas fa-clipboard-list text-cookie-500 mr-3"></i>
+            <span>Registrar compra</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Proveedores -->
+      <div class="bg-white rounded-lg shadow hover:shadow-lg transition-all">
+        <div
+          class="p-5 border-b border-cookie-100 bg-gradient-to-r from-cookie-50 to-white"
+        >
+          <div class="flex items-center">
+            <div class="p-3 rounded-full bg-cookie-100 text-cookie-600 mr-4">
+              <i class="fas fa-truck fa-lg"></i>
+            </div>
+            <h2 class="text-xl font-kavoon text-cookie-800">Proveedores</h2>
+          </div>
+        </div>
+        <div class="p-5">
+          <a
+            href="{{ url_for('proveedor_bp.agregarProveedor') }}"
+            class="flex items-center p-2 text-cookie-700 hover:bg-cookie-50 rounded-lg group mb-3"
+          >
+            <i class="fas fa-user-plus text-cookie-500 mr-3"></i>
+            <span>Nuevo Proveedor</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Usuarios -->
+      <div class="bg-white rounded-lg shadow hover:shadow-lg transition-all">
+        <div
+          class="p-5 border-b border-cookie-100 bg-gradient-to-r from-cookie-50 to-white"
+        >
+          <div class="flex items-center">
+            <div class="p-3 rounded-full bg-cookie-100 text-cookie-600 mr-4">
+              <i class="fas fa-users fa-lg"></i>
+            </div>
+            <h2 class="text-xl font-kavoon text-cookie-800">Usuarios</h2>
+          </div>
+        </div>
+        <div class="p-5">
+          <a
+            href="{{ url_for('auth.registro_adm') }}"
+            class="flex items-center p-2 text-cookie-700 hover:bg-cookie-50 rounded-lg group mb-3"
+          >
+            <i class="fas fa-user-plus text-cookie-500 mr-3"></i>
+            <span>Registrar Usuario</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Producción -->
+      <div class="bg-white rounded-lg shadow hover:shadow-lg transition-all">
+        <div
+          class="p-5 border-b border-cookie-100 bg-gradient-to-r from-cookie-50 to-white"
+        >
+          <div class="flex items-center">
+            <div class="p-3 rounded-full bg-cookie-100 text-cookie-600 mr-4">
+              <i class="fas fa-industry fa-lg"></i>
+            </div>
+            <h2 class="text-xl font-kavoon text-cookie-800">Producción</h2>
+          </div>
+        </div>
+        <div class="p-5">
+          <a
+            href="{{ url_for('produccion.index') }}"
+            class="flex items-center p-2 text-cookie-700 hover:bg-cookie-50 rounded-lg group mb-3"
+          >
+            <i class="fas fa-clipboard-check text-cookie-500 mr-3"></i>
+            <span>Registrar Producción</span>
+          </a>
+          <a
+            href="#"
+            class="flex items-center p-2 text-cookie-700 hover:bg-cookie-50 rounded-lg group"
+          >
+            <i class="fas fa-exclamation-triangle text-cookie-500 mr-3"></i>
+            <span>Registrar Mermas</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Ventas -->
+      <div class="bg-white rounded-lg shadow hover:shadow-lg transition-all">
+        <div
+          class="p-5 border-b border-cookie-100 bg-gradient-to-r from-cookie-50 to-white"
+        >
+          <div class="flex items-center">
+            <div class="p-3 rounded-full bg-cookie-100 text-cookie-600 mr-4">
+              <i class="fas fa-shopping-cart fa-lg"></i>
+            </div>
+            <h2 class="text-xl font-kavoon text-cookie-800">Ventas</h2>
+          </div>
+        </div>
+        <div class="p-5">
+          <a
+            href="{{ url_for('venta.ventas') }}"
+            class="flex items-center p-2 text-cookie-700 hover:bg-cookie-50 rounded-lg group mb-3"
+          >
+            <i class="fas fa-cash-register text-cookie-500 mr-3"></i>
+            <span>Registrar Venta</span>
+          </a>
+          <a
+            href="#"
+            class="flex items-center p-2 text-cookie-700 hover:bg-cookie-50 rounded-lg group"
+          >
+            <i class="fas fa-history text-cookie-500 mr-3"></i>
+            <span>Historial de Ventas</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Pedidos -->
+      <div class="bg-white rounded-lg shadow hover:shadow-lg transition-all">
+        <div
+          class="p-5 border-b border-cookie-100 bg-gradient-to-r from-cookie-50 to-white"
+        >
+          <div class="flex items-center">
+            <div class="p-3 rounded-full bg-cookie-100 text-cookie-600 mr-4">
+              <i class="fas fa-truck-loading fa-lg"></i>
+            </div>
+            <h2 class="text-xl font-kavoon text-cookie-800">Pedidos</h2>
+          </div>
+        </div>
+        <div class="p-5">
+          <a
+            href="#"
+            class="flex items-center p-2 text-cookie-700 hover:bg-cookie-50 rounded-lg group mb-3"
+          >
+            <i class="fas fa-plus-circle text-cookie-500 mr-3"></i>
+            <span>Nuevo Pedido</span>
+          </a>
+          <a
+            href="#"
+            class="flex items-center p-2 text-cookie-700 hover:bg-cookie-50 rounded-lg group"
+          >
+            <i class="fas fa-list text-cookie-500 mr-3"></i>
+            <span>Listar Pedidos</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Galletas -->
+      <div class="bg-white rounded-lg shadow hover:shadow-lg transition-all">
+        <div
+          class="p-5 border-b border-cookie-100 bg-gradient-to-r from-cookie-50 to-white"
+        >
+          <div class="flex items-center">
+            <div class="p-3 rounded-full bg-cookie-100 text-cookie-600 mr-4">
+              <i class="fas fa-cookie fa-lg"></i>
+            </div>
+            <h2 class="text-xl font-kavoon text-cookie-800">Galletas</h2>
+          </div>
+        </div>
+        <div class="p-5">
+          <a
+            href="#"
+            class="flex items-center p-2 text-cookie-700 hover:bg-cookie-50 rounded-lg group mb-3"
+          >
+            <i class="fas fa-plus-circle text-cookie-500 mr-3"></i>
+            <span>Agregar Galleta</span>
+          </a>
+          <a
+            href="#"
+            class="flex items-center p-2 text-cookie-700 hover:bg-cookie-50 rounded-lg group"
+          >
+            <i class="fas fa-warehouse text-cookie-500 mr-3"></i>
+            <span>Inventario</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Recetas -->
+      <div class="bg-white rounded-lg shadow hover:shadow-lg transition-all">
+        <div
+          class="p-5 border-b border-cookie-100 bg-gradient-to-r from-cookie-50 to-white"
+        >
+          <div class="flex items-center">
+            <div class="p-3 rounded-full bg-cookie-100 text-cookie-600 mr-4">
+              <i class="fas fa-book fa-lg"></i>
+            </div>
+            <h2 class="text-xl font-kavoon text-cookie-800">Recetas</h2>
+          </div>
+        </div>
+        <div class="p-5">
+          <a
+            href="{{ url_for('recetas.receta') }}"
+            class="flex items-center p-2 text-cookie-700 hover:bg-cookie-50 rounded-lg group mb-3"
+          >
+            <i class="fas fa-edit text-cookie-500 mr-3"></i>
+            <span>Crear Receta</span>
+          </a>
+          <a
+            href="#"
+            class="flex items-center p-2 text-cookie-700 hover:bg-cookie-50 rounded-lg group"
+          >
+            <i class="fas fa-clipboard-list text-cookie-500 mr-3"></i>
+            <span>Listar Recetas</span>
+          </a>
+        </div>
+      </div>
     </div>
   </div>
-</main>
+</div>
 
 {% endblock %}

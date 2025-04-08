@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Delicias de Galleta</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+
+    <style>
+      body {
+        background-color: #fff8f0;
+        font-family: "Segoe UI", sans-serif;
+      }
+
+      .header {
+        background-color: #c47912;
+        padding: 20px;
+        color: #371c02;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .header h1 {
+        margin: 0;
+      }
+
+      .logo {
+        height: 100px;
+        margin-left: 20px;
+      }
+
+      .card-title {
+        color: #5a2e1d;
+      }
+
+      .custom-btn {
+        background-color: #a0522d;
+        color: white;
+        border: none;
+      }
+
+      .custom-btn:hover {
+        background-color: #87411f;
+      }
+
+      .carousel-img {
+        height: 400px;
+        object-fit: cover;
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- Header con botón de inicio de sesión -->
+    <div class="header">
+      <div class="">
+        <img
+          src="../static/img/logo.png"
+          alt="Logo Golden Cookie"
+          class="logo"
+        />
+      </div>
+      <div class="">
+        <h1>Delicias de Galleta</h1>
+        <p>Golden Cookies, donde cada mordida es oro.</p>
+      </div>
+      <div>
+        {% if usuario == None %}
+        <a href="{{url_for('index')}}" class="btn custom-btn">Iniciar sesión</a>
+        <a href="{{url_for('index')}}" class="btn custom-btn">Registrarse</a>
+        {% else %}
+        <a href="{{url_for('pedidos.carrito')}}" class="btn custom-btn"
+          >Carrito de compras</a
+        >
+        <a href="{{url_for('pedidos.pedido')}}" class="btn custom-btn"
+          >Tus pedidos</a
+        >
+        {% endif %}
+      </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %} {% if
+    messages %}
+    <div style="margin: 40px">
+      {% for category, message in messages %}
+      <div
+        class="alert alert-{{ category }} alert-dismissible fade show"
+        role="alert"
+      >
+        {{ message }}
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="alert"
+          aria-label="Close"
+        ></button>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %} {% endwith %}
+
+    <!-- Carrusel de productos -->
+    <div
+      id="carruselGalletas"
+      class="carousel slide container mt-4"
+      data-bs-ride="carousel"
+    >
+      <div class="carousel-inner rounded">
+        {% for galleta in galletas %}
+        <div class="carousel-item active">
+          <img
+            src="{{galleta.imagen}}"
+            class="d-block w-100 carousel-img"
+            alt="{{galleta.nombre}}"
+          />
+        </div>
+        {% endfor %}
+      </div>
+      <button
+        class="carousel-control-prev"
+        type="button"
+        data-bs-target="#carruselGalletas"
+        data-bs-slide="prev"
+      >
+        <span class="carousel-control-prev-icon"></span>
+      </button>
+      <button
+        class="carousel-control-next"
+        type="button"
+        data-bs-target="#carruselGalletas"
+        data-bs-slide="next"
+      >
+        <span class="carousel-control-next-icon"></span>
+      </button>
+    </div>
+
+    <!-- Cards de productos -->
+    <div class="container mt-5">
+      <div class="row row-cols-1 row-cols-md-3 g-4">
+        <!-- Card 2 -->
+        {% for galleta in galletas %}
+        <div class="col">
+          <div class="card h-100">
+            <img
+              src="{{galleta.imagen}}"
+              class="card-img-top"
+              alt="Galleta de avena"
+            />
+            <div class="card-body">
+              <h5 class="card-title">{{galleta.nombre}}</h5>
+              <p class="card-text">{{galleta.descripcion}}</p>
+              <p class="card-text">$ {{galleta.precio}} (Precio unitario)</p>
+              <p class="card-text">
+                {{galleta.cantidad_galletas}} galletas disponbles
+              </p>
+              <div class="d-flex">
+                {% if usuario == None %}
+                <p>Inicia sesión para poder hacer un pedido</p>
+                {% else %}
+                <form
+                  class="d-flex"
+                  method="post"
+                  action="{{url_for('pedidos.procesar_t')}}"
+                >
+                  <input
+                    type="hidden"
+                    name="csrf_token"
+                    value="{{csrf_token()}}"
+                  />
+                  <input
+                    type="hidden"
+                    name="galleta"
+                    value="{{galleta.id_galleta}}"
+                  />
+                  <input
+                    type="number"
+                    name="cantidad"
+                    class="form-contol rounded"
+                    min="1"
+                    placeholder="Cantidad de galletas"
+                  />
+                  <button class="btn custom-btn" style="margin-left: 5px">
+                    Añadir al carrito
+                  </button>
+                </form>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>

@@ -1,0 +1,226 @@
+{% extends "layout.html" %} {% block title %}Producción - Golden Cookies{%
+endblock %} {% block main %}
+<div class="p-4 sm:ml-64">
+  <div class="p-4 md:p-6 lg:p-8">
+    <!-- Mobile sidebar toggle -->
+    <button
+      type="button"
+      onclick="toggleSidebar()"
+      class="md:hidden inline-flex items-center p-2 mb-4 text-cookie-700 rounded-lg hover:bg-cookie-200 focus:outline-none"
+    >
+      <i class="fas fa-bars text-lg"></i>
+      <span class="ml-2">Menú</span>
+    </button>
+
+    <!-- Title and content -->
+    <div class="mb-8">
+      <h1 class="text-3xl font-kavoon text-cookie-800">Producción</h1>
+      <p class="text-cookie-600">
+        Gestión de procesos de fabricación y lotes de galletas
+      </p>
+    </div>
+
+    <!-- Flash messages -->
+    <div id="flash-messages" class="mb-6">
+      {% with messages = get_flashed_messages(with_categories=true) %} {% if
+      messages %} {% for category, message in messages %}
+      <div
+        id="flash-{{ loop.index }}"
+        class="p-4 mb-4 rounded-lg flex justify-between items-center {% if category == 'success' %}bg-green-100 text-green-800{% elif category == 'danger' %}bg-red-100 text-red-800{% elif category == 'warning' %}bg-yellow-100 text-yellow-800{% else %}bg-blue-100 text-blue-800{% endif %}"
+        role="alert"
+      >
+        <div>
+          {% if category == 'success' %}
+          <i class="fas fa-check-circle mr-2"></i>
+          {% elif category == 'danger' %}
+          <i class="fas fa-exclamation-circle mr-2"></i>
+          {% elif category == 'warning' %}
+          <i class="fas fa-exclamation-triangle mr-2"></i>
+          {% else %}
+          <i class="fas fa-info-circle mr-2"></i>
+          {% endif %} {{ message }}
+        </div>
+        <button
+          type="button"
+          onclick="closeFlash('flash-{{ loop.index }}')"
+          class="text-gray-500 hover:text-gray-700 focus:outline-none"
+        >
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      {% endfor %} {% endif %} {% endwith %}
+    </div>
+
+    <!-- Search filters -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+      <h2 class="text-xl font-kavoon text-cookie-700 mb-4">
+        Buscar Producciones
+      </h2>
+      <form
+        method="POST"
+        action="{{ url_for('produccion.index') }}"
+        class="space-y-4 md:space-y-0 md:grid md:grid-cols-3 md:gap-6"
+      >
+        {{ form.csrf_token }}
+
+        <div>
+          <label for="estatus" class="block text-cookie-700 mb-2">Estado</label>
+          {{ form.estatus(class="w-full p-2 border border-cookie-300 rounded-md
+          focus:ring focus:ring-cookie-400 focus:border-cookie-500") }}
+        </div>
+
+        <div>
+          <label for="fecha_inicio" class="block text-cookie-700 mb-2"
+            >Fecha desde</label
+          >
+          {{ form.fecha_inicio(class="w-full p-2 border border-cookie-300
+          rounded-md focus:ring focus:ring-cookie-400 focus:border-cookie-500",
+          type="date") }}
+        </div>
+
+        <div>
+          <label for="galleta" class="block text-cookie-700 mb-2"
+            >Galleta</label
+          >
+          {{ form.galleta(class="w-full p-2 border border-cookie-300 rounded-md
+          focus:ring focus:ring-cookie-400 focus:border-cookie-500") }}
+        </div>
+
+        <div class="md:col-span-3 flex justify-end">
+          <button
+            type="submit"
+            class="px-6 py-2 bg-cookie-600 text-white rounded-md hover:bg-cookie-700 transition-colors"
+          >
+            <i class="fas fa-search mr-2"></i>Buscar
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Production list and action buttons -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+      <!-- Action buttons -->
+      <div class="md:col-span-1 space-y-4">
+        <a
+          href="{{ url_for('produccion.crear') }}"
+          class="block w-full bg-cookie-600 text-white p-4 rounded-lg shadow-md hover:bg-cookie-700 transition-colors text-center"
+        >
+          <i class="fas fa-plus-circle text-xl mb-2"></i>
+          <span class="block font-kavoon">Nueva Producción</span>
+        </a>
+
+        <a
+          href="{{ url_for('produccion.listar_mermas') }}"
+          class="block w-full bg-cookie-500 text-white p-4 rounded-lg shadow-md hover:bg-cookie-600 transition-colors text-center"
+        >
+          <i class="fas fa-box-open text-xl mb-2"></i>
+          <span class="block font-kavoon">Gestionar Mermas</span>
+        </a>
+
+        <a
+          href="{{ url_for('produccion.estadisticas') }}"
+          class="block w-full bg-cookie-700 text-white p-4 rounded-lg shadow-md hover:bg-cookie-800 transition-colors text-center"
+        >
+          <i class="fas fa-chart-pie text-xl mb-2"></i>
+          <span class="block font-kavoon">Estadísticas</span>
+        </a>
+      </div>
+
+      <!-- Production listing -->
+      <div class="md:col-span-3 bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-xl font-kavoon text-cookie-700 mb-4">Producciones</h2>
+
+        {% if producciones|length > 0 %}
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm text-left">
+            <thead class="text-xs text-cookie-700 uppercase bg-cookie-100">
+              <tr>
+                <th class="px-4 py-3">#</th>
+                <th class="px-4 py-3">Galleta</th>
+                <th class="px-4 py-3">Estado</th>
+                <th class="px-4 py-3">Fecha</th>
+                <th class="px-4 py-3">Cantidad</th>
+                <th class="px-4 py-3">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for produccion in producciones %}
+              <tr class="border-b border-cookie-200 hover:bg-cookie-50">
+                <td class="px-4 py-3">{{ produccion.id_produccion }}</td>
+                <td class="px-4 py-3">
+                  {{ produccion.receta.galleta.nombre }}
+                </td>
+                <td class="px-4 py-3">
+                  <span
+                    class="px-2 py-1 rounded-full text-xs font-medium {% if produccion.estatus == 'programada' %}bg-blue-100 text-blue-800 {% elif produccion.estatus == 'en_proceso' %}bg-yellow-100 text-yellow-800 {% elif produccion.estatus == 'completada' %}bg-green-100 text-green-800 {% elif produccion.estatus == 'cancelada' %}bg-red-100 text-red-800 {% endif %}"
+                  >
+                    {% if produccion.estatus == 'programada' %}Programada {%
+                    elif produccion.estatus == 'en_proceso' %}En proceso {% elif
+                    produccion.estatus == 'completada' %}Completada {% elif
+                    produccion.estatus == 'cancelada' %}Cancelada {% else %}{{
+                    produccion.estatus }}{% endif %}
+                  </span>
+                </td>
+                <td class="px-4 py-3">
+                  {{ produccion.created_at.strftime('%d/%m/%Y') }}
+                </td>
+                <td class="px-4 py-3">
+                  {{ produccion.receta.cantidad_produccion }} unidades
+                </td>
+                <td class="px-4 py-3">
+                  <a
+                    href="{{ url_for('produccion.detalle', id=produccion.id_produccion) }}"
+                    class="text-cookie-600 hover:text-cookie-800"
+                  >
+                    <i class="fas fa-eye mr-1"></i>Ver
+                  </a>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="text-center py-8 text-cookie-600">
+          <i class="fas fa-cookie-bite text-5xl mb-4"></i>
+          <p>No hay producciones registradas</p>
+          <a
+            href="{{ url_for('produccion.crear') }}"
+            class="mt-4 inline-block px-4 py-2 bg-cookie-600 text-white rounded-md hover:bg-cookie-700 transition-colors"
+          >
+            Crear nueva producción
+          </a>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Cerrar mensaje flash
+  function closeFlash(id) {
+    const flashElement = document.getElementById(id);
+    if (flashElement) {
+      flashElement.style.opacity = "0";
+      setTimeout(() => {
+        flashElement.style.display = "none";
+      }, 300);
+    }
+  }
+
+  // Cerrar mensajes flash automáticamente después de 5 segundos
+  document.addEventListener("DOMContentLoaded", function () {
+    const flashMessages = document.querySelectorAll('[id^="flash-"]');
+    flashMessages.forEach((message) => {
+      // Añadir transición para efecto de desvanecimiento
+      message.style.transition = "opacity 0.3s ease";
+
+      // Cerrar automáticamente después de 5 segundos
+      setTimeout(() => {
+        closeFlash(message.id);
+      }, 5000);
+    });
+  });
+</script>
+{% endblock %}

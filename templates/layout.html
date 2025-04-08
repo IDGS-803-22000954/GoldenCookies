@@ -1,0 +1,271 @@
+{# templates/layout.html #} {% set nombres_roles = { 'admin': 'Administrador',
+'produccion': 'Producción', 'ventas': 'Vendedor', 'cliente': 'Cliente' }
+%}
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}Golden Cookies{% endblock %}</title>
+
+    <!-- Fonts -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Kavoon&family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Font Awesome -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+      integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              amber: {
+                50: "#fffbeb",
+                100: "#fef3c7",
+                200: "#fde68a",
+                300: "#fcd34d",
+                400: "#fbbf24",
+                500: "#f59e0b",
+                600: "#d97706",
+                700: "#b45309",
+                800: "#92400e",
+                900: "#78350f",
+              },
+              cookie: {
+                50: "#fcf9f2", // Crema muy claro
+                100: "#f8f0e3", // Crema vainilla
+                200: "#f2e2c4", // Galleta clara
+                300: "#e6d0a9", // Galleta cocida
+                400: "#d4b78c", // Canela suave
+                500: "#bb9f7c", // Galleta dorada
+                600: "#9a7b5a", // Canela
+                700: "#7d5d3b", // Chocolate con leche
+                800: "#62442b", // Chocolate negro
+                900: "#3d2c1c", // Chocolate amargo
+              },
+            },
+            fontFamily: {
+              kavoon: ["Kavoon", "cursive"],
+              sans: ["Inter", "sans-serif"],
+            },
+          },
+        },
+      };
+    </script>
+
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: #fcf9f2; /* Color de fondo crema suave */
+      }
+      .font-kavoon {
+        font-family: "Kavoon", cursive;
+      }
+
+      /* Logo zoom effect */
+      .logo-container {
+        overflow: hidden;
+        border-radius: 9999px; /* Full rounded */
+      }
+
+      .logo-image {
+        transition: transform 0.3s ease;
+      }
+
+      .logo-container:hover .logo-image {
+        transform: scale(1.4); /* 15% zoom on hover */
+      }
+    </style>
+    {% block styles %}{% endblock %}
+  </head>
+  <body class="bg-cookie-50">
+    <!-- Sidebar -->
+    <aside
+      id="sidebar"
+      class="fixed top-0 left-0 z-40 w-64 h-screen transition-transform -translate-x-full md:translate-x-0"
+    >
+      <div
+        class="h-full px-3 py-2 overflow-y-auto bg-gradient-to-b from-cookie-800 to-cookie-600 flex flex-col"
+      >
+        <a href="#" class="flex items-center justify-center my-6 p-2">
+          <div class="logo-container h-28 w-28">
+            <img
+              src="../static/img/logo.webp"
+              class="logo-image h-full w-full rounded-full"
+              alt="Logo Golden Cookies"
+            />
+          </div>
+        </a>
+
+        <!-- Nombre de la aplicación -->
+        <div class="text-center mb-8">
+          <h1 class="text-2xl font-kavoon text-cookie-50">Golden Cookies</h1>
+        </div>
+
+        <!-- Información del usuario -->
+        <div class="p-3 mb-5 bg-cookie-700/40 rounded-lg text-center">
+          <p class="text-cookie-100 text-sm font-medium">
+            {{ current_user.nombre if current_user.is_authenticated else
+            'Usuario' }}
+          </p>
+          <p class="text-cookie-200 text-xs">
+            {{ nombres_roles[current_user.rol.lower()] if current_user.is_authenticated else 'Rol' }}
+          </p>
+        </div>
+
+        <ul class="space-y-2 font-medium">
+          <li>
+            <a
+              href="{{ url_for('admin') }}"
+              class="flex items-center p-2 text-white rounded-lg hover:bg-cookie-500"
+            >
+              <i class="fas fa-home text-cookie-200 w-5 h-5 text-center"></i>
+              <span class="ml-3">Inicio</span>
+            </a>
+          </li>
+          <li>
+            <a
+              href="{{ url_for('insumo_bp.agregarInsumo') }}"
+              class="flex items-center p-2 text-white rounded-lg hover:bg-cookie-500"
+            >
+              <i class="fas fa-boxes text-cookie-200 w-5 h-5 text-center"></i>
+              <span class="ml-3">Insumos</span>
+            </a>
+          </li>
+          <li>
+            <a
+              href="{{ url_for('proveedor_bp.agregarProveedor') }}"
+              class="flex items-center p-2 text-white rounded-lg hover:bg-cookie-500"
+            >
+              <i class="fas fa-truck text-cookie-200 w-5 h-5 text-center"></i>
+              <span class="ml-3">Proveedores</span>
+            </a>
+          </li>
+          <li>
+            <a
+              href="{{ url_for('auth.registro_adm') }}"
+              class="flex items-center p-2 text-white rounded-lg hover:bg-cookie-500"
+            >
+              <i class="fas fa-users text-cookie-200 w-5 h-5 text-center"></i>
+              <span class="ml-3">Usuarios</span>
+            </a>
+          </li>
+          <li>
+            <a
+              href="#"
+              class="flex items-center p-2 text-white rounded-lg hover:bg-cookie-500"
+            >
+              <i
+                class="fas fa-industry text-cookie-200 w-5 h-5 text-center"
+              ></i>
+              <span class="ml-3">Produccion</span>
+            </a>
+          </li>
+          <li>
+            <a
+              href="#"
+              class="flex items-center p-2 text-white rounded-lg hover:bg-cookie-500"
+            >
+              <i class="fas fa-cookie text-cookie-200 w-5 h-5 text-center"></i>
+              <span class="ml-3">Galletas</span>
+            </a>
+          </li>
+          <li>
+            <a
+              href="#"
+              class="flex items-center p-2 text-white rounded-lg hover:bg-cookie-500"
+            >
+              <i class="fas fa-book text-cookie-200 w-5 h-5 text-center"></i>
+              <span class="ml-3">Recetas</span>
+            </a>
+          </li>
+          <li>
+            <a
+              href="{{url_for("venta.ventas")}}"
+              class="flex items-center p-2 text-white rounded-lg hover:bg-cookie-500"
+            >
+              <i
+                class="fas fa-shopping-cart text-cookie-200 w-5 h-5 text-center"
+              ></i>
+              <span class="ml-3">Ventas</span>
+            </a>
+          </li>
+          <li class="mt-auto pt-4 border-t border-cookie-600">
+            <a
+              href="{{ url_for('auth.logout') }}"
+              class="flex items-center p-2 text-white rounded-lg hover:bg-cookie-500"
+            >
+              <i
+                class="fas fa-sign-out-alt text-cookie-200 w-5 h-5 text-center"
+              ></i>
+              <span class="ml-3">Cerrar Sesión</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </aside>
+    <!-- Content Area -->
+    {% block main %}{% endblock %}
+
+    <!-- Script para toggle sidebar en móvil -->
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        // En dispositivos móviles, el sidebar comienza oculto
+        const sidebar = document.getElementById("sidebar");
+
+        // Asegurar que el sidebar está oculto en móviles al cargar
+        if (window.innerWidth < 768) {
+          sidebar.classList.add("-translate-x-full");
+        }
+
+        // Función para toggle sidebar (solo activa en móvil)
+        window.toggleSidebar = function () {
+          if (window.innerWidth < 768) {
+            sidebar.classList.toggle("-translate-x-full");
+          }
+        };
+
+        // Cierra automáticamente el sidebar al hacer clic en un enlace (para móviles)
+        const sidebarLinks = sidebar.querySelectorAll("a");
+        sidebarLinks.forEach((link) => {
+          link.addEventListener("click", function () {
+            if (window.innerWidth < 768) {
+              sidebar.classList.add("-translate-x-full");
+            }
+          });
+        });
+
+        // Cierra el sidebar cuando se hace clic fuera de él (para móviles)
+        document.addEventListener("click", function (event) {
+          if (
+            window.innerWidth < 768 &&
+            !sidebar.contains(event.target) &&
+            !event.target.closest('button[onclick="toggleSidebar()"]')
+          ) {
+            sidebar.classList.add("-translate-x-full");
+          }
+        });
+
+        // Ajusta la visibilidad del sidebar al cambiar el tamaño de la ventana
+        window.addEventListener("resize", function () {
+          if (window.innerWidth >= 768) {
+            sidebar.classList.remove("-translate-x-full");
+          } else {
+            sidebar.classList.add("-translate-x-full");
+          }
+        });
+      });
+    </script>
+  </body>
+</html>

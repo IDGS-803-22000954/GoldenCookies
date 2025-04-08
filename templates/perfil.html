@@ -1,103 +1,324 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Golden Cookie</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Kavoon&display=swap" rel="stylesheet">
-    <style>
-        body{
-            padding-top: 125px;
-        }
-        .header {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            background-color: #c47912; /* Color marrón oscuro */
-            padding: 20px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            z-index: 1000;
-        }
-        .logo {
-            height: 100px;
-            margin-left: 20px;
-        }
-        .container{
-            margin-top: 1000px;
-        }
-    </style>
-</head>
-<body>
-<header class="header">
-    <img src="../static/img/logo.png" alt="Logo Golden Cookie" class="logo"> 
-    <form action="{{ url_for('auth.logout') }}" method="POST">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-      <button type="submit" class="btn btn-danger">Cerrar sesión</button>
-    </form>
-</header>
+{% extends "layout.html" %} {% block title %}Mi Perfil - Golden Cookies{%
+endblock %} {% block main %}
+<div class="p-4 sm:ml-64">
+  <div class="p-4 md:p-6 lg:p-8">
+    <!-- Mobile sidebar toggle -->
+    <button
+      type="button"
+      onclick="toggleSidebar()"
+      class="md:hidden inline-flex items-center p-2 mb-4 text-cookie-700 rounded-lg hover:bg-cookie-200 focus:outline-none"
+    >
+      <i class="fas fa-bars text-lg"></i>
+      <span class="ml-2">Menú</span>
+    </button>
 
-<div class="container mt-5">
-    <h2 class="text-center mb-4 font-weight-bold">Perfil de Usuario</h2>
-
-    <!-- Mensajes de alerta -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-    <div class="mt-3">
-        {% for category, message in messages %}
-        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-            <strong>{{ message }}</strong>
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-            </button>
-        </div>
-        {% endfor %}
+    <!-- Title and content -->
+    <div class="mb-8">
+      <h1 class="text-3xl font-kavoon text-cookie-800">Mi Perfil</h1>
+      <p class="text-cookie-600">Administra tu información personal</p>
     </div>
-    {% endif %}
-    {% endwith %}
 
-    <div class="card shadow p-4 mt-3">
-        <form action="{{ url_for('auth.editar_perfil') }}" method="POST">
+    <!-- Flash messages -->
+    <div id="flash-messages" class="mb-6">
+      {% with messages = get_flashed_messages(with_categories=true) %} {% if
+      messages %} {% for category, message in messages %}
+      <div
+        id="flash-{{ loop.index }}"
+        class="p-4 mb-4 rounded-lg flex justify-between items-center {% if category == 'success' %}bg-green-100 text-green-800{% elif category == 'danger' %}bg-red-100 text-red-800{% elif category == 'warning' %}bg-yellow-100 text-yellow-800{% else %}bg-blue-100 text-blue-800{% endif %}"
+        role="alert"
+      >
+        <div>
+          {% if category == 'success' %}
+          <i class="fas fa-check-circle mr-2"></i>
+          {% elif category == 'danger' %}
+          <i class="fas fa-exclamation-circle mr-2"></i>
+          {% elif category == 'warning' %}
+          <i class="fas fa-exclamation-triangle mr-2"></i>
+          {% else %}
+          <i class="fas fa-info-circle mr-2"></i>
+          {% endif %} {{ message }}
+        </div>
+        <button
+          type="button"
+          onclick="closeFlash('flash-{{ loop.index }}')"
+          class="text-gray-500 hover:text-gray-700 focus:outline-none"
+        >
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      {% endfor %} {% endif %} {% endwith %}
+    </div>
+
+    <!-- User Profile -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <!-- User Info Card -->
+      <div class="lg:col-span-1">
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+          <div class="flex items-center justify-center mb-6">
+            <div
+              class="w-32 h-32 bg-cookie-100 rounded-full flex items-center justify-center"
+            >
+              <i class="fas fa-user text-cookie-600 text-5xl"></i>
+            </div>
+          </div>
+
+          <div class="text-center mb-6">
+            <h2 class="text-xl font-kavoon text-cookie-800">
+              {{ usuario.nombre }}
+            </h2>
+            <p class="text-cookie-600">@{{ usuario.nombre_usuario }}</p>
+            <span
+              class="inline-block mt-2 px-3 py-1 rounded-full text-sm font-medium {% if usuario.rol == 'admin' %}bg-purple-100 text-purple-800 {% elif usuario.rol == 'ventas' %}bg-blue-100 text-blue-800 {% elif usuario.rol == 'produccion' %}bg-green-100 text-green-800 {% else %}bg-gray-100 text-gray-800{% endif %}"
+            >
+              {{ usuario.rol|capitalize }}
+            </span>
+          </div>
+
+          <div class="space-y-3">
+            <div class="flex items-center">
+              <div class="w-10 flex-shrink-0 text-cookie-500">
+                <i class="fas fa-phone"></i>
+              </div>
+              <div>
+                <p class="text-sm text-cookie-500">Teléfono</p>
+                <p class="font-medium">{{ usuario.telefono }}</p>
+              </div>
+            </div>
+
+            <div class="flex items-center">
+              <div class="w-10 flex-shrink-0 text-cookie-500">
+                <i class="fas fa-envelope"></i>
+              </div>
+              <div>
+                <p class="text-sm text-cookie-500">Correo</p>
+                <p class="font-medium">
+                  {{ usuario.email or 'No registrado' }}
+                </p>
+              </div>
+            </div>
+
+            <div class="flex items-center">
+              <div class="w-10 flex-shrink-0 text-cookie-500">
+                <i class="fas fa-clock"></i>
+              </div>
+              <div>
+                <p class="text-sm text-cookie-500">Último acceso</p>
+                <p class="font-medium">
+                  {{ usuario.ultimo_login.strftime('%d/%m/%Y %H:%M') if
+                  usuario.ultimo_login else 'No disponible' }}
+                </p>
+              </div>
+            </div>
+
+            <div class="flex items-center">
+              <div class="w-10 flex-shrink-0 text-cookie-500">
+                <i class="fas fa-calendar-alt"></i>
+              </div>
+              <div>
+                <p class="text-sm text-cookie-500">Creado el</p>
+                <p class="font-medium">
+                  {{ usuario.created_at.strftime('%d/%m/%Y') }}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Acciones rápidas -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+          <h3 class="text-lg font-kavoon text-cookie-700 mb-4">
+            Acciones Rápidas
+          </h3>
+
+          <div class="space-y-3">
+            <a
+              href="{{ url_for('auth.logout') }}"
+              class="block w-full bg-red-100 text-red-800 p-3 rounded-md hover:bg-red-200 transition-colors text-center"
+            >
+              <i class="fas fa-sign-out-alt mr-2"></i>Cerrar Sesión
+            </a>
+
+            {% if usuario.rol == 'cliente' %}
+            <a
+              href="#historial-pedidos"
+              class="block w-full bg-cookie-100 text-cookie-800 p-3 rounded-md hover:bg-cookie-200 transition-colors text-center"
+            >
+              <i class="fas fa-history mr-2"></i>Historial de Pedidos
+            </a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Edit Profile Form -->
+      <div class="lg:col-span-2">
+        <div class="bg-white rounded-lg shadow-md p-6">
+          <h2 class="text-xl font-kavoon text-cookie-700 mb-6">
+            Editar Información de Perfil
+          </h2>
+
+          <form method="POST" action="{{ url_for('auth.editar_perfil') }}">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
 
-            <div class="form-group">
-                <label for="nombre"><strong>Nombre</strong></label>
-                <input type="text" class="form-control" id="nombre" name="nombre" value="{{ usuario.nombre }}" required>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <div>
+                <label for="nombre" class="block text-cookie-700 mb-2"
+                  >Nombre Completo</label
+                >
+                <input
+                  type="text"
+                  id="nombre"
+                  name="nombre"
+                  value="{{ usuario.nombre }}"
+                  class="w-full p-2 border border-cookie-300 rounded-md focus:ring focus:ring-cookie-400 focus:border-cookie-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label for="nombre_usuario" class="block text-cookie-700 mb-2"
+                  >Nombre de Usuario</label
+                >
+                <input
+                  type="text"
+                  id="nombre_usuario"
+                  name="nombre_usuario"
+                  value="{{ usuario.nombre_usuario }}"
+                  class="w-full p-2 border border-cookie-300 rounded-md focus:ring focus:ring-cookie-400 focus:border-cookie-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label for="telefono" class="block text-cookie-700 mb-2"
+                  >Teléfono</label
+                >
+                <input
+                  type="tel"
+                  id="telefono"
+                  name="telefono"
+                  value="{{ usuario.telefono }}"
+                  class="w-full p-2 border border-cookie-300 rounded-md focus:ring focus:ring-cookie-400 focus:border-cookie-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label for="email" class="block text-cookie-700 mb-2"
+                  >Correo Electrónico</label
+                >
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  value="{{ usuario.email or '' }}"
+                  class="w-full p-2 border border-cookie-300 rounded-md focus:ring focus:ring-cookie-400 focus:border-cookie-500"
+                />
+              </div>
             </div>
 
-            <div class="form-group">
-                <label for="nombre_usuario"><strong>Nombre de usuario</strong></label>
-                <input type="text" class="form-control" id="nombre_usuario" name="nombre_usuario" value="{{ usuario.nombre_usuario }}" required>
+            <div class="mb-6">
+              <h3 class="text-lg font-medium text-cookie-700 mb-3">
+                Cambiar Contraseña
+              </h3>
+              <p class="text-cookie-600 text-sm mb-3">
+                Deja este campo en blanco si no deseas cambiar tu contraseña.
+              </p>
+
+              <div class="relative">
+                <input
+                  type="password"
+                  id="contrasenia"
+                  name="contrasenia"
+                  placeholder="Nueva contraseña"
+                  class="w-full p-2 border border-cookie-300 rounded-md focus:ring focus:ring-cookie-400 focus:border-cookie-500"
+                />
+                <button
+                  type="button"
+                  onclick="togglePasswordVisibility('contrasenia')"
+                  class="absolute inset-y-0 right-0 flex items-center pr-3"
+                >
+                  <i
+                    id="password-toggle-icon"
+                    class="fas fa-eye text-cookie-400"
+                  ></i>
+                </button>
+              </div>
             </div>
 
-            <div class="form-group">
-                <label for="telefono"><strong>Teléfono</strong></label>
-                <input type="text" class="form-control" id="telefono" name="telefono" value="{{ usuario.telefono }}" required>
+            <div class="border-t border-cookie-200 pt-6 flex justify-end">
+              <button
+                type="submit"
+                class="bg-cookie-600 text-white py-2 px-6 rounded-md hover:bg-cookie-700 transition-colors"
+              >
+                <i class="fas fa-save mr-2"></i>Guardar Cambios
+              </button>
             </div>
+          </form>
+        </div>
 
-            <div class="form-group">
-                <label for="email"><strong>Correo electrónico</strong></label>
-                <input type="email" class="form-control" id="email" name="email" value="{{ usuario.email }}" required>
-            </div>
+        {% if usuario.rol == 'cliente' %}
+        <!-- Historial de Pedidos para clientes -->
+        <div
+          id="historial-pedidos"
+          class="bg-white rounded-lg shadow-md p-6 mt-6"
+        >
+          <h2 class="text-xl font-kavoon text-cookie-700 mb-6">
+            Historial de Pedidos
+          </h2>
 
-            <div class="form-group">
-                <label for="contrasenia"><strong>Nueva Contraseña</strong> (dejar en blanco si no desea cambiar)</label>
-                <input type="password" class="form-control" id="contrasenia" name="contrasenia">
-            </div>
-
-            <!-- Espaciado entre contraseña y botones -->
-            <div class="mt-4 d-flex justify-content-between">
-                <a href="{{ url_for('cliente') }}" class="btn btn-outline-secondary btn-lg">Regresar al Menú</a>
-                <button type="submit" class="btn btn-primary btn-lg">Guardar cambios</button>
-            </div>
-        </form>
+          <!-- Implementar historial de pedidos aquí -->
+          <div class="text-center py-6 text-cookie-500">
+            <i class="fas fa-cookie-bite text-5xl mb-3"></i>
+            <p>No hay pedidos recientes</p>
+          </div>
+        </div>
+        {% endif %}
+      </div>
     </div>
+  </div>
 </div>
 
+<script>
+  // Cerrar mensaje flash
+  function closeFlash(id) {
+    const flashElement = document.getElementById(id);
+    if (flashElement) {
+      flashElement.style.opacity = "0";
+      setTimeout(() => {
+        flashElement.style.display = "none";
+      }, 300);
+    }
+  }
 
-</body>
-</html>
+  // Cerrar mensajes flash automáticamente después de 5 segundos
+  document.addEventListener("DOMContentLoaded", function () {
+    const flashMessages = document.querySelectorAll('[id^="flash-"]');
+    flashMessages.forEach((message) => {
+      // Añadir transición para efecto de desvanecimiento
+      message.style.transition = "opacity 0.3s ease";
+
+      // Cerrar automáticamente después de 5 segundos
+      setTimeout(() => {
+        closeFlash(message.id);
+      }, 5000);
+    });
+  });
+
+  // Función para mostrar/ocultar contraseña
+  function togglePasswordVisibility(inputId) {
+    const passwordInput = document.getElementById(inputId);
+    const icon = document.getElementById("password-toggle-icon");
+
+    if (passwordInput.type === "password") {
+      passwordInput.type = "text";
+      icon.classList.remove("fa-eye");
+      icon.classList.add("fa-eye-slash");
+    } else {
+      passwordInput.type = "password";
+      icon.classList.remove("fa-eye-slash");
+      icon.classList.add("fa-eye");
+    }
+  }
+</script>
+{% endblock %}

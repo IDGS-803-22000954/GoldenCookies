@@ -1,0 +1,383 @@
+{% extends "layout.html" %} {% block title %}Detalle de Producción - Golden
+Cookies{% endblock %} {% block main %}
+<div class="p-4 sm:ml-64">
+  <div class="p-4 md:p-6 lg:p-8">
+    <!-- Mobile sidebar toggle -->
+    <button
+      type="button"
+      onclick="toggleSidebar()"
+      class="md:hidden inline-flex items-center p-2 mb-4 text-cookie-700 rounded-lg hover:bg-cookie-200 focus:outline-none"
+    >
+      <i class="fas fa-bars text-lg"></i>
+      <span class="ml-2">Menú</span>
+    </button>
+
+    <!-- Title and navigation -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between mb-8">
+      <div>
+        <div class="flex items-center space-x-2">
+          <a
+            href="{{ url_for('produccion.index') }}"
+            class="text-cookie-600 hover:text-cookie-800"
+          >
+            <i class="fas fa-arrow-left"></i>
+          </a>
+          <h1 class="text-3xl font-kavoon text-cookie-800">
+            Producción #{{ produccion.id_produccion }}
+          </h1>
+        </div>
+        <p class="text-cookie-600">
+          {{ produccion.receta.galleta.nombre }} -
+          <span
+            class="font-medium {% if produccion.estatus == 'programada' %}text-blue-600 {% elif produccion.estatus == 'en_proceso' %}text-yellow-600 {% elif produccion.estatus == 'completada' %}text-green-600 {% elif produccion.estatus == 'cancelada' %}text-red-600 {% endif %}"
+          >
+            {% if produccion.estatus == 'programada' %}Programada {% elif
+            produccion.estatus == 'en_proceso' %}En proceso {% elif
+            produccion.estatus == 'completada' %}Completada {% elif
+            produccion.estatus == 'cancelada' %}Cancelada {% else %}{{
+            produccion.estatus }}{% endif %}
+          </span>
+        </p>
+      </div>
+
+      <div class="mt-4 md:mt-0 flex space-x-3">
+        {% if produccion.estatus == 'programada' %}
+        <form
+          method="POST"
+          action="{{ url_for('produccion.iniciar', id=produccion.id_produccion) }}"
+        >
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+          <button
+            type="submit"
+            class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+          >
+            <i class="fas fa-play mr-2"></i>Iniciar Producción
+          </button>
+        </form>
+        {% elif produccion.estatus == 'en_proceso' %}
+        <form
+          method="POST"
+          action="{{ url_for('produccion.finalizar', id=produccion.id_produccion) }}"
+        >
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+          <button
+            type="submit"
+            class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+          >
+            <i class="fas fa-check-circle mr-2"></i>Finalizar Producción
+          </button>
+        </form>
+        {% endif %} {% if produccion.estatus != 'completada' and
+        produccion.estatus != 'cancelada' %}
+        <form
+          method="POST"
+          action="{{ url_for('produccion.cancelar', id=produccion.id_produccion) }}"
+          onsubmit="return confirm('¿Estás seguro de cancelar esta producción?')"
+        >
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+          <button
+            type="submit"
+            class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+          >
+            <i class="fas fa-times-circle mr-2"></i>Cancelar
+          </button>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Flash messages -->
+    <div id="flash-messages" class="mb-6">
+      {% with messages = get_flashed_messages(with_categories=true) %} {% if
+      messages %} {% for category, message in messages %}
+      <div
+        id="flash-{{ loop.index }}"
+        class="p-4 mb-4 rounded-lg flex justify-between items-center {% if category == 'success' %}bg-green-100 text-green-800{% elif category == 'danger' %}bg-red-100 text-red-800{% elif category == 'warning' %}bg-yellow-100 text-yellow-800{% else %}bg-blue-100 text-blue-800{% endif %}"
+        role="alert"
+      >
+        <div>
+          {% if category == 'success' %}
+          <i class="fas fa-check-circle mr-2"></i>
+          {% elif category == 'danger' %}
+          <i class="fas fa-exclamation-circle mr-2"></i>
+          {% elif category == 'warning' %}
+          <i class="fas fa-exclamation-triangle mr-2"></i>
+          {% else %}
+          <i class="fas fa-info-circle mr-2"></i>
+          {% endif %} {{ message }}
+        </div>
+        <button
+          type="button"
+          onclick="closeFlash('flash-{{ loop.index }}')"
+          class="text-gray-500 hover:text-gray-700 focus:outline-none"
+        >
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      {% endfor %} {% endif %} {% endwith %}
+    </div>
+
+    <!-- Production Information -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+      <!-- Recipe and Production Details -->
+      <div class="lg:col-span-1">
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+          <h2 class="text-xl font-kavoon text-cookie-700 mb-4">
+            Detalles de Receta
+          </h2>
+
+          <div class="space-y-3">
+            <div>
+              <p class="text-sm text-cookie-500">Nombre:</p>
+              <p class="font-medium">{{ produccion.receta.nombre }}</p>
+            </div>
+
+            <div>
+              <p class="text-sm text-cookie-500">Galleta:</p>
+              <p class="font-medium">{{ produccion.receta.galleta.nombre }}</p>
+            </div>
+
+            <div>
+              <p class="text-sm text-cookie-500">Cantidad de Producción:</p>
+              <p class="font-medium">
+                {{ produccion.receta.cantidad_produccion }} unidades
+              </p>
+            </div>
+
+            <div>
+              <p class="text-sm text-cookie-500">Peso Unitario:</p>
+              <p class="font-medium">
+                {{ produccion.receta.galleta.peso_unidad }} g
+              </p>
+            </div>
+
+            <div>
+              <p class="text-sm text-cookie-500">Precio Sugerido:</p>
+              <p class="font-medium">
+                ${{ '%.2f'|format(produccion.receta.galleta.precio) }}
+              </p>
+            </div>
+
+            {% if produccion.receta.detalles %}
+            <div>
+              <p class="text-sm text-cookie-500">Detalles:</p>
+              <p>{{ produccion.receta.detalles }}</p>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-6">
+          <h2 class="text-xl font-kavoon text-cookie-700 mb-4">
+            Información de Producción
+          </h2>
+
+          <div class="space-y-3">
+            <div>
+              <p class="text-sm text-cookie-500">ID:</p>
+              <p class="font-medium">{{ produccion.id_produccion }}</p>
+            </div>
+
+            <div>
+              <p class="text-sm text-cookie-500">Estado:</p>
+              <p
+                class="font-medium px-2 py-1 rounded-full inline-block {% if produccion.estatus == 'programada' %}bg-blue-100 text-blue-800 {% elif produccion.estatus == 'en_proceso' %}bg-yellow-100 text-yellow-800 {% elif produccion.estatus == 'completada' %}bg-green-100 text-green-800 {% elif produccion.estatus == 'cancelada' %}bg-red-100 text-red-800 {% endif %}"
+              >
+                {% if produccion.estatus == 'programada' %}Programada {% elif
+                produccion.estatus == 'en_proceso' %}En proceso {% elif
+                produccion.estatus == 'completada' %}Completada {% elif
+                produccion.estatus == 'cancelada' %}Cancelada {% else %}{{
+                produccion.estatus }}{% endif %}
+              </p>
+            </div>
+
+            <div>
+              <p class="text-sm text-cookie-500">Fecha de Creación:</p>
+              <p class="font-medium">
+                {{ produccion.created_at.strftime('%d/%m/%Y %H:%M') }}
+              </p>
+            </div>
+
+            <div>
+              <p class="text-sm text-cookie-500">Usuario:</p>
+              <p class="font-medium">{{ produccion.usuario.nombre }}</p>
+            </div>
+
+            {% if produccion.estatus == 'completada' and lote_galleta %}
+            <div>
+              <p class="text-sm text-cookie-500">Lote de Galletas:</p>
+              <p class="font-medium">#{{ lote_galleta.id_lote_galleta }}</p>
+            </div>
+
+            <div>
+              <p class="text-sm text-cookie-500">Cantidad Producida:</p>
+              <p class="font-medium">
+                {{ lote_galleta.cantidad_inicial }} unidades
+              </p>
+            </div>
+
+            <div>
+              <p class="text-sm text-cookie-500">Costo Total:</p>
+              <p class="font-medium">
+                ${{ '%.2f'|format(lote_galleta.costo_total_produccion) }}
+              </p>
+            </div>
+
+            <div>
+              <p class="text-sm text-cookie-500">Costo Unitario:</p>
+              <p class="font-medium">
+                ${{ '%.2f'|format(lote_galleta.costo_unitario_produccion) }}
+              </p>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Ingredients and Resources -->
+      <div class="lg:col-span-2">
+        {% if produccion.estatus == 'programada' and not insumos_disponibles %}
+        <div
+          class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded"
+        >
+          <div class="flex items-start">
+            <div class="flex-shrink-0">
+              <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="ml-3">
+              <p class="font-bold">Insumos insuficientes</p>
+              <p>No hay suficientes insumos para iniciar esta producción.</p>
+              <ul class="mt-2 ml-4 list-disc">
+                {% for insumo in insumos_insuficientes %}
+                <li>
+                  {{ insumo.nombre }}: requiere {{ insumo.requerido }} {{
+                  insumo.unidad }}, disponible {{ insumo.disponible }} {{
+                  insumo.unidad }}
+                </li>
+                {% endfor %}
+              </ul>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+        <div class="bg-white rounded-lg shadow-md p-6">
+          <h2 class="text-xl font-kavoon text-cookie-700 mb-4">
+            Insumos Requeridos
+          </h2>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm text-left">
+              <thead class="text-xs text-cookie-700 uppercase bg-cookie-100">
+                <tr>
+                  <th class="px-4 py-3">Insumo</th>
+                  <th class="px-4 py-3">Cantidad Requerida</th>
+                  <th class="px-4 py-3">Unidad</th>
+                  {% if produccion.estatus == 'completada' %}
+                  <th class="px-4 py-3">Costo</th>
+                  {% endif %}
+                </tr>
+              </thead>
+              <tbody>
+                {% for ri in produccion.receta.receta_insumo %}
+                <tr class="border-b border-cookie-200 hover:bg-cookie-50">
+                  <td class="px-4 py-3">{{ ri.insumo.nombre }}</td>
+                  <td class="px-4 py-3">{{ ri.cantidad_insumo }}</td>
+                  <td class="px-4 py-3">{{ ri.insumo.unidad_medida }}</td>
+                  {% if produccion.estatus == 'completada' %}
+                  <td class="px-4 py-3">
+                    {% set pi = insumos_usados|selectattr('id_insumo', 'eq',
+                    ri.id_insumo)|first %} {% if pi %} ${{
+                    '%.2f'|format(pi.cantidad_usada *
+                    (pi.lote_insumo.costo_total/pi.lote_insumo.cantidad)) }} {% else %} $0.00 {% endif
+                    %}
+                  </td>
+                  {% endif %}
+                </tr>
+                {% endfor %} {% if produccion.estatus == 'completada' %}
+                <tr class="bg-cookie-50 font-semibold">
+                  <td class="px-4 py-3" colspan="3">Costo Total</td>
+                  <td class="px-4 py-3">${{ '%.2f'|format(lote_galleta.costo_total_produccion) }}</td>
+                </tr>
+                {% endif %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {% if mermas|length > 0 %}
+        <div class="bg-white rounded-lg shadow-md p-6 mt-6">
+          <h2 class="text-xl font-kavoon text-cookie-700 mb-4">
+            Mermas Registradas
+          </h2>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm text-left">
+              <thead class="text-xs text-cookie-700 uppercase bg-cookie-100">
+                <tr>
+                  <th class="px-4 py-3">Tipo</th>
+                  <th class="px-4 py-3">Artículo</th>
+                  <th class="px-4 py-3">Cantidad</th>
+                  <th class="px-4 py-3">Fecha</th>
+                  <th class="px-4 py-3">Motivo</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for merma in mermas %}
+                <tr class="border-b border-cookie-200 hover:bg-cookie-50">
+                  <td class="px-4 py-3">{{ merma.tipo_merma }}</td>
+                  <td class="px-4 py-3">
+                    {% if merma.id_lote_insumo %} {{
+                    merma.lote_insumo.insumo.nombre }} {% elif
+                    merma.id_lote_galleta %} {{
+                    merma.lote_galleta.galleta.nombre }} {% else %} - {% endif
+                    %}
+                  </td>
+                  <td class="px-4 py-3">
+                    {{ merma.cantidad }} {% if merma.id_lote_insumo %} {{
+                    merma.lote_insumo.insumo.unidad_medida }} {% else %}
+                    unidades {% endif %}
+                  </td>
+                  <td class="px-4 py-3">
+                    {{ merma.fecha_registro.strftime('%d/%m/%Y') }}
+                  </td>
+                  <td class="px-4 py-3">{{ merma.motivo }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Cerrar mensaje flash
+  function closeFlash(id) {
+    const flashElement = document.getElementById(id);
+    if (flashElement) {
+      flashElement.style.opacity = "0";
+      setTimeout(() => {
+        flashElement.style.display = "none";
+      }, 300);
+    }
+  }
+
+  // Cerrar mensajes flash automáticamente después de 5 segundos
+  document.addEventListener("DOMContentLoaded", function () {
+    const flashMessages = document.querySelectorAll('[id^="flash-"]');
+    flashMessages.forEach((message) => {
+      // Añadir transición para efecto de desvanecimiento
+      message.style.transition = "opacity 0.3s ease";
+
+      // Cerrar automáticamente después de 5 segundos
+      setTimeout(() => {
+        closeFlash(message.id);
+      }, 5000);
+    });
+  });
+</script>
+{% endblock %}

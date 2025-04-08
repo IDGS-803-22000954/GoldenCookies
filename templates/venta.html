@@ -1,0 +1,267 @@
+{% extends "layout.html" %} {% block title %}Ventas - Golden Cookies{% endblock
+%} {% block main %}
+<div class="p-4 sm:ml-64">
+  <div class="p-4 md:p-6 lg:p-8">
+    <!-- Mobile sidebar toggle -->
+    <button
+      type="button"
+      onclick="toggleSidebar()"
+      class="md:hidden inline-flex items-center p-2 mb-4 text-cookie-700 rounded-lg hover:bg-cookie-200 focus:outline-none"
+    >
+      <i class="fas fa-bars text-lg"></i>
+      <span class="ml-2">Menú</span>
+    </button>
+
+    <!-- Title and content -->
+    <div class="mb-8">
+      <h1 class="text-3xl font-kavoon text-cookie-800">Ventas</h1>
+      <p class="text-cookie-600">Gestión de ventas locales y pedidos</p>
+    </div>
+
+    <!-- Flash messages -->
+    <div id="flash-messages" class="mb-6">
+      {% with messages = get_flashed_messages(with_categories=true) %} {% if
+      messages %} {% for category, message in messages %}
+      <div
+        id="flash-{{ loop.index }}"
+        class="p-4 mb-4 rounded-lg flex justify-between items-center {% if category == 'success' %}bg-green-100 text-green-800{% elif category == 'danger' %}bg-red-100 text-red-800{% elif category == 'warning' %}bg-yellow-100 text-yellow-800{% else %}bg-blue-100 text-blue-800{% endif %}"
+        role="alert"
+      >
+        <div>
+          {% if category == 'success' %}
+          <i class="fas fa-check-circle mr-2"></i>
+          {% elif category == 'danger' %}
+          <i class="fas fa-exclamation-circle mr-2"></i>
+          {% elif category == 'warning' %}
+          <i class="fas fa-exclamation-triangle mr-2"></i>
+          {% else %}
+          <i class="fas fa-info-circle mr-2"></i>
+          {% endif %} {{ message }}
+        </div>
+        <button
+          type="button"
+          onclick="closeFlash('flash-{{ loop.index }}')"
+          class="text-gray-500 hover:text-gray-700 focus:outline-none"
+        >
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      {% endfor %} {% endif %} {% endwith %}
+    </div>
+
+    <!-- Sales form and cart interface -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- Product selection form -->
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-xl font-kavoon text-cookie-700 mb-4">
+          Agregar Producto
+        </h2>
+        <form method="POST" action="{{ url_for('venta.procesar_tabla') }}">
+          {{ form.csrf_token }}
+
+          <div class="mb-4">
+            <label for="galleta" class="block text-cookie-700 mb-2"
+              >Galleta</label
+            >
+            <select
+              name="galleta"
+              id="galleta"
+              class="w-full p-2 border border-cookie-300 rounded-md focus:ring focus:ring-cookie-400 focus:border-cookie-500"
+              required
+            >
+              <option value="">Seleccione una galleta</option>
+              {% for galleta in galletas %}
+              <option value="{{ galleta.id_galleta }}">
+                {{ galleta.nombre }} - Stock: {{ galleta.cantidad_galletas }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="mb-4">
+            <label for="tipo_venta" class="block text-cookie-700 mb-2"
+              >Tipo de Venta</label
+            >
+            <select
+              name="tipo_venta"
+              id="tipo_venta"
+              class="w-full p-2 border border-cookie-300 rounded-md focus:ring focus:ring-cookie-400 focus:border-cookie-500"
+              required
+            >
+              <option value="unidad">Unidad</option>
+              <option value="paquete_10">Paquete de 10 galletas</option>
+              <option value="paquete_20">Paquete de 20 galletas</option>
+              <option value="paquete_30">Paquete de 30 galletas</option>
+              <option value="docena">Docena</option>
+            </select>
+          </div>
+
+          <div class="mb-6">
+            <label for="cantidad" class="block text-cookie-700 mb-2"
+              >Cantidad</label
+            >
+            <input
+              type="number"
+              name="cantidad"
+              id="cantidad"
+              min="1"
+              value="1"
+              class="w-full p-2 border border-cookie-300 rounded-md focus:ring focus:ring-cookie-400 focus:border-cookie-500"
+              required
+            />
+          </div>
+
+          <button
+            type="submit"
+            class="w-full bg-cookie-600 text-white py-2 px-4 rounded-md hover:bg-cookie-700 transition-colors"
+          >
+            <i class="fas fa-plus mr-2"></i>Agregar a la Venta
+          </button>
+        </form>
+      </div>
+
+      <!-- Shopping cart -->
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-xl font-kavoon text-cookie-700 mb-4">
+          Carrito de Venta
+        </h2>
+
+        {% if ventas|length > 0 %}
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm text-left">
+            <thead class="text-xs text-cookie-700 uppercase bg-cookie-100">
+              <tr>
+                <th class="px-4 py-3">Galleta</th>
+                <th class="px-4 py-3">Tipo</th>
+                <th class="px-4 py-3">Cant.</th>
+                <th class="px-4 py-3">Precio</th>
+                <th class="px-4 py-3">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for venta in ventas %}
+              <tr class="border-b border-cookie-200">
+                <td class="px-4 py-3">{{ venta.galleta }}</td>
+                <td class="px-4 py-3">
+                  {% if venta.tipo_venta == 'unidad' %} Unidad {% elif
+                  venta.tipo_venta == 'paquete_10' %} Paquete de 10 {% elif
+                  venta.tipo_venta == 'paquete_20' %} Paquete de 20 {% elif
+                  venta.tipo_venta == 'paquete_30' %} Paquete de 30 {% elif
+                  venta.tipo_venta == 'docena' %} Docena {% else %} {{
+                  venta.tipo_venta }} {% endif %}
+                </td>
+                <td class="px-4 py-3">{{ venta.cantidad }}</td>
+                <td class="px-4 py-3">${{ '%.2f'|format(venta.precio) }}</td>
+                <td class="px-4 py-3">
+                  <form
+                    method="POST"
+                    action="{{ url_for('venta.eliminar_venta', indice=loop.index0) }}"
+                  >
+                    {{ form.csrf_token }}
+                    <button
+                      type="submit"
+                      class="text-red-600 hover:text-red-800"
+                    >
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  </form>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+            <tfoot>
+              <tr class="font-semibold bg-cookie-50">
+                <td colspan="3" class="px-4 py-3 text-right">Total:</td>
+                <td class="px-4 py-3">
+                  ${{ '%.2f'|format(ventas|sum(attribute='precio')) }}
+                </td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <div class="mt-6 flex justify-between">
+          <form method="POST" action="{{ url_for('venta.terminar_venta') }}">
+            {{ form.csrf_token }}
+            <button
+              type="submit"
+              class="bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 transition-colors"
+            >
+              <i class="fas fa-times mr-2"></i>Cancelar Venta
+            </button>
+          </form>
+
+          <form method="POST" action="{{ url_for('venta.realizar_venta') }}">
+            {{ form.csrf_token }}
+            <button
+              type="submit"
+              class="bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-colors"
+            >
+              <i class="fas fa-check mr-2"></i>Confirmar Venta
+            </button>
+          </form>
+        </div>
+        {% else %}
+        <div class="text-center py-8 text-cookie-600">
+          <i class="fas fa-shopping-cart text-5xl mb-4"></i>
+          <p>No hay productos en el carrito</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Additional actions -->
+    <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+      <a
+        href="{{ url_for('venta.venta_pedido') }}"
+        class="bg-cookie-500 text-white p-6 rounded-lg shadow-md hover:bg-cookie-600 transition-colors flex justify-between items-center"
+      >
+        <div>
+          <h3 class="text-lg font-kavoon">Pedidos Pendientes</h3>
+          <p class="text-cookie-50">Ver y procesar pedidos</p>
+        </div>
+        <i class="fas fa-clipboard-list text-3xl"></i>
+      </a>
+
+      <a
+        href="{{ url_for('venta.ganancias') }}"
+        class="bg-cookie-700 text-white p-6 rounded-lg shadow-md hover:bg-cookie-800 transition-colors flex justify-between items-center"
+      >
+        <div>
+          <h3 class="text-lg font-kavoon">Reporte de Ventas</h3>
+          <p class="text-cookie-50">Ver ganancias diarias</p>
+        </div>
+        <i class="fas fa-chart-line text-3xl"></i>
+      </a>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Cerrar mensaje flash
+  function closeFlash(id) {
+    const flashElement = document.getElementById(id);
+    if (flashElement) {
+      flashElement.style.opacity = "0";
+      setTimeout(() => {
+        flashElement.style.display = "none";
+      }, 300);
+    }
+  }
+
+  // Cerrar mensajes flash automáticamente después de 5 segundos
+  document.addEventListener("DOMContentLoaded", function () {
+    const flashMessages = document.querySelectorAll('[id^="flash-"]');
+    flashMessages.forEach((message) => {
+      // Añadir transición para efecto de desvanecimiento
+      message.style.transition = "opacity 0.3s ease";
+
+      // Cerrar automáticamente después de 5 segundos
+      setTimeout(() => {
+        closeFlash(message.id);
+      }, 5000);
+    });
+  });
+</script>
+{% endblock %}

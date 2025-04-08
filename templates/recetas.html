@@ -1,0 +1,490 @@
+{% extends "layout.html" %} {% block title %}Recetas - Golden Cookies{% endblock
+%} {% block main %}
+<div class="p-4 sm:ml-64">
+  <div class="p-4 md:p-6 lg:p-8">
+    <!-- Mobile sidebar toggle -->
+    <button
+      type="button"
+      onclick="toggleSidebar()"
+      class="md:hidden inline-flex items-center p-2 mb-4 text-cookie-700 rounded-lg hover:bg-cookie-200 focus:outline-none"
+    >
+      <i class="fas fa-bars text-lg"></i>
+      <span class="ml-2">Menú</span>
+    </button>
+
+    <!-- Title and content -->
+    <div class="mb-8">
+      <h1 class="text-3xl font-kavoon text-cookie-800">Recetas</h1>
+      <p class="text-cookie-600">Gestión de recetas y creación de galletas</p>
+    </div>
+
+    <!-- Flash messages -->
+    <div id="flash-messages" class="mb-6">
+      {% with messages = get_flashed_messages(with_categories=true) %} {% if
+      messages %} {% for category, message in messages %}
+      <div
+        id="flash-{{ loop.index }}"
+        class="p-4 mb-4 rounded-lg flex justify-between items-center {% if category == 'success' %}bg-green-100 text-green-800{% elif category == 'danger' %}bg-red-100 text-red-800{% elif category == 'warning' %}bg-yellow-100 text-yellow-800{% else %}bg-blue-100 text-blue-800{% endif %}"
+        role="alert"
+      >
+        <div>
+          {% if category == 'success' %}
+          <i class="fas fa-check-circle mr-2"></i>
+          {% elif category == 'danger' %}
+          <i class="fas fa-exclamation-circle mr-2"></i>
+          {% elif category == 'warning' %}
+          <i class="fas fa-exclamation-triangle mr-2"></i>
+          {% else %}
+          <i class="fas fa-info-circle mr-2"></i>
+          {% endif %} {{ message }}
+        </div>
+        <button
+          type="button"
+          onclick="closeFlash('flash-{{ loop.index }}')"
+          class="text-gray-500 hover:text-gray-700 focus:outline-none"
+        >
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      {% endfor %} {% endif %} {% endwith %}
+    </div>
+
+    <!-- Recipe form and listing interface -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Recipe creation form -->
+      <div class="lg:col-span-1 bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-xl font-kavoon text-cookie-700 mb-4">Nueva Receta</h2>
+        <form
+          method="POST"
+          action="{{ url_for('recetas.insertar_receta') }}"
+          enctype="multipart/form-data"
+        >
+          {{ form.csrf_token }}
+
+          <div class="mb-4">
+            <label for="nombre" class="block text-cookie-700 mb-2"
+              >Nombre</label
+            >
+            {{ form.nombre(class="w-full p-2 border border-cookie-300 rounded-md
+            focus:ring focus:ring-cookie-400 focus:border-cookie-500",
+            required=true) }}
+          </div>
+
+          <div class="mb-4">
+            <label for="detalles" class="block text-cookie-700 mb-2"
+              >Detalles</label
+            >
+            {{ form.detalles(class="w-full p-2 border border-cookie-300
+            rounded-md focus:ring focus:ring-cookie-400
+            focus:border-cookie-500", rows=3) }}
+          </div>
+
+          <div class="mb-4">
+            <label for="cantidad_produccion" class="block text-cookie-700 mb-2"
+              >Cantidad de Producción</label
+            >
+            {{ form.cantidad_produccion(class="w-full p-2 border
+            border-cookie-300 rounded-md focus:ring focus:ring-cookie-400
+            focus:border-cookie-500", required=true, min=1) }}
+          </div>
+
+          <div class="mb-4">
+            <label for="peso_unidad" class="block text-cookie-700 mb-2"
+              >Peso por Unidad (g)</label
+            >
+            {{ form.peso_unidad(class="w-full p-2 border border-cookie-300
+            rounded-md focus:ring focus:ring-cookie-400
+            focus:border-cookie-500", required=true, min=0.1, step="0.1") }}
+          </div>
+
+          <div class="mb-4">
+            <label for="descripcion" class="block text-cookie-700 mb-2"
+              >Descripción</label
+            >
+            {{ form.descripcion(class="w-full p-2 border border-cookie-300
+            rounded-md focus:ring focus:ring-cookie-400
+            focus:border-cookie-500", rows=3) }}
+          </div>
+
+          <div class="mb-6">
+            <label for="imagen_galleta" class="block text-cookie-700 mb-2"
+              >Imagen</label
+            >
+            {{ form.imagen_galleta(class="w-full p-2 border border-cookie-300
+            rounded-md focus:ring focus:ring-cookie-400
+            focus:border-cookie-500") }}
+          </div>
+
+          <div class="mb-6">
+            <h3 class="text-lg font-kavoon text-cookie-700 mb-3">Insumos</h3>
+            <div class="space-y-3 max-h-80 overflow-y-auto p-2">
+              {% for insumo in insumos %}
+              <div class="flex items-center p-2 rounded-md hover:bg-cookie-50">
+                <input
+                  type="checkbox"
+                  name="insumo_{{ insumo.id_insumo }}"
+                  id="insumo_{{ insumo.id_insumo }}"
+                  class="mr-3 h-5 w-5 text-cookie-600 focus:ring-cookie-500"
+                />
+                <label for="insumo_{{ insumo.id_insumo }}" class="flex-grow">
+                  {{ insumo.nombre }} ({{ insumo.unidad_medida }})
+                </label>
+                <input
+                  type="number"
+                  name="cantidad_{{ insumo.id_insumo }}"
+                  id="cantidad_{{ insumo.id_insumo }}"
+                  placeholder="Cantidad"
+                  step="0.01"
+                  min="0"
+                  class="ml-2 p-1 w-24 border border-cookie-300 rounded-md focus:ring focus:ring-cookie-400 focus:border-cookie-500"
+                />
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            class="w-full bg-cookie-600 text-white py-2 px-4 rounded-md hover:bg-cookie-700 transition-colors"
+          >
+            <i class="fas fa-save mr-2"></i>Guardar Receta
+          </button>
+        </form>
+      </div>
+
+      <!-- Recipe listing -->
+      <div class="lg:col-span-2 bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-xl font-kavoon text-cookie-700 mb-4">
+          Recetas Existentes
+        </h2>
+
+        {% if recetas|length > 0 %}
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm text-left">
+            <thead class="text-xs text-cookie-700 uppercase bg-cookie-100">
+              <tr>
+                <th class="px-4 py-3">Nombre</th>
+                <th class="px-4 py-3">Galleta</th>
+                <th class="px-4 py-3">Producción</th>
+                <th class="px-4 py-3">Precio</th>
+                <th class="px-4 py-3">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for receta in recetas %}
+              <tr class="border-b border-cookie-200 hover:bg-cookie-50">
+                <td class="px-4 py-3">{{ receta.nombre }}</td>
+                <td class="px-4 py-3">
+                  {% set galleta = galletas|selectattr('id_galleta', 'eq',
+                  receta.id_galleta)|first %} {% if galleta %} {{ galleta.nombre
+                  }} {% else %} Sin galleta {% endif %}
+                </td>
+                <td class="px-4 py-3">
+                  {{ receta.cantidad_produccion }} unidades
+                </td>
+                <td class="px-4 py-3">
+                  {% set galleta = galletas|selectattr('id_galleta', 'eq',
+                  receta.id_galleta)|first %} {% if galleta %} ${{
+                  '%.2f'|format(galleta.precio) }} {% else %} $0.00 {% endif %}
+                </td>
+                <td class="px-4 py-3">
+                  <button
+                    onclick="editarReceta({{ receta.id_receta }})"
+                    class="text-blue-600 hover:text-blue-800 mr-2"
+                  >
+                    <i class="fas fa-edit"></i>
+                  </button>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="text-center py-8 text-cookie-600">
+          <i class="fas fa-cookie text-5xl mb-4"></i>
+          <p>No hay recetas registradas</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Recipe Details Modal -->
+    <div
+      id="recetaModal"
+      class="fixed inset-0 z-50 hidden overflow-auto bg-black bg-opacity-50 flex items-center justify-center p-4"
+    >
+      <div
+        class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-screen overflow-y-auto"
+      >
+        <div
+          class="flex justify-between items-center border-b border-cookie-200 p-4"
+        >
+          <h3 class="text-xl font-kavoon text-cookie-700">Editar Receta</h3>
+          <button
+            onclick="cerrarModal()"
+            class="text-cookie-500 hover:text-cookie-700"
+          >
+            <i class="fas fa-times text-xl"></i>
+          </button>
+        </div>
+
+        <form
+          id="editRecetaForm"
+          method="POST"
+          action=""
+          enctype="multipart/form-data"
+          class="p-6"
+        >
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <div class="mb-4">
+                <label for="edit_nombre" class="block text-cookie-700 mb-2"
+                  >Nombre</label
+                >
+                <input
+                  type="text"
+                  id="edit_nombre"
+                  name="nombre"
+                  class="w-full p-2 border border-cookie-300 rounded-md focus:ring focus:ring-cookie-400 focus:border-cookie-500"
+                  required
+                />
+              </div>
+
+              <div class="mb-4">
+                <label for="edit_detalles" class="block text-cookie-700 mb-2"
+                  >Detalles</label
+                >
+                <textarea
+                  id="edit_detalles"
+                  name="detalles"
+                  rows="3"
+                  class="w-full p-2 border border-cookie-300 rounded-md focus:ring focus:ring-cookie-400 focus:border-cookie-500"
+                ></textarea>
+              </div>
+
+              <div class="mb-4">
+                <label
+                  for="edit_cantidad_produccion"
+                  class="block text-cookie-700 mb-2"
+                  >Cantidad de Producción</label
+                >
+                <input
+                  type="number"
+                  id="edit_cantidad_produccion"
+                  name="cantidad_produccion"
+                  min="1"
+                  class="w-full p-2 border border-cookie-300 rounded-md focus:ring focus:ring-cookie-400 focus:border-cookie-500"
+                  required
+                />
+              </div>
+
+              <div class="mb-4">
+                <label for="edit_peso_unidad" class="block text-cookie-700 mb-2"
+                  >Peso por Unidad (g)</label
+                >
+                <input
+                  type="number"
+                  id="edit_peso_unidad"
+                  name="peso_unidad"
+                  min="0.1"
+                  step="0.1"
+                  class="w-full p-2 border border-cookie-300 rounded-md focus:ring focus:ring-cookie-400 focus:border-cookie-500"
+                  required
+                />
+              </div>
+            </div>
+
+            <div>
+              <div class="mb-4">
+                <label class="block text-cookie-700 mb-2">Imagen Actual</label>
+                <div
+                  id="imagen_actual_container"
+                  class="h-40 bg-cookie-50 rounded-md flex items-center justify-center"
+                >
+                  <img
+                    id="imagen_actual"
+                    src=""
+                    alt="Sin imagen"
+                    class="max-h-full max-w-full object-contain rounded"
+                  />
+                </div>
+              </div>
+
+              <div class="mb-4">
+                <label
+                  for="edit_imagen_galleta"
+                  class="block text-cookie-700 mb-2"
+                  >Nueva Imagen (opcional)</label
+                >
+                <input
+                  type="file"
+                  id="edit_imagen_galleta"
+                  name="imagen_galleta"
+                  class="w-full p-2 border border-cookie-300 rounded-md focus:ring focus:ring-cookie-400 focus:border-cookie-500"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-4 mb-6">
+            <h3 class="text-lg font-kavoon text-cookie-700 mb-3">Insumos</h3>
+            <div
+              id="edit_insumos_container"
+              class="space-y-3 max-h-80 overflow-y-auto p-2 border border-cookie-200 rounded-md"
+            >
+              <!-- Los insumos se cargarán dinámicamente aquí -->
+            </div>
+          </div>
+
+          <div
+            class="flex justify-end space-x-4 pt-4 border-t border-cookie-200"
+          >
+            <button
+              type="button"
+              onclick="cerrarModal()"
+              class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              class="px-4 py-2 bg-cookie-600 text-white rounded-md hover:bg-cookie-700 transition-colors"
+            >
+              <i class="fas fa-save mr-2"></i>Guardar Cambios
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Cerrar mensaje flash
+  function closeFlash(id) {
+    const flashElement = document.getElementById(id);
+    if (flashElement) {
+      flashElement.style.opacity = "0";
+      setTimeout(() => {
+        flashElement.style.display = "none";
+      }, 300);
+    }
+  }
+
+  // Cerrar mensajes flash automáticamente después de 5 segundos
+  document.addEventListener("DOMContentLoaded", function () {
+    const flashMessages = document.querySelectorAll('[id^="flash-"]');
+    flashMessages.forEach((message) => {
+      // Añadir transición para efecto de desvanecimiento
+      message.style.transition = "opacity 0.3s ease";
+
+      // Cerrar automáticamente después de 5 segundos
+      setTimeout(() => {
+        closeFlash(message.id);
+      }, 5000);
+    });
+  });
+
+  // Modal de edición
+  const modal = document.getElementById("recetaModal");
+
+  function editarReceta(id_receta) {
+    // Hacer una solicitud AJAX para obtener los datos de la receta
+    fetch(`/recetas/modificar/${id_receta}`)
+      .then((response) => response.json())
+      .then((data) => {
+        console.log(data);
+
+        // Establecer la URL del formulario
+        document.getElementById(
+          "editRecetaForm"
+        ).action = `/recetas/modificar/${id_receta}`;
+
+        // Llenar el formulario con los datos
+        document.getElementById("edit_nombre").value = data.receta.nombre;
+        document.getElementById("edit_detalles").value = data.receta.detalles;
+        document.getElementById("edit_cantidad_produccion").value =
+          data.receta.cantidad_produccion;
+        document.getElementById("edit_peso_unidad").value =
+          data.galleta.peso_unidad;
+
+        // Establecer la imagen si existe
+        const imgElement = document.getElementById("imagen_actual");
+        if (data.galleta.imagen) {
+          imgElement.src = `/static/uploads/${data.galleta.imagen}`;
+          imgElement.alt = data.galleta.nombre;
+        } else {
+          imgElement.src = "";
+          imgElement.alt = "Sin imagen";
+        }
+
+        // Llenar los insumos
+        const insumosContainer = document.getElementById(
+          "edit_insumos_container"
+        );
+        insumosContainer.innerHTML = "";
+
+        data.insumos.forEach((insumo) => {
+          const insumoDiv = document.createElement("div");
+          insumoDiv.className =
+            "flex items-center p-2 rounded-md hover:bg-cookie-50";
+
+          const checkbox = document.createElement("input");
+          checkbox.type = "checkbox";
+          checkbox.name = `insumo_${insumo.id_insumo}`;
+          checkbox.id = `edit_insumo_${insumo.id_insumo}`;
+          checkbox.className =
+            "mr-3 h-5 w-5 text-cookie-600 focus:ring-cookie-500";
+
+          // Marcar como seleccionado si tiene cantidad
+          if (insumo.cantidad > 0) {
+            checkbox.checked = true;
+          }
+
+          const label = document.createElement("label");
+          label.htmlFor = `edit_insumo_${insumo.id_insumo}`;
+          label.className = "flex-grow";
+          label.textContent = `${insumo.nombre} (${insumo.unidad_medida})`;
+
+          const input = document.createElement("input");
+          input.type = "number";
+          input.name = `cantidad_${insumo.id_insumo}`;
+          input.id = `edit_cantidad_${insumo.id_insumo}`;
+          input.placeholder = "Cantidad";
+          input.step = "0.01";
+          input.min = "0";
+          input.value = insumo.cantidad;
+          input.className =
+            "ml-2 p-1 w-24 border border-cookie-300 rounded-md focus:ring focus:ring-cookie-400 focus:border-cookie-500";
+
+          insumoDiv.appendChild(checkbox);
+          insumoDiv.appendChild(label);
+          insumoDiv.appendChild(input);
+
+          insumosContainer.appendChild(insumoDiv);
+        });
+
+        // Mostrar el modal
+        modal.classList.remove("hidden");
+      })
+      .catch((error) => {
+        console.error("Error al cargar datos de la receta:", error);
+        alert("Error al cargar los datos de la receta");
+      });
+  }
+
+  function cerrarModal() {
+    modal.classList.add("hidden");
+  }
+
+  // Cerrar el modal si se hace clic fuera de él
+  window.onclick = function (event) {
+    if (event.target === modal) {
+      cerrarModal();
+    }
+  };
+</script>
+{% endblock %}

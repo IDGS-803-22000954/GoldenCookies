@@ -1,167 +1,387 @@
-{% extends './layout_B.html' %} {% block main %}
-
-<div class="container-rr">
-  <div class="login-box-rr">
-    <h2 class="text-center">Registro de Usuario</h2>
-
-    {% with messages = get_flashed_messages(with_categories=true) %} {% if
-    messages %}
-    <div class="mb-3">
-      {% for category, message in messages %}
-      <div
-        class="alert alert-{{ category }} alert-dismissible fade show"
-        role="alert"
+{% extends "layout.html" %} {% block title %}Gestión de Usuarios - Golden Cookies{% endblock
+  %} {% block main %}
+  <div class="p-4 sm:ml-64">
+    <div class="p-4 md:p-6 lg:p-8">
+      <!-- Mobile sidebar toggle -->
+      <button
+        type="button"
+        onclick="toggleSidebar()"
+        class="md:hidden inline-flex items-center p-2 mb-4 text-cookie-700 rounded-lg hover:bg-cookie-200 focus:outline-none"
       >
-        <strong>{{ message }}</strong>
-        <button
-          type="button"
-          class="close"
-          data-dismiss="alert"
-          aria-label="Close"
+        <i class="fas fa-bars text-lg"></i>
+        <span class="ml-2">Menú</span>
+      </button>
+  
+      <!-- Title and content -->
+      <div class="mb-8">
+        <h1 class="text-3xl font-kavoon text-cookie-800">Gestión de Usuarios</h1>
+        <p class="text-cookie-600">Administración de cuentas de usuario</p>
+      </div>
+  
+      <!-- Flash messages -->
+      <div id="flash-messages" class="mb-6">
+        {% with messages = get_flashed_messages(with_categories=true) %} {% if
+        messages %} {% for category, message in messages %}
+        <div
+          id="flash-{{ loop.index }}"
+          class="p-4 mb-4 rounded-lg flex justify-between items-center {% if category == 'success' %}bg-green-100 text-green-800{% elif category == 'danger' %}bg-red-100 text-red-800{% elif category == 'warning' %}bg-yellow-100 text-yellow-800{% else %}bg-blue-100 text-blue-800{% endif %}"
+          role="alert"
         >
-          <span aria-hidden="true">&times;</span>
-        </button>
+          <div>
+            {% if category == 'success' %}
+            <i class="fas fa-check-circle mr-2"></i>
+            {% elif category == 'danger' %}
+            <i class="fas fa-exclamation-circle mr-2"></i>
+            {% elif category == 'warning' %}
+            <i class="fas fa-exclamation-triangle mr-2"></i>
+            {% else %}
+            <i class="fas fa-info-circle mr-2"></i>
+            {% endif %} {{ message }}
+          </div>
+          <button
+            type="button"
+            onclick="closeFlash('flash-{{ loop.index }}')"
+            class="text-gray-500 hover:text-gray-700 focus:outline-none"
+          >
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        {% endfor %} {% endif %} {% endwith %}
       </div>
-      {% endfor %}
-    </div>
-    {% endif %} {% endwith %}
-
-    <form action="/auth/registro_adm" method="POST">
-      {{ form.hidden_tag() }}
-
-      <div class="form-container">
-        <div class="form-column">
-          <div class="mb-3">
-            {{ form.nombre.label(class="form-label fw-bold") }} {{
-            form.nombre(class="form-control custom-input", required=True) }} {%
-            if form.nombre.errors %} {% for error in form.nombre.errors %}
-            <div class="text-danger">{{ error }}</div>
-            {% endfor %} {% endif %}
+  
+      <!-- User Registration and Management -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- User Registration Form -->
+        <div class="lg:col-span-1 bg-white rounded-lg shadow-md p-6">
+          <h2 class="text-xl font-kavoon text-cookie-700 mb-4">
+            Registrar Nuevo Usuario
+          </h2>
+          
+          <form method="POST" action="{{ url_for('auth.registro_adm') }}" id="registroForm">
+            {{ form.csrf_token }}
+            
+            <div class="mb-4">
+              <label for="nombre" class="block text-cookie-700 mb-2">Nombre Completo</label>
+              {{ form.nombre(class="w-full p-2 border border-cookie-300 rounded-md focus:ring focus:ring-cookie-400 focus:border-cookie-500", required=true, placeholder="Nombre completo") }}
+              {% if form.nombre.errors %}
+                <div class="text-red-600 text-sm mt-1">
+                  {% for error in form.nombre.errors %}
+                    {{ error }}
+                  {% endfor %}
+                </div>
+              {% endif %}
+            </div>
+            
+            <div class="mb-4">
+              <label for="nombre_usuario" class="block text-cookie-700 mb-2">Nombre de Usuario</label>
+              {{ form.nombre_usuario(class="w-full p-2 border border-cookie-300 rounded-md focus:ring focus:ring-cookie-400 focus:border-cookie-500", required=true, placeholder="Nombre de usuario único") }}
+              {% if form.nombre_usuario.errors %}
+                <div class="text-red-600 text-sm mt-1">
+                  {% for error in form.nombre_usuario.errors %}
+                    {{ error }}
+                  {% endfor %}
+                </div>
+              {% endif %}
+            </div>
+            
+            <div class="mb-4">
+              <label for="telefono" class="block text-cookie-700 mb-2">Teléfono</label>
+              {{ form.telefono(class="w-full p-2 border border-cookie-300 rounded-md focus:ring focus:ring-cookie-400 focus:border-cookie-500", required=true, placeholder="Número de teléfono") }}
+              {% if form.telefono.errors %}
+                <div class="text-red-600 text-sm mt-1">
+                  {% for error in form.telefono.errors %}
+                    {{ error }}
+                  {% endfor %}
+                </div>
+              {% endif %}
+            </div>
+            
+            <div class="mb-4">
+              <label for="email" class="block text-cookie-700 mb-2">Correo Electrónico</label>
+              {{ form.email(class="w-full p-2 border border-cookie-300 rounded-md focus:ring focus:ring-cookie-400 focus:border-cookie-500", required=true, placeholder="correo@ejemplo.com", type="email") }}
+              {% if form.email.errors %}
+                <div class="text-red-600 text-sm mt-1">
+                  {% for error in form.email.errors %}
+                    {{ error }}
+                  {% endfor %}
+                </div>
+              {% endif %}
+            </div>
+            
+            <div class="mb-4">
+              <label for="rol" class="block text-cookie-700 mb-2">Rol</label>
+              {{ form.rol(class="w-full p-2 border border-cookie-300 rounded-md focus:ring focus:ring-cookie-400 focus:border-cookie-500", required=true) }}
+              {% if form.rol.errors %}
+                <div class="text-red-600 text-sm mt-1">
+                  {% for error in form.rol.errors %}
+                    {{ error }}
+                  {% endfor %}
+                </div>
+              {% endif %}
+            </div>
+            
+            <div class="mb-4">
+              <label for="contrasenia" class="block text-cookie-700 mb-2">Contraseña</label>
+              <div class="relative">
+                {{ form.contrasenia(class="w-full p-2 border border-cookie-300 rounded-md focus:ring focus:ring-cookie-400 focus:border-cookie-500", required=true, placeholder="Contraseña segura") }}
+                <button 
+                  type="button" 
+                  onclick="togglePasswordVisibility('contrasenia')" 
+                  class="absolute inset-y-0 right-0 flex items-center pr-3"
+                >
+                  <i id="password-toggle-icon" class="fas fa-eye text-cookie-400"></i>
+                </button>
+              </div>
+              {% if form.contrasenia.errors %}
+                <div class="text-red-600 text-sm mt-1">
+                  {% for error in form.contrasenia.errors %}
+                    {{ error }}
+                  {% endfor %}
+                </div>
+              {% endif %}
+            </div>
+            
+            <div class="mb-6">
+              <label for="confirmar_contrasenia" class="block text-cookie-700 mb-2">Confirmar Contraseña</label>
+              <div class="relative">
+                {{ form.confirmar_contrasenia(class="w-full p-2 border border-cookie-300 rounded-md focus:ring focus:ring-cookie-400 focus:border-cookie-500", required=true, placeholder="Confirmar contraseña") }}
+                <button 
+                  type="button" 
+                  onclick="togglePasswordVisibility('confirmar_contrasenia')" 
+                  class="absolute inset-y-0 right-0 flex items-center pr-3"
+                >
+                  <i id="confirm-password-toggle-icon" class="fas fa-eye text-cookie-400"></i>
+                </button>
+              </div>
+              {% if form.confirmar_contrasenia.errors %}
+                <div class="text-red-600 text-sm mt-1">
+                  {% for error in form.confirmar_contrasenia.errors %}
+                    {{ error }}
+                  {% endfor %}
+                </div>
+              {% endif %}
+            </div>
+            
+            <button
+              type="submit"
+              class="w-full bg-cookie-600 text-white py-2 px-4 rounded-md hover:bg-cookie-700 transition-colors"
+            >
+              <i class="fas fa-user-plus mr-2"></i>Registrar Usuario
+            </button>
+            
+            <input type="hidden" id="userId" name="userId" value="">
+          </form>
+        </div>
+  
+        <!-- User Listing -->
+        <div class="lg:col-span-2 bg-white rounded-lg shadow-md p-6">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-kavoon text-cookie-700">
+              Usuarios Registrados
+            </h2>
+            
+            <!-- Search & Filter Form -->
+            <div class="flex space-x-2">
+              <form action="{{ url_for('auth.registro_adm') }}" method="GET" class="flex space-x-2">
+                <div class="relative">
+                  <input 
+                    type="text" 
+                    name="q" 
+                    placeholder="Buscar usuario..." 
+                    class="p-2 pl-8 border border-cookie-300 rounded-md focus:ring focus:ring-cookie-400 focus:border-cookie-500"
+                    value="{{ request.args.get('q', '') }}"
+                  >
+                  <div class="absolute inset-y-0 left-0 flex items-center pl-2 pointer-events-none">
+                    <i class="fas fa-search text-cookie-400"></i>
+                  </div>
+                </div>
+                
+                <select 
+                  name="rol" 
+                  class="p-2 border border-cookie-300 rounded-md focus:ring focus:ring-cookie-400 focus:border-cookie-500"
+                >
+                  <option value="">Todos los roles</option>
+                  <option value="admin" {% if request.args.get('rol') == 'admin' %}selected{% endif %}>Admin</option>
+                  <option value="ventas" {% if request.args.get('rol') == 'ventas' %}selected{% endif %}>Ventas</option>
+                  <option value="produccion" {% if request.args.get('rol') == 'produccion' %}selected{% endif %}>Producción</option>
+                  <option value="cliente" {% if request.args.get('rol') == 'cliente' %}selected{% endif %}>Cliente</option>
+                </select>
+                
+                <button 
+                  type="submit" 
+                  class="bg-cookie-600 text-white p-2 rounded-md hover:bg-cookie-700 transition-colors"
+                >
+                  <i class="fas fa-filter"></i>
+                </button>
+              </form>
+            </div>
           </div>
-          <div class="mb-3">
-            {{ form.nombre_usuario.label(class="form-label fw-bold") }} {{
-            form.nombre_usuario(class="form-control custom-input",
-            required=True) }} {% if form.nombre_usuario.errors %} {% for error
-            in form.nombre_usuario.errors %}
-            <div class="text-danger">{{ error }}</div>
-            {% endfor %} {% endif %}
-          </div>
-          <div class="mb-3">
-            {{ form.telefono.label(class="form-label fw-bold") }} {{
-            form.telefono(class="form-control custom-input", required=True) }}
-            {% if form.telefono.errors %} {% for error in form.telefono.errors
-            %}
-            <div class="text-danger">{{ error }}</div>
-            {% endfor %} {% endif %}
+          
+          <!-- Debug info -->
+          <p class="text-xs text-cookie-500 mb-2">Total de usuarios: {{ usuarios|length if usuarios is defined else 0 }}</p>
+          
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm text-left">
+              <thead class="text-xs text-cookie-700 uppercase bg-cookie-100">
+                <tr>
+                  <th class="px-4 py-3">Nombre</th>
+                  <th class="px-4 py-3">Usuario</th>
+                  <th class="px-4 py-3">Teléfono</th>
+                  <th class="px-4 py-3">Email</th>
+                  <th class="px-4 py-3">Rol</th>
+                  <th class="px-4 py-3">Estado</th>
+                  <th class="px-4 py-3">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% if usuarios is defined and usuarios|length > 0 %}
+                  {% for user in usuarios %}
+                  <tr class="border-b border-cookie-200 hover:bg-cookie-50" data-id="{{ user.id_usuario }}">
+                    <td class="px-4 py-3">{{ user.nombre }}</td>
+                    <td class="px-4 py-3">{{ user.nombre_usuario }}</td>
+                    <td class="px-4 py-3">{{ user.telefono }}</td>
+                    <td class="px-4 py-3">{{ user.email or '-' }}</td>
+                    <td class="px-4 py-3">
+                      <span class="px-2 py-1 rounded-full text-xs font-medium 
+                      {% if user.rol == 'admin' %}bg-purple-100 text-purple-800
+                      {% elif user.rol == 'ventas' %}bg-blue-100 text-blue-800
+                      {% elif user.rol == 'produccion' %}bg-green-100 text-green-800
+                      {% else %}bg-gray-100 text-gray-800{% endif %}">
+                        {{ user.rol }}
+                      </span>
+                    </td>
+                    <td class="px-4 py-3">
+                      <span class="px-2 py-1 rounded-full text-xs font-medium 
+                      {% if user.bloqueado %}bg-red-100 text-red-800{% else %}bg-green-100 text-green-800{% endif %}">
+                        {{ 'Bloqueado' if user.bloqueado else 'Activo' }}
+                      </span>
+                    </td>
+                    <td class="px-4 py-3">
+                      <div class="flex space-x-2">
+                        <button 
+                          onclick="editUser({{ user.id_usuario }}, '{{ user.nombre }}', '{{ user.nombre_usuario }}', '{{ user.telefono }}', '{{ user.email or '' }}', '{{ user.rol }}')" 
+                          class="text-blue-600 hover:text-blue-800"
+                          title="Editar"
+                        >
+                          <i class="fas fa-edit"></i>
+                        </button>
+                        
+                        <form method="POST" action="{{ url_for('auth.eliminar_usuario', id=user.id_usuario) }}" onsubmit="return confirm('¿Estás seguro de eliminar a este usuario?');">
+                          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                          <button 
+                            type="submit" 
+                            class="text-red-600 hover:text-red-800"
+                            title="Eliminar"
+                          >
+                            <i class="fas fa-trash"></i>
+                          </button>
+                        </form>
+                        
+                        {% if user.bloqueado %}
+                        <button 
+                          onclick="toggleUserStatus({{ user.id_usuario }}, false)" 
+                          class="text-green-600 hover:text-green-800"
+                          title="Desbloquear"
+                        >
+                          <i class="fas fa-unlock"></i>
+                        </button>
+                        {% else %}
+                        <button 
+                          onclick="toggleUserStatus({{ user.id_usuario }}, true)" 
+                          class="text-yellow-600 hover:text-yellow-800"
+                          title="Bloquear"
+                        >
+                          <i class="fas fa-lock"></i>
+                        </button>
+                        {% endif %}
+                      </div>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                {% else %}
+                  <tr>
+                    <td colspan="7" class="px-4 py-6 text-center text-cookie-600">
+                      No se encontraron usuarios o no se han cargado los datos. Verifica que la variable "usuarios" esté siendo pasada a la plantilla.
+                    </td>
+                  </tr>
+                {% endif %}
+              </tbody>
+            </table>
           </div>
         </div>
-        <div class="form-column">
-          <div class="mb-3">
-            {{ form.email.label(class="form-label fw-bold") }} {{
-            form.email(class="form-control custom-input", required=True) }} {%
-            if form.email.errors %} {% for error in form.email.errors %}
-            <div class="text-danger">{{ error }}</div>
-            {% endfor %} {% endif %}
-          </div>
-          <div class="mb-3">
-            {{ form.contrasenia.label(class="form-label fw-bold") }} {{
-            form.contrasenia(class="form-control custom-input", required=True)
-            }} {% if form.contrasenia.errors %} {% for error in
-            form.contrasenia.errors %}
-            <div class="text-danger">{{ error }}</div>
-            {% endfor %} {% endif %}
-          </div>
-          <div class="mb-3">
-            {{ form.confirmar_contrasenia.label(class="form-label fw-bold") }}
-            {{ form.confirmar_contrasenia(class="form-control custom-input",
-            required=True) }} {% if form.confirmar_contrasenia.errors %} {% for
-            error in form.confirmar_contrasenia.errors %}
-            <div class="text-danger">{{ error }}</div>
-            {% endfor %} {% endif %}
-          </div>
-        </div>
       </div>
-
-      <div class="mb-3">
-        <label for="rol">Selecciona un Rol:</label>
-        <select id="rol" name="rol" class="custom-input">
-          {% for value, label in form.rol.choices %}
-          <option value="{{ value }}">{{ label }}</option>
-          {% endfor %}
-        </select>
-        {% if form.rol.errors %} {% for error in form.rol.errors %}
-        <div class="text-danger">{{ error }}</div>
-        {% endfor %} {% endif %}
-      </div>
-
-      <div class="form-button">
-        {{ form.submit(class="btn custom-btn w-50") }}
-      </div>
-    </form>
-  </div>
-  <div style="margin-left: 5%; margin-right: 5%">
-    <!-- Barra de búsqueda y filtro por rol -->
-    <div class="search-filter" style="margin-top: 70px">
-      <input
-        type="text"
-        id="search"
-        class="custom-input"
-        placeholder="Buscar usuario..."
-      />
-      <select id="filter-role" class="custom-input">
-        <option value="">Todos los roles</option>
-        {% for value, label in form.rol.choices %}
-        <option value="{{ value }}">{{ label }}</option>
-        {% endfor %}
-      </select>
     </div>
-
-    <!-- Tabla de usuarios -->
-    <table class="table">
-      <thead>
-        <tr>
-          <th>Nombre</th>
-          <th>Usuario</th>
-          <th>Email</th>
-          <th>Teléfono</th>
-          <th>Rol</th>
-          <th>Acciones</th>
-        </tr>
-      </thead>
-      <tbody id="user-table-body">
-        {% for usuario in usuario %}
-        <tr>
-          <td>{{ usuario.nombre }}</td>
-          <td>{{ usuario.nombre_usuario }}</td>
-          <td>{{ usuario.email }}</td>
-          <td>{{ usuario.telefono }}</td>
-          <td>{{ usuario.rol }}</td>
-          <td>
-            <form
-              method="POST"
-              action="{{ url_for('auth.eliminar_usuario', id=usuario.id_usuario) }}"
-              style="display: inline"
-            >
-              <input
-                type="hidden"
-                name="csrf_token"
-                value="{{ csrf_token() }}"
-              />
-              <button type="submit" class="btn btn-danger">Eliminar</button>
-            </form>
-            <form
-              method="GET"
-              action="{{ url_for('auth.obtener_usuario', id=usuario.id_usuario) }}"
-              style="display: inline"
-            >
-              <button type="submit" class="btn btn-warning">Editar</button>
-            </form>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
   </div>
-
+  
+  <script>
+    // Cerrar mensaje flash
+    function closeFlash(id) {
+      const flashElement = document.getElementById(id);
+      if (flashElement) {
+        flashElement.style.opacity = "0";
+        setTimeout(() => {
+          flashElement.style.display = "none";
+        }, 300);
+      }
+    }
+  
+    // Cerrar mensajes flash automáticamente después de 5 segundos
+    document.addEventListener("DOMContentLoaded", function () {
+      const flashMessages = document.querySelectorAll('[id^="flash-"]');
+      flashMessages.forEach((message) => {
+        // Añadir transición para efecto de desvanecimiento
+        message.style.transition = "opacity 0.3s ease";
+  
+        // Cerrar automáticamente después de 5 segundos
+        setTimeout(() => {
+          closeFlash(message.id);
+        }, 5000);
+      });
+    });
+    
+    // Función para mostrar/ocultar contraseña
+    function togglePasswordVisibility(inputId) {
+      const passwordInput = document.getElementById(inputId);
+      const iconId = inputId === 'contrasenia' ? 'password-toggle-icon' : 'confirm-password-toggle-icon';
+      const icon = document.getElementById(iconId);
+      
+      if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+      } else {
+        passwordInput.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+      }
+    }
+    
+    // Función para editar usuario
+    function editUser(id, nombre, nombreUsuario, telefono, email, rol) {
+      // Rellenar formulario con datos del usuario
+      document.getElementById('nombre').value = nombre;
+      document.getElementById('nombre_usuario').value = nombreUsuario;
+      document.getElementById('telefono').value = telefono;
+      document.getElementById('email').value = email;
+      document.getElementById('rol').value = rol;
+      document.getElementById('userId').value = id;
+      
+      // Cambiar el texto del botón
+      const submitButton = document.querySelector('#registroForm button[type="submit"]');
+      submitButton.innerHTML = '<i class="fas fa-save mr-2"></i>Actualizar Usuario';
+      
+      // Hacer scroll hasta el formulario
+      document.querySelector('.lg\\:col-span-1').scrollIntoView({ behavior: 'smooth' });
+    }
+    
+    // Función para alternar estado de bloqueo
+    function toggleUserStatus(userId, block) {
+      // Esta función debería enviar una solicitud al servidor para cambiar el estado del usuario
+      // En un entorno real, implementarías una llamada AJAX aquí
+      console.log(`Toggle user ${userId} status to ${block ? 'blocked' : 'active'}`);
+      
+      // Por ahora, simplemente recargamos la página
+      window.location.href = `/toggle_status/${userId}?block=${block}`;
+    }
+  </script>
   {% endblock %}
-</div>
