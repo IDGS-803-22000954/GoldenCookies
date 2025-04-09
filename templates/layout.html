@@ -1,6 +1,5 @@
 {# templates/layout.html #} {% set nombres_roles = { 'admin': 'Administrador',
-'produccion': 'Producción', 'ventas': 'Vendedor', 'cliente': 'Cliente' }
-%}
+'produccion': 'Producción', 'ventas': 'Vendedor', 'cliente': 'Cliente' } %}
 <!DOCTYPE html>
 <html lang="es">
   <head>
@@ -91,6 +90,8 @@
   </head>
   <body class="bg-cookie-50">
     <!-- Sidebar -->
+    <!-- Sidebar - solo se muestra si el usuario está autenticado -->
+    {% if current_user.is_authenticated %}
     <aside
       id="sidebar"
       class="fixed top-0 left-0 z-40 w-64 h-screen transition-transform -translate-x-full md:translate-x-0"
@@ -116,24 +117,28 @@
         <!-- Información del usuario -->
         <div class="p-3 mb-5 bg-cookie-700/40 rounded-lg text-center">
           <p class="text-cookie-100 text-sm font-medium">
-            {{ current_user.nombre if current_user.is_authenticated else
-            'Usuario' }}
+            {{ current_user.nombre }}
           </p>
           <p class="text-cookie-200 text-xs">
-            {{ nombres_roles[current_user.rol.lower()] if current_user.is_authenticated else 'Rol' }}
+            {{ nombres_roles[current_user.rol.lower()] }}
           </p>
         </div>
 
+        <!-- Menú de navegación - Condicional según el rol -->
         <ul class="space-y-2 font-medium">
+          <!-- Link de inicio - Visible para todos los roles -->
           <li>
             <a
-              href="{{ url_for('admin') }}"
+              href="{{ url_for('menu') }}"
               class="flex items-center p-2 text-white rounded-lg hover:bg-cookie-500"
             >
               <i class="fas fa-home text-cookie-200 w-5 h-5 text-center"></i>
               <span class="ml-3">Inicio</span>
             </a>
           </li>
+
+          <!-- Sección Admin -->
+          {% if current_user.rol.lower() == 'admin' %}
           <li>
             <a
               href="{{ url_for('insumo_bp.agregarInsumo') }}"
@@ -161,38 +166,39 @@
               <span class="ml-3">Usuarios</span>
             </a>
           </li>
+          {% endif %}
+
+          <!-- Sección Producción -->
+          {% if current_user.rol.lower() == 'admin' or current_user.rol.lower()
+          == 'produccion' %}
           <li>
             <a
-              href="#"
+              href="{{ url_for('produccion.index') }}"
               class="flex items-center p-2 text-white rounded-lg hover:bg-cookie-500"
             >
               <i
                 class="fas fa-industry text-cookie-200 w-5 h-5 text-center"
               ></i>
-              <span class="ml-3">Produccion</span>
+              <span class="ml-3">Producción</span>
             </a>
           </li>
           <li>
             <a
-              href="#"
+              href="{{ url_for('recetas.receta') }}"
               class="flex items-center p-2 text-white rounded-lg hover:bg-cookie-500"
             >
               <i class="fas fa-cookie text-cookie-200 w-5 h-5 text-center"></i>
-              <span class="ml-3">Galletas</span>
+              <span class="ml-3">Galletas y Recetas</span>
             </a>
           </li>
+          {% endif %}
+
+          <!-- Sección Ventas -->
+          {% if current_user.rol.lower() == 'admin' or current_user.rol.lower()
+          == 'ventas' %}
           <li>
             <a
-              href="#"
-              class="flex items-center p-2 text-white rounded-lg hover:bg-cookie-500"
-            >
-              <i class="fas fa-book text-cookie-200 w-5 h-5 text-center"></i>
-              <span class="ml-3">Recetas</span>
-            </a>
-          </li>
-          <li>
-            <a
-              href="{{url_for("venta.ventas")}}"
+              href="{{ url_for('venta.ventas') }}"
               class="flex items-center p-2 text-white rounded-lg hover:bg-cookie-500"
             >
               <i
@@ -201,6 +207,68 @@
               <span class="ml-3">Ventas</span>
             </a>
           </li>
+          {% endif %}
+
+          <!-- Sección Cliente -->
+          {% if current_user.rol.lower() == 'cliente' %}
+          <li>
+            <a
+              href="{{ url_for('venta.venta_pedido') }}"
+              class="flex items-center p-2 text-white rounded-lg hover:bg-cookie-500"
+            >
+              <i
+                class="fas fa-shopping-bag text-cookie-200 w-5 h-5 text-center"
+              ></i>
+              <span class="ml-3">Mis Pedidos</span>
+            </a>
+          </li>
+          {% endif %} {# Añade el enlace al catálogo para todos los roles #}
+          <!-- Link al catálogo - Visible para todos los roles -->
+          <li>
+            <a
+              href="{{ url_for('catalogo.index') }}"
+              class="flex items-center p-2 text-white rounded-lg hover:bg-cookie-500"
+            >
+              <i class="fas fa-store text-cookie-200 w-5 h-5 text-center"></i>
+              <span class="ml-3">Catálogo</span>
+            </a>
+          </li>
+
+          {# Si hay un carrito en la sesión, añade el contador al lado del ícono
+          del carrito #} {% if current_user.is_authenticated and
+          session.get('carrito') %}
+          <li>
+            <a
+              href="{{ url_for('catalogo.ver_carrito') }}"
+              class="flex items-center p-2 text-white rounded-lg hover:bg-cookie-500"
+            >
+              <i
+                class="fas fa-shopping-cart text-cookie-200 w-5 h-5 text-center"
+              ></i>
+              <span class="ml-3">Carrito</span>
+              <span
+                class="ml-auto bg-white text-cookie-700 rounded-full h-5 w-5 flex items-center justify-center text-xs font-bold"
+              >
+                {{ session['carrito']|length }}
+              </span>
+            </a>
+          </li>
+          {% endif %}
+
+          <!-- Perfil de usuario - Visible para todos -->
+          <li>
+            <a
+              href="{{ url_for('auth.editar_perfil') }}"
+              class="flex items-center p-2 text-white rounded-lg hover:bg-cookie-500"
+            >
+              <i
+                class="fas fa-user-circle text-cookie-200 w-5 h-5 text-center"
+              ></i>
+              <span class="ml-3">Mi Perfil</span>
+            </a>
+          </li>
+
+          <!-- Cerrar Sesión - Siempre visible al final -->
           <li class="mt-auto pt-4 border-t border-cookie-600">
             <a
               href="{{ url_for('auth.logout') }}"
@@ -215,6 +283,7 @@
         </ul>
       </div>
     </aside>
+    {% endif %}
     <!-- Content Area -->
     {% block main %}{% endblock %}
 

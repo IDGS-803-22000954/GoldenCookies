@@ -1,0 +1,174 @@
+{% extends "layout.html" %} {% block title %}Catálogo de Galletas - Golden
+Cookies{% endblock %} {% block main %}
+<div
+  class="flex flex-col min-h-screen {% if current_user.is_authenticated %}md:ml-64{% endif %}"
+>
+  <!-- Barra superior con toggle para sidebar (solo visible cuando hay un usuario autenticado) -->
+  {% if current_user.is_authenticated %}
+  <header class="bg-cookie-700 p-4 text-white flex items-center md:hidden">
+    <button
+      onclick="toggleSidebar()"
+      class="text-white focus:outline-none mr-4"
+    >
+      <i class="fas fa-bars text-xl"></i>
+    </button>
+    <h1 class="text-xl font-kavoon">Golden Cookies</h1>
+  </header>
+  {% else %}
+  <!-- Barra de navegación para usuarios no autenticados -->
+  <header class="bg-cookie-700 p-4 text-white">
+    <div class="container mx-auto flex justify-between items-center">
+      <h1 class="text-xl font-kavoon">Golden Cookies</h1>
+      <div>
+        <a
+          href="{{ url_for('auth.login') }}"
+          class="text-white hover:text-cookie-200 mr-4"
+        >
+          <i class="fas fa-sign-in-alt mr-1"></i> Iniciar Sesión
+        </a>
+        <a
+          href="{{ url_for('auth.registro') }}"
+          class="text-white hover:text-cookie-200"
+        >
+          <i class="fas fa-user-plus mr-1"></i> Registrarse
+        </a>
+      </div>
+    </div>
+  </header>
+  {% endif %}
+
+  <!-- Contenido principal -->
+  <main class="flex-grow p-4 md:p-8 container mx-auto">
+    <!-- Encabezado de la página -->
+    <div class="flex justify-between items-center mb-8">
+      <h1 class="text-3xl font-kavoon text-cookie-800">
+        Nuestras Deliciosas Galletas
+      </h1>
+
+      <!-- Botón de carrito (solo para usuarios autenticados) -->
+      {% if current_user.is_authenticated %}
+      <a
+        href="{{ url_for('catalogo.ver_carrito') }}"
+        class="flex items-center bg-cookie-600 hover:bg-cookie-700 text-white px-4 py-2 rounded-lg transition"
+      >
+        <i class="fas fa-shopping-cart mr-2"></i>
+        <span>Ver Carrito</span>
+        {% if session.get('carrito') %}
+        <span
+          class="ml-2 bg-white text-cookie-700 rounded-full h-6 w-6 flex items-center justify-center text-sm font-bold"
+        >
+          {{ session['carrito']|length }}
+        </span>
+        {% endif %}
+      </a>
+      {% endif %}
+    </div>
+
+    <!-- Mensajes flash -->
+    {% with messages = get_flashed_messages(with_categories=true) %} {% if
+    messages %} {% for category, message in messages %}
+    <div
+      class="mb-6 p-4 rounded-lg {{ 'bg-green-100 text-green-800' if category == 'success' else 'bg-red-100 text-red-800' if category == 'error' else 'bg-blue-100 text-blue-800' }}"
+    >
+      <p class="flex items-center">
+        <i
+          class="fas {{ 'fa-check-circle' if category == 'success' else 'fa-exclamation-circle' if category == 'error' else 'fa-info-circle' }} mr-2"
+        ></i>
+        {{ message }}
+      </p>
+    </div>
+    {% endfor %} {% endif %} {% endwith %}
+
+    <!-- Grid de galletas -->
+    <div
+      class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+    >
+      {% for galleta in galletas %}
+      <div
+        class="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition"
+      >
+        <div class="h-48 overflow-hidden bg-cookie-100">
+          {% if galleta.imagen %}
+          <img
+            src="{{ url_for('static', filename='img/galletas/' + galleta.imagen) }}"
+            alt="{{ galleta.nombre }}"
+            class="w-full h-full object-cover"
+          />
+          {% else %}
+          <div
+            class="w-full h-full flex items-center justify-center bg-cookie-200"
+          >
+            <i class="fas fa-cookie text-5xl text-cookie-400"></i>
+          </div>
+          {% endif %}
+        </div>
+        <div class="p-4">
+          <h3 class="text-xl font-bold text-cookie-800 mb-2">
+            {{ galleta.nombre }}
+          </h3>
+          <p class="text-gray-600 mb-4 h-12 overflow-hidden">
+            {{ galleta.descripcion|truncate(50) if galleta.descripcion else
+            "Deliciosa galleta artesanal" }}
+          </p>
+          <div class="flex justify-between items-center mb-4">
+            <span class="text-lg font-bold text-cookie-700"
+              >${{ galleta.precio }}</span
+            >
+            <span class="text-sm text-gray-500"
+              >{{ galleta.peso_unidad }}g/unidad</span
+            >
+          </div>
+
+          <div class="mt-4 flex flex-col gap-2">
+            <a
+              href="{{ url_for('catalogo.detalle', id_galleta=galleta.id_galleta) }}"
+              class="w-full block text-center px-4 py-2 bg-cookie-400 hover:bg-cookie-500 text-white rounded-lg transition"
+            >
+              Ver detalles
+            </a>
+
+            {% if current_user.is_authenticated %}
+            <form
+              action="{{ url_for('catalogo.agregar_carrito', id_galleta=galleta.id_galleta) }}"
+              method="post"
+              class="mt-1"
+            >
+              <input
+                type="hidden"
+                name="csrf_token"
+                value="{{ csrf_token() }}"
+              />
+              <input type="hidden" name="cantidad" value="1" />
+              <button
+                type="submit"
+                class="w-full px-4 py-2 bg-cookie-600 hover:bg-cookie-700 text-white rounded-lg transition flex items-center justify-center"
+              >
+                <i class="fas fa-cart-plus mr-2"></i> Comprar
+              </button>
+            </form>
+            {% else %}
+            <a
+              href="{{ url_for('auth.login') }}"
+              class="w-full block text-center px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded-lg transition"
+            >
+              Inicia sesión para comprar
+            </a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      {% endfor %} {% if not galletas %}
+      <div class="col-span-full p-8 bg-cookie-100 rounded-lg text-center">
+        <i class="fas fa-cookie-bite text-5xl text-cookie-400 mb-4"></i>
+        <h3 class="text-xl font-bold text-cookie-800">
+          No hay galletas disponibles
+        </h3>
+        <p class="text-gray-600 mt-2">
+          Vuelve pronto, ¡estamos horneando nuevas delicias para ti!
+        </p>
+      </div>
+      {% endif %}
+    </div>
+  </main>
+</div>
+{% endblock %}

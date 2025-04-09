@@ -202,7 +202,7 @@ def realizar_venta():
 
 
 @venta.route("/venta_pedido", methods=['GET', 'POST'])
-@verificar_roles('admin', 'ventas')
+@verificar_roles('admin', 'ventas', 'cliente')
 @login_required
 def venta_pedido():
     pedidos = db.session.query(Venta).filter(

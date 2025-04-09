@@ -11,6 +11,7 @@ from auth import verificar_roles
 from venta import venta
 from recetas.recetas import recetas_bp
 from produccion.routes import produccion_bp
+from routes.catalogo import catalogo_bp
 
 app = Flask(__name__)
 app.config.from_object(DevelopmentConfig)
@@ -40,7 +41,7 @@ def status_401(error):
 @app.route("/index")
 def index():
 
-    return redirect('auth/login')
+    return redirect('catalogo')
 
 
 @app.route('/admin')
@@ -55,6 +56,12 @@ def admin():
 def cliente():
     return render_template('cliente.html')
 
+@app.route("/menu")
+@login_required
+@verificar_roles('admin', 'cliente', 'produccion', 'ventas')
+def menu():
+    return render_template('admin.html')
+
 
 app.register_blueprint(auth, url_prefix='/auth')
 app.register_blueprint(insumo_bp)
@@ -63,6 +70,7 @@ app.register_blueprint(compras_bp, url_prefix='/compras')
 app.register_blueprint(venta, url_prefix='/venta')
 app.register_blueprint(recetas_bp, url_prefix='/recetas')
 app.register_blueprint(produccion_bp, url_prefix='/produccion')
+app.register_blueprint(catalogo_bp, url_prefix='/catalogo')
 
 
 if __name__ == '__main__':
