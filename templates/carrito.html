@@ -118,6 +118,13 @@ Cookies{% endblock %} {% block main %}
                     <div class="text-sm font-medium text-gray-900">
                       {{ item.nombre }}
                     </div>
+                    {% if item.tiempo_espera > 0 %}
+                    <span class="text-cookie-600 text-xs">
+                      <i class="fas fa-clock mr-1"></i> Fabricación a pedido ({{
+                      item.tiempo_espera }} día{% if item.tiempo_espera > 1
+                      %}s{% endif %})
+                    </span>
+                    {% endif %}
                   </div>
                 </div>
               </td>
@@ -171,6 +178,31 @@ Cookies{% endblock %} {% block main %}
       </div>
     </div>
 
+    {% if tiempo_espera_maximo > 0 %}
+    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+      <h3 class="text-blue-800 font-bold flex items-center mb-2">
+        <i class="fas fa-info-circle mr-2"></i> Información importante
+      </h3>
+      <p class="text-blue-700">
+        Algunos productos de tu carrito requieren fabricación, por lo que la
+        entrega estimada será en
+        <strong
+          >{{ tiempo_espera_maximo }} día{% if tiempo_espera_maximo > 1 %}s{%
+          endif %}</strong
+        >.
+      </p>
+      {% if tiempo_espera_maximo > 1 %}
+      <p class="text-blue-700 mt-2">
+        Tu pedido estará listo para recoger a partir del
+        <strong
+          >{{ (now + timedelta(days=tiempo_espera_maximo)).strftime('%d/%m/%Y')
+          }}</strong
+        >.
+      </p>
+      {% endif %}
+    </div>
+    {% endif %}
+
     <!-- Botones de acción -->
     <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
       <a
@@ -208,10 +240,13 @@ Cookies{% endblock %} {% block main %}
         </li>
         <li class="flex items-start">
           <i class="fas fa-truck text-cookie-600 mt-1 mr-3"></i>
-          <span
-            >Tu pedido estará listo para recoger en nuestra tienda en las
-            próximas 24 horas.</span
-          >
+          <span>
+            {% if tiempo_espera_maximo > 0 %} Tu pedido estará listo para
+            recoger en nuestra tienda en aproximadamente {{ tiempo_espera_maximo
+            }} día{% if tiempo_espera_maximo > 1 %}s{% endif %}. {% else %} Tu
+            pedido estará listo para recoger en nuestra tienda en las próximas
+            24 horas. {% endif %}
+          </span>
         </li>
         <li class="flex items-start">
           <i class="fas fa-phone text-cookie-600 mt-1 mr-3"></i>
@@ -246,52 +281,6 @@ Cookies{% endblock %} {% block main %}
     {% endif %}
   </main>
 
-  <!-- Footer -->
-  <footer class="bg-cookie-800 text-white p-6 md:ml-0">
-    <div class="max-w-7xl mx-auto">
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <div>
-          <h3 class="text-xl font-kavoon mb-4">Golden Cookies</h3>
-          <p class="text-cookie-100">
-            Las mejores galletas artesanales hechas con ingredientes de calidad
-            y mucho amor.
-          </p>
-        </div>
-        <div>
-          <h3 class="text-lg font-bold mb-4">Contacto</h3>
-          <p class="flex items-center mb-2">
-            <i class="fas fa-map-marker-alt mr-2 text-cookie-300"></i> Av.
-            Principal #123, Ciudad
-          </p>
-          <p class="flex items-center mb-2">
-            <i class="fas fa-phone mr-2 text-cookie-300"></i> (123) 456-7890
-          </p>
-          <p class="flex items-center">
-            <i class="fas fa-envelope mr-2 text-cookie-300"></i>
-            info@goldencookies.com
-          </p>
-        </div>
-        <div>
-          <h3 class="text-lg font-bold mb-4">Síguenos</h3>
-          <div class="flex space-x-4">
-            <a href="#" class="text-white hover:text-cookie-300 transition"
-              ><i class="fab fa-facebook-f text-2xl"></i
-            ></a>
-            <a href="#" class="text-white hover:text-cookie-300 transition"
-              ><i class="fab fa-instagram text-2xl"></i
-            ></a>
-            <a href="#" class="text-white hover:text-cookie-300 transition"
-              ><i class="fab fa-twitter text-2xl"></i
-            ></a>
-          </div>
-        </div>
-      </div>
-      <div
-        class="border-t border-cookie-600 mt-6 pt-6 text-center text-cookie-300"
-      >
-        <p>&copy; 2025 Golden Cookies. Todos los derechos reservados.</p>
-      </div>
-    </div>
-  </footer>
+  
 </div>
 {% endblock %}

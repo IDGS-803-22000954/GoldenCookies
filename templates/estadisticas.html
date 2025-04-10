@@ -38,9 +38,6 @@ Cookies{% endblock %} {% block main %}
           <i class="fas fa-cookie-bite text-cookie-600 text-3xl"></i>
         </div>
         <h3 class="text-xl font-bold text-cookie-800">Total Producciones</h3>
-        {% set total_producciones = 0 %} {% for estatus, count in estatus_count
-        %} {% set total_producciones = total_producciones + count %} {% endfor
-        %}
         <p class="text-3xl font-kavoon text-cookie-700 mt-2">
           {{ total_producciones }}
         </p>
@@ -55,9 +52,6 @@ Cookies{% endblock %} {% block main %}
           <i class="fas fa-check-circle text-green-600 text-3xl"></i>
         </div>
         <h3 class="text-xl font-bold text-cookie-800">Completadas</h3>
-        {% set completadas = 0 %} {% for estatus, count in estatus_count %} {%
-        if estatus == 'completada' %} {% set completadas = count %} {% endif %}
-        {% endfor %}
         <p class="text-3xl font-kavoon text-green-600 mt-2">
           {{ completadas }}
         </p>
@@ -72,9 +66,6 @@ Cookies{% endblock %} {% block main %}
           <i class="fas fa-hourglass-half text-yellow-600 text-3xl"></i>
         </div>
         <h3 class="text-xl font-bold text-cookie-800">En Proceso</h3>
-        {% set en_proceso = 0 %} {% for estatus, count in estatus_count %} {% if
-        estatus == 'en_proceso' %} {% set en_proceso = count %} {% endif %} {%
-        endfor %}
         <p class="text-3xl font-kavoon text-yellow-600 mt-2">
           {{ en_proceso }}
         </p>
@@ -89,9 +80,6 @@ Cookies{% endblock %} {% block main %}
           <i class="fas fa-calendar-alt text-blue-600 text-3xl"></i>
         </div>
         <h3 class="text-xl font-bold text-cookie-800">Programadas</h3>
-        {% set programadas = 0 %} {% for estatus, count in estatus_count %} {%
-        if estatus == 'programada' %} {% set programadas = count %} {% endif %}
-        {% endfor %}
         <p class="text-3xl font-kavoon text-blue-600 mt-2">{{ programadas }}</p>
         <p class="text-cookie-500 mt-1">Pendientes de iniciar</p>
       </div>
@@ -105,12 +93,13 @@ Cookies{% endblock %} {% block main %}
           Top Galletas Producidas
         </h2>
 
-        <div class="h-64 mb-4" id="galletasChart">
-          <!-- Chart will be inserted here by JS -->
+        <div class="h-64 mb-4">
           {% if not top_galletas %}
           <div class="flex items-center justify-center h-full">
             <p class="text-cookie-500">No hay datos disponibles</p>
           </div>
+          {% else %}
+          <canvas id="galletasChart"></canvas>
           {% endif %}
         </div>
 
@@ -142,12 +131,13 @@ Cookies{% endblock %} {% block main %}
           Top Insumos Utilizados
         </h2>
 
-        <div class="h-64 mb-4" id="insumosChart">
-          <!-- Chart will be inserted here by JS -->
+        <div class="h-64 mb-4">
           {% if not top_insumos %}
           <div class="flex items-center justify-center h-full">
             <p class="text-cookie-500">No hay datos disponibles</p>
           </div>
+          {% else %}
+          <canvas id="insumosChart"></canvas>
           {% endif %}
         </div>
 
@@ -182,16 +172,17 @@ Cookies{% endblock %} {% block main %}
           Estado de Producciones
         </h2>
 
-        <div class="h-64 mb-4" id="estatusChart">
-          <!-- Chart will be inserted here by JS -->
+        <div class="h-64 mb-4">
           {% if not estatus_count %}
           <div class="flex items-center justify-center h-full">
             <p class="text-cookie-500">No hay datos disponibles</p>
           </div>
+          {% else %}
+          <canvas id="estatusChart"></canvas>
           {% endif %}
         </div>
 
-        {% if estatus_count %}
+        {% if estatus_porcentajes %}
         <div class="overflow-x-auto mt-4">
           <table class="w-full text-sm text-left">
             <thead class="text-xs text-cookie-700 uppercase bg-cookie-100">
@@ -202,7 +193,7 @@ Cookies{% endblock %} {% block main %}
               </tr>
             </thead>
             <tbody>
-              {% for estatus, count in estatus_count %}
+              {% for estatus, count, porcentaje in estatus_porcentajes %}
               <tr class="border-b border-cookie-200 hover:bg-cookie-50">
                 <td class="px-4 py-2">
                   <span
@@ -215,10 +206,7 @@ Cookies{% endblock %} {% block main %}
                   </span>
                 </td>
                 <td class="px-4 py-2">{{ count }}</td>
-                <td class="px-4 py-2">
-                  {{ (count / total_producciones * 100)|round(1) if
-                  total_producciones > 0 else 0 }}%
-                </td>
+                <td class="px-4 py-2">{{ porcentaje }}%</td>
               </tr>
               {% endfor %}
             </tbody>
@@ -233,12 +221,13 @@ Cookies{% endblock %} {% block main %}
           Mermas por Tipo
         </h2>
 
-        <div class="h-64 mb-4" id="mermasChart">
-          <!-- Chart will be inserted here by JS -->
+        <div class="h-64 mb-4">
           {% if not mermas %}
           <div class="flex items-center justify-center h-full">
             <p class="text-cookie-500">No hay datos disponibles</p>
           </div>
+          {% else %}
+          <canvas id="mermasChart"></canvas>
           {% endif %}
         </div>
 
@@ -280,169 +269,181 @@ Cookies{% endblock %} {% block main %}
   document.addEventListener('DOMContentLoaded', function() {
     // Datos para los gráficos
     {% if top_galletas %}
-    const galletasData = {
-      labels: [{% for galleta, _ in top_galletas %}'{{ galleta }}',{% endfor %}],
-      datasets: [{
-        label: 'Cantidad Producida',
-        data: [{% for _, total in top_galletas %}{{ total }},{% endfor %}],
-        backgroundColor: [
-          'rgba(255, 159, 64, 0.7)',
-          'rgba(255, 205, 86, 0.7)',
-          'rgba(75, 192, 192, 0.7)',
-          'rgba(54, 162, 235, 0.7)',
-          'rgba(153, 102, 255, 0.7)'
-        ],
-        borderColor: [
-          'rgb(255, 159, 64)',
-          'rgb(255, 205, 86)',
-          'rgb(75, 192, 192)',
-          'rgb(54, 162, 235)',
-          'rgb(153, 102, 255)'
-        ],
-        borderWidth: 1
-      }]
-    };
+    const galletasCanvas = document.getElementById('galletasChart');
+    if (galletasCanvas) {
+      const galletasCtx = galletasCanvas.getContext('2d');
+      const galletasData = {
+        labels: [{% for galleta, _ in top_galletas %}'{{ galleta }}',{% endfor %}],
+        datasets: [{
+          label: 'Cantidad Producida',
+          data: [{% for _, total in top_galletas %}{{ total }},{% endfor %}],
+          backgroundColor: [
+            'rgba(255, 159, 64, 0.7)',
+            'rgba(255, 205, 86, 0.7)',
+            'rgba(75, 192, 192, 0.7)',
+            'rgba(54, 162, 235, 0.7)',
+            'rgba(153, 102, 255, 0.7)'
+          ],
+          borderColor: [
+            'rgb(255, 159, 64)',
+            'rgb(255, 205, 86)',
+            'rgb(75, 192, 192)',
+            'rgb(54, 162, 235)',
+            'rgb(153, 102, 255)'
+          ],
+          borderWidth: 1
+        }]
+      };
 
-    // Crear gráfico de galletas
-    const galletasCtx = document.getElementById('galletasChart').getContext('2d');
-    new Chart(galletasCtx, {
-      type: 'bar',
-      data: galletasData,
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-          y: {
-            beginAtZero: true
+      // Crear gráfico de galletas
+      new Chart(galletasCtx, {
+        type: 'bar',
+        data: galletasData,
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: true
+            }
           }
         }
-      }
-    });
+      });
+    }
     {% endif %}
 
     {% if top_insumos %}
-    const insumosData = {
-      labels: [{% for insumo, _ in top_insumos %}'{{ insumo }}',{% endfor %}],
-      datasets: [{
-        label: 'Cantidad Utilizada',
-        data: [{% for _, total in top_insumos %}{{ total }},{% endfor %}],
-        backgroundColor: [
-          'rgba(75, 192, 192, 0.7)',
-          'rgba(54, 162, 235, 0.7)',
-          'rgba(153, 102, 255, 0.7)',
-          'rgba(255, 159, 64, 0.7)',
-          'rgba(255, 205, 86, 0.7)'
-        ],
-        borderColor: [
-          'rgb(75, 192, 192)',
-          'rgb(54, 162, 235)',
-          'rgb(153, 102, 255)',
-          'rgb(255, 159, 64)',
-          'rgb(255, 205, 86)'
-        ],
-        borderWidth: 1
-      }]
-    };
+    const insumosCanvas = document.getElementById('insumosChart');
+    if (insumosCanvas) {
+      const insumosCtx = insumosCanvas.getContext('2d');
+      const insumosData = {
+        labels: [{% for insumo, _ in top_insumos %}'{{ insumo }}',{% endfor %}],
+        datasets: [{
+          label: 'Cantidad Utilizada',
+          data: [{% for _, total in top_insumos %}{{ total }},{% endfor %}],
+          backgroundColor: [
+            'rgba(75, 192, 192, 0.7)',
+            'rgba(54, 162, 235, 0.7)',
+            'rgba(153, 102, 255, 0.7)',
+            'rgba(255, 159, 64, 0.7)',
+            'rgba(255, 205, 86, 0.7)'
+          ],
+          borderColor: [
+            'rgb(75, 192, 192)',
+            'rgb(54, 162, 235)',
+            'rgb(153, 102, 255)',
+            'rgb(255, 159, 64)',
+            'rgb(255, 205, 86)'
+          ],
+          borderWidth: 1
+        }]
+      };
 
-    // Crear gráfico de insumos
-    const insumosCtx = document.getElementById('insumosChart').getContext('2d');
-    new Chart(insumosCtx, {
-      type: 'bar',
-      data: insumosData,
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-          y: {
-            beginAtZero: true
+      // Crear gráfico de insumos
+      new Chart(insumosCtx, {
+        type: 'bar',
+        data: insumosData,
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: true
+            }
           }
         }
-      }
-    });
+      });
+    }
     {% endif %}
 
     {% if estatus_count %}
-    const estatusData = {
-      labels: [
-        {% for estatus, _ in estatus_count %}
-          {% if estatus == 'programada' %}'Programada'
-          {% elif estatus == 'en_proceso' %}'En proceso'
-          {% elif estatus == 'completada' %}'Completada'
-          {% elif estatus == 'cancelada' %}'Cancelada'
-          {% else %}'{{ estatus }}'{% endif %},
-        {% endfor %}
-      ],
-      datasets: [{
-        data: [{% for _, count in estatus_count %}{{ count }},{% endfor %}],
-        backgroundColor: [
-          'rgba(54, 162, 235, 0.7)',   // Azul para programada
-          'rgba(255, 205, 86, 0.7)',   // Amarillo para en proceso
-          'rgba(75, 192, 192, 0.7)',   // Verde para completada
-          'rgba(255, 99, 132, 0.7)'    // Rojo para cancelada
+    const estatusCanvas = document.getElementById('estatusChart');
+    if (estatusCanvas) {
+      const estatusCtx = estatusCanvas.getContext('2d');
+      const estatusData = {
+        labels: [
+          {% for estatus, _ in estatus_count %}
+            {% if estatus == 'programada' %}'Programada'
+            {% elif estatus == 'en_proceso' %}'En proceso'
+            {% elif estatus == 'completada' %}'Completada'
+            {% elif estatus == 'cancelada' %}'Cancelada'
+            {% else %}'{{ estatus }}'{% endif %},
+          {% endfor %}
         ],
-        borderColor: [
-          'rgb(54, 162, 235)',
-          'rgb(255, 205, 86)',
-          'rgb(75, 192, 192)',
-          'rgb(255, 99, 132)'
-        ],
-        borderWidth: 1
-      }]
-    };
+        datasets: [{
+          data: [{% for _, count in estatus_count %}{{ count }},{% endfor %}],
+          backgroundColor: [
+            'rgba(54, 162, 235, 0.7)',   // Azul para programada
+            'rgba(255, 205, 86, 0.7)',   // Amarillo para en proceso
+            'rgba(75, 192, 192, 0.7)',   // Verde para completada
+            'rgba(255, 99, 132, 0.7)'    // Rojo para cancelada
+          ],
+          borderColor: [
+            'rgb(54, 162, 235)',
+            'rgb(255, 205, 86)',
+            'rgb(75, 192, 192)',
+            'rgb(255, 99, 132)'
+          ],
+          borderWidth: 1
+        }]
+      };
 
-    // Crear gráfico de estatus
-    const estatusCtx = document.getElementById('estatusChart').getContext('2d');
-    new Chart(estatusCtx, {
-      type: 'pie',
-      data: estatusData,
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            position: 'right'
+      // Crear gráfico de estatus
+      new Chart(estatusCtx, {
+        type: 'pie',
+        data: estatusData,
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'right'
+            }
           }
         }
-      }
-    });
+      });
+    }
     {% endif %}
 
     {% if mermas %}
-    const mermasData = {
-      labels: [{% for tipo, _ in mermas %}'{{ tipo }}',{% endfor %}],
-      datasets: [{
-        data: [{% for _, total in mermas %}{{ total }},{% endfor %}],
-        backgroundColor: [
-          'rgba(255, 99, 132, 0.7)',   // Rojo para caducado
-          'rgba(255, 159, 64, 0.7)',   // Naranja para dañado
-          'rgba(255, 205, 86, 0.7)',   // Amarillo para defecto
-          'rgba(153, 102, 255, 0.7)'   // Morado para otros
-        ],
-        borderColor: [
-          'rgb(255, 99, 132)',
-          'rgb(255, 159, 64)',
-          'rgb(255, 205, 86)',
-          'rgb(153, 102, 255)'
-        ],
-        borderWidth: 1
-      }]
-    };
+    const mermasCanvas = document.getElementById('mermasChart');
+    if (mermasCanvas) {
+      const mermasCtx = mermasCanvas.getContext('2d');
+      const mermasData = {
+        labels: [{% for tipo, _ in mermas %}'{{ tipo }}',{% endfor %}],
+        datasets: [{
+          data: [{% for _, total in mermas %}{{ total }},{% endfor %}],
+          backgroundColor: [
+            'rgba(255, 99, 132, 0.7)',   // Rojo para caducado
+            'rgba(255, 159, 64, 0.7)',   // Naranja para dañado
+            'rgba(255, 205, 86, 0.7)',   // Amarillo para defecto
+            'rgba(153, 102, 255, 0.7)'   // Morado para otros
+          ],
+          borderColor: [
+            'rgb(255, 99, 132)',
+            'rgb(255, 159, 64)',
+            'rgb(255, 205, 86)',
+            'rgb(153, 102, 255)'
+          ],
+          borderWidth: 1
+        }]
+      };
 
-    // Crear gráfico de mermas
-    const mermasCtx = document.getElementById('mermasChart').getContext('2d');
-    new Chart(mermasCtx, {
-      type: 'doughnut',
-      data: mermasData,
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            position: 'right'
+      // Crear gráfico de mermas
+      new Chart(mermasCtx, {
+        type: 'doughnut',
+        data: mermasData,
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'right'
+            }
           }
         }
-      }
-    });
+      });
+    }
     {% endif %}
   });
 </script>

@@ -30,6 +30,24 @@ class Galleta(db.Model):
     detalle_venta: Mapped[List['DetalleVenta']] = relationship(
         'DetalleVenta', back_populates='galleta')
 
+    def tiempo_estimado_fabricacion(self, cantidad=1):
+        """Estima el tiempo necesario para fabricar una cantidad de galletas"""
+        # Obtener la receta asociada
+        receta = Receta.query.filter_by(id_galleta=self.id_galleta).first()
+
+        if not receta:
+            return 1  # Por defecto, 1 día si no hay receta
+
+        # Calcula cuántas producciones se necesitan
+        producciones_necesarias = (
+            cantidad + receta.cantidad_produccion - 1) // receta.cantidad_produccion
+
+        # Por cada producción, asumimos 0.5 días de trabajo (simplificado)
+        dias_estimados = 0.5 * producciones_necesarias
+
+        # Redondeamos hacia arriba y siempre mínimo 1 día
+        return max(1, int(dias_estimados + 0.5))
+
 
 class Insumo(db.Model):
     __tablename__ = 'insumo'
@@ -168,7 +186,8 @@ class Venta(db.Model):
     created_at: Mapped[Optional[datetime.datetime]] = mapped_column(
         TIMESTAMP, server_default=text('CURRENT_TIMESTAMP'))
     estado: Mapped[Optional[str]] = mapped_column(
-        Enum('pendiente', 'lista'), server_default=text("'lista'"))
+        Enum('pendiente', 'en_produccion', 'listo_para_recoger', 'entregado'),
+        server_default=text("'pendiente'"))
     fecha_recogida: Mapped[Optional[datetime.datetime]
                            ] = mapped_column(DateTime)
     pagado: Mapped[Optional[int]] = mapped_column(

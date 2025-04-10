@@ -128,7 +128,7 @@ de Insumos - Golden Cookies{% endblock %} {% block styles %}
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm">
                 <button
-                  onclick="abrirModalEditar('{{ insumo.id_insumo }}', '{{ insumo.nombre }}', '{{ insumo.unidad_medida }}', '{{ insumo.cantidad_insumo }}')"
+                  onclick="abrirModalEditar('{{ insumo.id_insumo }}', '{{ insumo.nombre }}', '{{ insumo.unidad_medida }}')"
                   class="text-amber-600 hover:text-amber-800"
                 >
                   <i class="fas fa-edit"></i>
@@ -152,6 +152,7 @@ de Insumos - Golden Cookies{% endblock %} {% block styles %}
   </div>
 </div>
 
+<!-- Modal para editar insumo -->
 <!-- Modal para editar insumo -->
 <div
   id="modal-editar"
@@ -183,6 +184,7 @@ de Insumos - Golden Cookies{% endblock %} {% block styles %}
         action="{{ url_for('insumo_bp.editar_insumo') }}"
       >
         <input type="hidden" id="id_insumo" name="id_insumo" />
+        {{ formulario.csrf_token }}
 
         <div class="mb-4">
           <label
@@ -204,27 +206,15 @@ de Insumos - Golden Cookies{% endblock %} {% block styles %}
             class="block text-sm font-medium text-cookie-800 mb-1"
             >Unidad de Medida</label
           >
-          <input
-            type="text"
+          <select
             id="unidad_medida_editar"
             name="unidad_medida"
             class="w-full px-3 py-2 border border-cookie-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cookie-500"
-          />
-        </div>
-
-        <div class="mb-6">
-          <label
-            for="cantidad_insumo"
-            class="block text-sm font-medium text-cookie-800 mb-1"
-            >Cantidad</label
           >
-          <input
-            type="number"
-            step="0.01"
-            id="cantidad_insumo_editar"
-            name="cantidad_insumo"
-            class="w-full px-3 py-2 border border-cookie-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cookie-500"
-          />
+            <option value="gramos">Gramos</option>
+            <option value="mililitros">Mililitros</option>
+            <option value="unidades">Unidades</option>
+          </select>
         </div>
 
         <div class="flex justify-end pt-2">
@@ -249,11 +239,20 @@ de Insumos - Golden Cookies{% endblock %} {% block styles %}
 
 <!-- Scripts -->
 <script>
-  function abrirModalEditar(id, nombre, unidad, cantidad) {
+  function abrirModalEditar(id, nombre, unidad) {
     document.getElementById("id_insumo").value = id;
     document.getElementById("nombre_editar").value = nombre;
-    document.getElementById("unidad_medida_editar").value = unidad;
-    document.getElementById("cantidad_insumo_editar").value = cantidad;
+
+    // Seleccionar la opción correcta en el select
+    const selectUnidad = document.getElementById("unidad_medida_editar");
+    for (let i = 0; i < selectUnidad.options.length; i++) {
+      if (
+        selectUnidad.options[i].value.toLowerCase() === unidad.toLowerCase()
+      ) {
+        selectUnidad.selectedIndex = i;
+        break;
+      }
+    }
 
     // Mostrar modal
     const modal = document.getElementById("modal-editar");
@@ -261,6 +260,22 @@ de Insumos - Golden Cookies{% endblock %} {% block styles %}
     modal.classList.add("modal-active");
     document.body.classList.add("overflow-hidden");
   }
+
+  function cerrarModalEditar() {
+    // Ocultar modal
+    const modal = document.getElementById("modal-editar");
+    modal.classList.add("opacity-0", "pointer-events-none");
+    modal.classList.remove("modal-active");
+    document.body.classList.remove("overflow-hidden");
+  }
+
+  // Cerrar modal al hacer clic fuera de él
+  window.addEventListener("click", function (e) {
+    const modal = document.getElementById("modal-editar");
+    if (e.target === modal) {
+      cerrarModalEditar();
+    }
+  });
 
   function cerrarModalEditar() {
     // Ocultar modal

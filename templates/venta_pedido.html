@@ -32,13 +32,13 @@ Cookies{% endblock %} {% block main %}
       messages %} {% for category, message in messages %}
       <div
         id="flash-{{ loop.index }}"
-        class="p-4 mb-4 rounded-lg flex justify-between items-center {% if category == 'success' %}bg-green-100 text-green-800{% elif category == 'danger' %}bg-red-100 text-red-800{% elif category == 'warning' %}bg-yellow-100 text-yellow-800{% else %}bg-blue-100 text-blue-800{% endif %}"
+        class="p-4 mb-4 rounded-lg flex justify-between items-center {% if category == 'success' %}bg-green-100 text-green-800{% elif category == 'danger' or category == 'error' %}bg-red-100 text-red-800{% elif category == 'warning' %}bg-yellow-100 text-yellow-800{% else %}bg-blue-100 text-blue-800{% endif %}"
         role="alert"
       >
         <div>
           {% if category == 'success' %}
           <i class="fas fa-check-circle mr-2"></i>
-          {% elif category == 'danger' %}
+          {% elif category == 'danger' or category == 'error' %}
           <i class="fas fa-exclamation-circle mr-2"></i>
           {% elif category == 'warning' %}
           <i class="fas fa-exclamation-triangle mr-2"></i>
@@ -57,42 +57,117 @@ Cookies{% endblock %} {% block main %}
       {% endfor %} {% endif %} {% endwith %}
     </div>
 
+    <!-- Filtros de pedidos -->
+    <div class="bg-white rounded-lg shadow-md p-4 mb-6">
+      <div class="flex flex-wrap items-center gap-4">
+        <div>
+          <label
+            for="filter-estado"
+            class="block text-sm font-medium text-gray-700 mb-1"
+            >Estado</label
+          >
+          <select
+            id="filter-estado"
+            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-cookie-500 focus:border-cookie-500 block w-full p-2.5"
+          >
+            <option value="todos">Todos los estados</option>
+            <option value="pendiente">Pendiente</option>
+            <option value="en_produccion">En producción</option>
+            <option value="listo_para_recoger">Listo para recoger</option>
+            <option value="entregado">Entregado</option>
+          </select>
+        </div>
+        <div>
+          <label
+            for="buscar-cliente"
+            class="block text-sm font-medium text-gray-700 mb-1"
+            >Cliente</label
+          >
+          <input
+            type="text"
+            id="buscar-cliente"
+            placeholder="Buscar por cliente"
+            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-cookie-500 focus:border-cookie-500 block w-full p-2.5"
+          />
+        </div>
+        <div class="self-end">
+          <button
+            type="button"
+            id="btn-filtrar"
+            class="bg-cookie-600 text-white px-4 py-2.5 rounded-lg hover:bg-cookie-700 transition-colors"
+          >
+            <i class="fas fa-filter mr-2"></i>Filtrar
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Pending orders -->
     <div class="bg-white rounded-lg shadow-md p-6">
       <h2 class="text-xl font-kavoon text-cookie-700 mb-4">Lista de Pedidos</h2>
 
       {% if pedidos|length > 0 %}
       <div class="overflow-x-auto">
-        <table class="w-full text-sm text-left">
+        <table class="w-full text-sm text-left" id="tabla-pedidos">
           <thead class="text-xs text-cookie-700 uppercase bg-cookie-100">
             <tr>
               <th class="px-4 py-3">ID</th>
               <th class="px-4 py-3">Cliente</th>
               <th class="px-4 py-3">Fecha Pedido</th>
+              <th class="px-4 py-3">Fecha Recogida</th>
               <th class="px-4 py-3">Total</th>
-              <th class="px-4 py-3">Pagado</th>
+              <th class="px-4 py-3">Estado</th>
               <th class="px-4 py-3">Acciones</th>
             </tr>
           </thead>
           <tbody>
             {% for pedido in pedidos %}
-            <tr class="border-b border-cookie-200 hover:bg-cookie-50">
+            <tr
+              class="border-b border-cookie-200 hover:bg-cookie-50"
+              data-estado="{{ pedido.estado }}"
+            >
               <td class="px-4 py-3">#{{ pedido.id_venta }}</td>
               <td class="px-4 py-3">{{ pedido.usuario.nombre }}</td>
               <td class="px-4 py-3">
                 {{ pedido.created_at.strftime('%d/%m/%Y') }}
               </td>
+              <td class="px-4 py-3">
+                {{ pedido.fecha_recogida.strftime('%d/%m/%Y') }} {% if
+                pedido.fecha_recogida.date() > pedido.created_at.date() and
+                pedido.estado == 'en_produccion' %}
+                <span
+                  class="ml-1 px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full"
+                >
+                  Prod. automática
+                </span>
+                {% endif %}
+              </td>
               <td class="px-4 py-3">${{ pedido.total }}</td>
               <td class="px-4 py-3">
-                {% if pedido.pagado %}
+                {% if pedido.estado == 'pendiente' %}
+                <span
+                  class="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full"
+                  >Pendiente</span
+                >
+                {% elif pedido.estado == 'en_produccion' %}
+                <span
+                  class="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full"
+                  >En producción</span
+                >
+                {% elif pedido.estado == 'listo_para_recoger' %}
                 <span
                   class="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full"
-                  >Sí</span
+                  >Listo para recoger</span
+                >
+                {% elif pedido.estado == 'entregado' %}
+                <span
+                  class="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded-full"
+                  >Entregado</span
                 >
                 {% else %}
                 <span
-                  class="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full"
-                  >No</span
+                  class="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded-full"
+                  >{{ pedido.estado }}</span
                 >
                 {% endif %}
               </td>
@@ -105,19 +180,45 @@ Cookies{% endblock %} {% block main %}
                   <i class="fas fa-eye"></i>
                 </button>
 
+                {% if pedido.estado == 'pendiente' %}
                 <form
                   method="POST"
                   action="{{ url_for('venta.realizar_venta_pedido', id_venta=pedido.id_venta) }}"
                   class="inline"
                 >
+                  <input
+                    type="hidden"
+                    name="csrf_token"
+                    value="{{ csrf_token() }}"
+                  />
+                  <button
+                    type="submit"
+                    class="text-blue-600 hover:text-blue-800"
+                    onclick="return confirm('¿Está seguro de procesar este pedido? Si no hay suficientes galletas en stock, se generarán órdenes de producción automáticamente.')"
+                  >
+                    <i class="fas fa-cogs" title="Procesar pedido"></i>
+                  </button>
+                </form>
+                {% elif pedido.estado == 'listo_para_recoger' %}
+                <form
+                  method="POST"
+                  action="{{ url_for('venta.entregar_pedido', id_venta=pedido.id_venta) }}"
+                  class="inline"
+                >
+                  <input
+                    type="hidden"
+                    name="csrf_token"
+                    value="{{ csrf_token() }}"
+                  />
                   <button
                     type="submit"
                     class="text-green-600 hover:text-green-800"
-                    onclick="return confirm('¿Está seguro de procesar este pedido? Esto reducirá el inventario de galletas.')"
+                    onclick="return confirm('¿Confirma que el cliente ha recogido este pedido?')"
                   >
-                    <i class="fas fa-check"></i>
+                    <i class="fas fa-check" title="Marcar como entregado"></i>
                   </button>
                 </form>
+                {% endif %}
               </td>
             </tr>
 
@@ -146,10 +247,50 @@ Cookies{% endblock %} {% block main %}
                   <div class="mb-4">
                     <p><strong>Cliente:</strong> {{ pedido.usuario.nombre }}</p>
                     <p>
-                      <strong>Fecha:</strong> {{
+                      <strong>Fecha Pedido:</strong> {{
                       pedido.created_at.strftime('%d/%m/%Y') }}
                     </p>
-                    <p><strong>Estado:</strong> {{ pedido.estado }}</p>
+                    <p>
+                      <strong>Fecha Recogida:</strong> {{
+                      pedido.fecha_recogida.strftime('%d/%m/%Y') }} {% if
+                      pedido.fecha_recogida.date() > pedido.created_at.date()
+                      and pedido.estado == 'en_produccion' %}
+                      <span
+                        class="ml-1 px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full"
+                      >
+                        Producción automática
+                      </span>
+                      {% endif %}
+                    </p>
+                    <p>
+                      <strong>Estado:</strong>
+                      {% if pedido.estado == 'pendiente' %}
+                      <span
+                        class="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full"
+                        >Pendiente</span
+                      >
+                      {% elif pedido.estado == 'en_produccion' %}
+                      <span
+                        class="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full"
+                        >En producción</span
+                      >
+                      {% elif pedido.estado == 'listo_para_recoger' %}
+                      <span
+                        class="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full"
+                        >Listo para recoger</span
+                      >
+                      {% elif pedido.estado == 'entregado' %}
+                      <span
+                        class="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded-full"
+                        >Entregado</span
+                      >
+                      {% else %}
+                      <span
+                        class="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded-full"
+                        >{{ pedido.estado }}</span
+                      >
+                      {% endif %}
+                    </p>
                     <p><strong>Total:</strong> ${{ pedido.total }}</p>
                   </div>
 
@@ -162,6 +303,7 @@ Cookies{% endblock %} {% block main %}
                           <th class="px-3 py-2 text-left">Tipo</th>
                           <th class="px-3 py-2 text-left">Cantidad</th>
                           <th class="px-3 py-2 text-left">Precio</th>
+                          <th class="px-3 py-2 text-left">Stock</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -175,25 +317,74 @@ Cookies{% endblock %} {% block main %}
                           <td class="px-3 py-2">
                             ${{ detalle.precio_unitario }}
                           </td>
+                          <td class="px-3 py-2">
+                            {% set galletas_reales = detalle.cantidad if
+                            detalle.tipo_venta == 'unidad' else detalle.cantidad
+                            * 10 if detalle.tipo_venta == 'paquete_10' else
+                            detalle.cantidad * 20 if detalle.tipo_venta ==
+                            'paquete_20' else detalle.cantidad * 30 if
+                            detalle.tipo_venta == 'paquete_30' else
+                            detalle.cantidad * 12 if detalle.tipo_venta ==
+                            'docena' else detalle.cantidad %} {% if
+                            detalle.galleta.cantidad_galletas >= galletas_reales
+                            %}
+                            <span
+                              class="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full"
+                            >
+                              Disponible
+                            </span>
+                            {% else %}
+                            <span
+                              class="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full"
+                            >
+                              Producción requerida
+                            </span>
+                            {% endif %}
+                          </td>
                         </tr>
                         {% endfor %}
                       </tbody>
                     </table>
                   </div>
 
-                  <div class="mt-6 flex justify-end">
+                  <div class="mt-6 flex justify-end gap-3">
+                    {% if pedido.estado == 'pendiente' %}
                     <form
                       method="POST"
                       action="{{ url_for('venta.realizar_venta_pedido', id_venta=pedido.id_venta) }}"
                     >
                       <button
                         type="submit"
-                        class="bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-colors"
-                        onclick="return confirm('¿Está seguro de procesar este pedido?')"
+                        class="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors"
+                        onclick="return confirm('¿Está seguro de procesar este pedido? Si no hay suficientes galletas en stock, se generarán órdenes de producción automáticamente.')"
                       >
-                        <i class="fas fa-check mr-2"></i>Procesar Pedido
+                        <i class="fas fa-cogs mr-2"></i>Procesar Pedido
                       </button>
                     </form>
+                    {% elif pedido.estado == 'listo_para_recoger' %}
+                    <form
+                      method="POST"
+                      action="{{ url_for('venta.entregar_pedido', id_venta=pedido.id_venta) }}"
+                    >
+                      <button
+                        type="submit"
+                        class="bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-colors"
+                        onclick="return confirm('¿Confirma que el cliente ha recogido este pedido?')"
+                      >
+                        <i class="fas fa-check mr-2"></i>Marcar como Entregado
+                      </button>
+                    </form>
+                    {% elif pedido.estado == 'en_produccion' %}
+                    <div class="bg-blue-100 text-blue-800 px-4 py-2 rounded-md">
+                      <i class="fas fa-info-circle mr-2"></i>Este pedido está en
+                      producción
+                    </div>
+                    {% elif pedido.estado == 'entregado' %}
+                    <div class="bg-gray-100 text-gray-800 px-4 py-2 rounded-md">
+                      <i class="fas fa-check-circle mr-2"></i>Pedido entregado
+                      al cliente
+                    </div>
+                    {% endif %}
                   </div>
                 </div>
               </div>
@@ -211,4 +402,58 @@ Cookies{% endblock %} {% block main %}
     </div>
   </div>
 </div>
+
+<!-- Script para filtrar pedidos -->
+<script>
+  function closeFlash(id) {
+    document.getElementById(id).classList.add("hidden");
+  }
+
+  function abrirModal(id) {
+    document.getElementById(id).classList.remove("hidden");
+    document.body.style.overflow = "hidden";
+  }
+
+  function cerrarModal(id) {
+    document.getElementById(id).classList.add("hidden");
+    document.body.style.overflow = "auto";
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    const btnFiltrar = document.getElementById("btn-filtrar");
+    const filtroEstado = document.getElementById("filter-estado");
+    const filtroCliente = document.getElementById("buscar-cliente");
+    const tablaPedidos = document.getElementById("tabla-pedidos");
+
+    btnFiltrar.addEventListener("click", function () {
+      const estado = filtroEstado.value;
+      const clienteTexto = filtroCliente.value.toLowerCase();
+
+      const filas = tablaPedidos.querySelectorAll("tbody tr");
+
+      filas.forEach(function (fila) {
+        let mostrar = true;
+
+        // Filtrar por estado
+        if (estado !== "todos") {
+          const estadoFila = fila.getAttribute("data-estado");
+          if (estadoFila !== estado) {
+            mostrar = false;
+          }
+        }
+
+        // Filtrar por cliente
+        if (clienteTexto.trim() !== "") {
+          const clienteCelda = fila.children[1].textContent.toLowerCase();
+          if (!clienteCelda.includes(clienteTexto)) {
+            mostrar = false;
+          }
+        }
+
+        // Mostrar u ocultar la fila
+        fila.style.display = mostrar ? "" : "none";
+      });
+    });
+  });
+</script>
 {% endblock %}

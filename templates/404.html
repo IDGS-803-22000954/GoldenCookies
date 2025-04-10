@@ -1,93 +1,140 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>404 - Cookie Not Found</title>
-    <style>
-        *,
-        :after,
-        :before,
-        html {
-            box-sizing: border-box;
-        } 
-      
-        body {
-            margin: 15px;
-            background-color: #4b2e1e;
-            background-image: radial-gradient(rgb(189, 180, 169) 20%, transparent 20%), radial-gradient(rgb(225, 208, 185) 20%, transparent 20%);
-            background-size: 30px 30px;
-            background-position: 0 0, 30px 30px; 
-            color: #f4e1c1;
-            font-family: "Courier New", monospace;
-            font-size: 40px;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-        }
-        
-        .notfound {
-            position: fixed; /* Cambiado de display: fixed a position: fixed */
-            top: 50%; /* Alineación vertical */
-            left: 50%; /* Alineación horizontal */
-            transform: translate(-50%, -50%); /* Centrado exacto */
-            background-color: #7d4b2a;
-            padding: 20px;
-            border: 5px solid #f4e1c1;
-            border-radius: 15px;
-            width: 80%;
-            max-width: 900px;
-            z-index: 1000; /* Asegura que esté encima de otros elementos */
-        }
-        
-        .title {
-            font-size: 72px;
-            font-weight: bold;
-            color: #ffdd99;
-        }
-        
-        .cookies {
-          width: 70px;  /* Ajusta el tamaño según necesites */
-          height: auto;
-          vertical-align: middle;
-        }
+{# templates/error_404.html #} {% extends "layout.html" %} {% block title
+%}Error 404 - Página no encontrada - Golden Cookies{% endblock %} {% block
+styles %}
+<style>
+  .error-container {
+    min-height: 70vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+  }
 
-        .cookie-icon {
-            font-size: 70px;
-            display: block;
-            margin: 10px 0;
-        }
-        
-        .cookie-img {
-          width: 22px;  /* Ajusta el tamaño según necesites */
-          height: auto;
-          vertical-align: middle; /* Para que no desajuste el texto */
-          margin-bottom: 2px;
-        }
+  .cookie-crumbs {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: -1;
+    opacity: 0.4;
+  }
 
-        .blink {
-            animation: blinkingText 1s infinite;
-        }
-        
-        @keyframes blinkingText {
-            0%, 50% { opacity: 1; }
-            51%, 100% { opacity: 0; }
-        }
-    </style>
-</head>
-<body>
-    <div class="notfound">
+  .cookie-crumb {
+    position: absolute;
+    background-color: #bb9f7c;
+    border-radius: 50%;
+    animation: float 15s infinite ease-in-out;
+  }
 
-        <div class="title">4<img src="../static/img/galleta_6.png" alt="Galleta" class="cookies">4</div>
-        <div class="cookie-icon"><img src="../static/img/galleta_5.png" alt="Galleta" class="cookies"></div>
-        <div class="text">C<img src="../static/img/galleta_2.png" alt="Galleta" class="cookie-img"><img src="../static/img/galleta_2.png" alt="Galleta" class="cookie-img">kie N<img src="../static/img/galleta_3.png" alt="Galleta" class="cookie-img">t F<img src="../static/img/galleta_7.png" alt="Galleta" class="cookie-img">und</div>
-        <p><img src="../static/img/galleta_1.png" alt="Galleta" class="cookie-img"><img src="../static/img/galleta_1.png" alt="Galleta" class="cookie-img">ps! L<img src="../static/img/galleta_3.png" alt="Galleta" class="cookie-img"><img src="../static/img/galleta_3.png" alt="Galleta" class="cookie-img">ks like the c<img src="../static/img/galleta_7.png" alt="Galleta" class="cookie-img"><img src="../static/img/galleta_7.png" alt="Galleta" class="cookie-img">kie y<img src="../static/img/galleta_1.png" alt="Galleta" class="cookie-img">u were l<img src="../static/img/biscuit.png" alt="Galleta" class="cookie-img"><img src="../static/img/biscuit.png" alt="Galleta" class="cookie-img">king f<img src="../static/img/galleta_3.png" alt="Galleta" class="cookie-img">r has crumbled.</p>
-        <p>Try checking the jar again <img src="../static/img/galleta_2.png" alt="Galleta" class="cookie-img">r head back t<img src="../static/img/galleta_7.png" alt="Galleta" class="cookie-img"> the h<img src="../static/img/galleta_1.png" alt="Galleta" class="cookie-img">mepage.</p>
-        <p class="blink">Press any key t<img src="../static/img/galleta_2.png" alt="Galleta" class="cookie-img"> c<img src="../static/img/galleta_2.png" alt="Galleta" class="cookie-img">ntinue...</p>
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0) rotate(0deg);
+    }
+    50% {
+      transform: translateY(-20px) rotate(180deg);
+    }
+  }
 
+  .broken-cookie {
+    position: relative;
+    animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) 3;
+    transform-origin: center;
+  }
+
+  @keyframes shake {
+    0%,
+    100% {
+      transform: rotate(0deg);
+    }
+    25% {
+      transform: rotate(-5deg);
+    }
+    50% {
+      transform: rotate(0deg);
+    }
+    75% {
+      transform: rotate(5deg);
+    }
+  }
+
+  .btn-return {
+    transition: all 0.3s ease;
+  }
+
+  .btn-return:hover {
+    transform: scale(1.05);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+      0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  }
+</style>
+{% endblock %} {% block main %}
+<div class="p-4 {% if current_user.is_authenticated %}sm:ml-64{% endif %}">
+  <div class="relative overflow-hidden error-container p-8">
+    <!-- Cookie crumbs background decoration -->
+    <div class="cookie-crumbs">
+      {% for i in range(20) %}
+      <div
+        class="cookie-crumb"
+        style="top: {{ range(0, 100) | random }}%; 
+                    left: {{ range(0, 100) | random }}%; 
+                    width: {{ range(5, 15) | random }}px; 
+                    height: {{ range(5, 15) | random }}px; 
+                    animation-delay: {{ (i * 0.5) }}s;"
+      ></div>
+      {% endfor %}
     </div>
-    
-</body>
-</html>
+
+    <!-- Error content -->
+    <div class="broken-cookie mb-8">
+      <img
+        src="{{ url_for('static', filename='img/broken_cookie.png') }}"
+        alt="Galleta rota"
+        class="w-48 h-48 mx-auto"
+        onerror="this.src='https://via.placeholder.com/180?text=🍪'; this.onerror=null;"
+      />
+    </div>
+
+    <h1 class="text-6xl font-kavoon text-cookie-800 mb-6">404</h1>
+    <h2 class="text-3xl font-kavoon text-cookie-600 mb-4">
+      ¡Oh no! Galleta no encontrada
+    </h2>
+    <p class="text-cookie-700 text-lg max-w-lg mx-auto mb-8">
+      Parece que la galleta que buscas se ha desmoronado o ha sido devorada. No
+      podemos encontrar la página que estás buscando.
+    </p>
+
+    <a
+      href="{{ url_for('index') }}"
+      class="btn-return bg-cookie-600 hover:bg-cookie-700 text-white font-medium py-3 px-6 rounded-lg transition duration-300 flex items-center justify-center mx-auto max-w-xs"
+    >
+      <i class="fas fa-home mr-2"></i>
+      Volver al horno principal
+    </a>
+  </div>
+</div>
+
+<script>
+  // Función para generar estilos aleatorios para las migas de galleta
+  document.addEventListener("DOMContentLoaded", function () {
+    const crumbs = document.querySelectorAll(".cookie-crumb");
+
+    crumbs.forEach((crumb) => {
+      // Añadir variación aleatoria al color
+      const colorVariation = Math.floor(Math.random() * 30) - 15;
+      const baseColor = [187, 159, 124]; // color cookie-500 en RGB
+
+      const r = Math.max(0, Math.min(255, baseColor[0] + colorVariation));
+      const g = Math.max(0, Math.min(255, baseColor[1] + colorVariation));
+      const b = Math.max(0, Math.min(255, baseColor[2] + colorVariation));
+
+      crumb.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
+
+      // Añadir duración aleatoria a la animación
+      const duration = 10 + Math.random() * 15;
+      crumb.style.animationDuration = `${duration}s`;
+    });
+  });
+</script>
+{% endblock %}

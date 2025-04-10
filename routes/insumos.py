@@ -37,13 +37,11 @@ def editar_insumo():
     id_insumo = request.form.get('id_insumo')
     nombre = request.form.get('nombre')
     unidad_medida = request.form.get('unidad_medida')
-    cantidad_insumo = request.form.get('cantidad_insumo')
 
     insumo = Insumo.query.get_or_404(id_insumo)
 
     insumo.nombre = nombre
     insumo.unidad_medida = unidad_medida
-    insumo.cantidad_insumo = cantidad_insumo
 
     db.session.commit()
     flash('Insumo actualizado correctamente!', 'success')

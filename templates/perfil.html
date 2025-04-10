@@ -140,7 +140,7 @@ endblock %} {% block main %}
 
             {% if usuario.rol == 'cliente' %}
             <a
-              href="#historial-pedidos"
+              href="{{ url_for('venta.venta_pedido') }}"
               class="block w-full bg-cookie-100 text-cookie-800 p-3 rounded-md hover:bg-cookie-200 transition-colors text-center"
             >
               <i class="fas fa-history mr-2"></i>Historial de Pedidos

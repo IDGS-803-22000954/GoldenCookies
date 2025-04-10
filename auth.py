@@ -128,7 +128,7 @@ def logout():
     session.pop('id_usuario', None)  # Elimina el ID de usuario de la sesión
     session.pop('rol', None)
     session.pop('expiracion_sesion', None)  # Elimina la expiración de sesión
-    return redirect(url_for('auth.login'))
+    return redirect('/catalogo')
 
 
 @auth.route('/perfil', methods=['GET', 'POST'])
@@ -240,6 +240,61 @@ def registro_adm():
     return render_template('/registro_adm.html', form=form, usuarios=usuarios_lista)
 
 
+@auth.route('/actualizar_usuario', methods=['POST'])
+@login_required
+@verificar_roles('admin')
+def actualizar_usuario():
+    user_id = request.form.get('userId')
+
+    if not user_id:
+        flash('ID de usuario no proporcionado.', 'danger')
+        return redirect(url_for('auth.registro_adm'))
+
+    # Buscar el usuario existente
+    user_to_update = usuario.query.get(int(user_id))
+
+    if not user_to_update:
+        flash('Usuario no encontrado.', 'danger')
+        return redirect(url_for('auth.registro_adm'))
+
+    # Proteger a los usuarios admin de ser modificados
+    if user_to_update.rol == 'admin':
+        flash('No se pueden modificar usuarios con rol de administrador.', 'danger')
+        return redirect(url_for('auth.registro_adm'))
+
+    # Verificar que el nombre de usuario no esté siendo usado por otro usuario
+    nombre_usuario = request.form.get('nombre_usuario')
+    nombre_usuario_existente = usuario.query.filter(
+        usuario.nombre_usuario == nombre_usuario,
+        usuario.id_usuario != int(user_id)
+    ).first()
+
+    if nombre_usuario_existente:
+        flash('El nombre de usuario ya está en uso por otro usuario.', 'danger')
+        return redirect(url_for('auth.registro_adm'))
+
+    # Actualizar los datos del usuario
+    user_to_update.nombre = request.form.get('nombre')
+    user_to_update.nombre_usuario = nombre_usuario
+    user_to_update.telefono = request.form.get('telefono')
+    user_to_update.email = request.form.get('email')
+    user_to_update.rol = request.form.get('rol')
+
+    # Asegurarse de que no se pueda cambiar a rol admin
+    if user_to_update.rol == 'admin':
+        flash('No se puede cambiar el rol a administrador.', 'danger')
+        return redirect(url_for('auth.registro_adm'))
+
+    # Actualizar contraseña solo si se proporciona una nueva
+    nueva_contrasenia = request.form.get('contrasenia')
+    if nueva_contrasenia and nueva_contrasenia.strip():
+        user_to_update.contrasenia = generate_password_hash(nueva_contrasenia)
+
+    db.session.commit()
+    flash('Usuario actualizado con éxito!', 'success')
+    return redirect(url_for('auth.registro_adm'))
+
+
 @auth.route('/expirada')
 def expirada():
     expiracion = verificar_expiracion_sesion()
@@ -287,10 +342,18 @@ def obtener_usuarios():
 
 
 @auth.route('/eliminar_usuario/<int:id>', methods=['POST'])
+@login_required
+@verificar_roles('admin')
 def eliminar_usuario(id):
     """Elimina un usuario por ID."""
-    usuario = usuario.query.get_or_404(id)
-    db.session.delete(usuario)
+    user = usuario.query.get_or_404(id)
+
+    # Proteger a los usuarios admin de ser eliminados
+    if user.rol == 'admin':
+        flash('No se pueden eliminar usuarios con rol de administrador.', 'danger')
+        return redirect(url_for('auth.registro_adm'))
+
+    db.session.delete(user)
     db.session.commit()
     flash('Usuario eliminado correctamente.', 'success')
     return redirect(url_for('auth.registro_adm'))

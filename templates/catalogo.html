@@ -90,7 +90,7 @@ Cookies{% endblock %} {% block main %}
         <div class="h-48 overflow-hidden bg-cookie-100">
           {% if galleta.imagen %}
           <img
-            src="{{ url_for('static', filename='img/galletas/' + galleta.imagen) }}"
+            src="{{ url_for('static', filename='uploads/' + galleta.imagen) }}"
             alt="{{ galleta.nombre }}"
             class="w-full h-full object-cover"
           />
@@ -146,7 +146,11 @@ Cookies{% endblock %} {% block main %}
                 <i class="fas fa-cart-plus mr-2"></i> Comprar
               </button>
             </form>
-            {% else %}
+            {% if galleta.cantidad_galletas <= 0 %}
+            <p class="text-cookie-600 text-xs mt-1 text-center">
+              <i class="fas fa-clock mr-1"></i> Fabricación a pedido
+            </p>
+            {% endif %} {% else %}
             <a
               href="{{ url_for('auth.login') }}"
               class="w-full block text-center px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded-lg transition"

@@ -90,6 +90,7 @@
             <label
               for="{{ form.cantidad_presentaciones.id }}"
               class="block text-sm font-medium text-cookie-800 mb-1"
+              id="label-cantidad"
               >Cantidad</label
             >
             {{ form.cantidad_presentaciones(class="w-full px-3 py-2 border
@@ -108,6 +109,7 @@
           <label
             for="{{ form.peso_unitario.id }}"
             class="block text-sm font-medium text-cookie-800 mb-1"
+            id="label-peso-unitario"
             >Peso Unitario</label
           >
           {{ form.peso_unitario(class="w-full px-3 py-2 border border-cookie-300
@@ -283,6 +285,10 @@
 <script>
   document.addEventListener("DOMContentLoaded", function () {
     // Obtener referencias a los campos del formulario
+    const insumoSelect = document.getElementById("{{ form.id_insumo.id }}");
+    const presentacionSelect = document.getElementById(
+      "{{ form.presentacion.id }}"
+    );
     const cantidadPresentacionesInput = document.getElementById(
       "{{ form.cantidad_presentaciones.id }}"
     );
@@ -292,6 +298,10 @@
     const precioTotalInput = document.getElementById(
       "{{ form.precio_total.id }}"
     );
+
+    // Obtener referencias a los labels
+    const labelCantidad = document.getElementById("label-cantidad");
+    const labelPesoUnitario = document.getElementById("label-peso-unitario");
 
     // Obtener referencias a los elementos del resumen
     const resumenCompra = document.getElementById("resumen-compra");
@@ -304,13 +314,32 @@
 
     // Función para obtener la unidad de medida del insumo seleccionado
     function obtenerUnidadMedida() {
-      const insumoSelect = document.getElementById("{{ form.id_insumo.id }}");
       const selectedOption = insumoSelect.options[insumoSelect.selectedIndex];
       const textoCompleto = selectedOption.text || "";
 
       // Buscar la unidad de medida entre paréntesis: "Nombre insumo (unidad_medida)"
       const match = textoCompleto.match(/\(([^)]+)\)/);
       return match ? match[1] : "unidades";
+    }
+
+    // Función para actualizar el label de Cantidad con el tipo de presentación
+    function actualizarLabelCantidad() {
+      const presentacionSeleccionada = presentacionSelect.value;
+      if (presentacionSeleccionada) {
+        labelCantidad.textContent = `Cantidad (${presentacionSeleccionada})`;
+      } else {
+        labelCantidad.textContent = "Cantidad";
+      }
+    }
+
+    // Función para actualizar el label de Peso Unitario con la unidad de medida
+    function actualizarLabelPesoUnitario() {
+      const unidadMedida = obtenerUnidadMedida();
+      if (unidadMedida) {
+        labelPesoUnitario.textContent = `Peso Unitario (${unidadMedida})`;
+      } else {
+        labelPesoUnitario.textContent = "Peso Unitario";
+      }
     }
 
     // Función para actualizar el resumen
@@ -337,13 +366,19 @@
       }
     }
 
+    // Inicializar los labels al cargar la página
+    actualizarLabelCantidad();
+    actualizarLabelPesoUnitario();
+
     // Agregar event listeners a los campos relevantes
+    presentacionSelect.addEventListener("change", actualizarLabelCantidad);
+    insumoSelect.addEventListener("change", function () {
+      actualizarLabelPesoUnitario();
+      actualizarResumen();
+    });
     cantidadPresentacionesInput.addEventListener("input", actualizarResumen);
     pesoUnitarioInput.addEventListener("input", actualizarResumen);
     precioTotalInput.addEventListener("input", actualizarResumen);
-    document
-      .getElementById("{{ form.id_insumo.id }}")
-      .addEventListener("change", actualizarResumen);
   });
 </script>
 {% endblock %}

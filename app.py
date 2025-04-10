@@ -54,11 +54,11 @@ def admin():
 @verificar_roles('cliente','admin')
 @login_required
 def cliente():
-    return render_template('cliente.html')
+    return redirect('catalogo')
 
 @app.route("/menu")
 @login_required
-@verificar_roles('admin', 'cliente', 'produccion', 'ventas')
+@verificar_roles('admin')
 def menu():
     return render_template('admin.html')
 

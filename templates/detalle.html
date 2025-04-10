@@ -81,7 +81,7 @@ Cookies{% endblock %} {% block main %}
         <div class="md:w-1/2 bg-cookie-100">
           {% if galleta.imagen %}
           <img
-            src="{{ url_for('static', filename='img/galletas/' + galleta.imagen) }}"
+            src="{{ url_for('static', filename='uploads/' + galleta.imagen) }}"
             alt="{{ galleta.nombre }}"
             class="w-full h-full object-cover md:h-96"
           />
@@ -121,15 +121,18 @@ Cookies{% endblock %} {% block main %}
               </p>
               <p class="text-gray-500">
                 Disponibles:
-                <span class="font-medium">{{ galleta.cantidad_galletas }}</span>
+                <span class="font-medium">
+                  {% if galleta.cantidad_galletas > 0 %} {{
+                  galleta.cantidad_galletas }} {% else %} Bajo pedido {% endif
+                  %}
+                </span>
                 unidades
               </p>
             </div>
           </div>
 
           <!-- Formulario de compra (solo para usuarios autenticados) -->
-          {% if current_user.is_authenticated %} {% if galleta.cantidad_galletas
-          > 0 %}
+          {% if current_user.is_authenticated %}
           <form
             action="{{ url_for('catalogo.agregar_carrito', id_galleta=galleta.id_galleta) }}"
             method="post"
@@ -154,7 +157,6 @@ Cookies{% endblock %} {% block main %}
                   name="cantidad"
                   value="1"
                   min="1"
-                  max="{{ galleta.cantidad_galletas }}"
                   class="bg-cookie-50 h-10 w-16 border-0 text-center text-cookie-800 font-medium text-lg focus:ring-0 focus:outline-none"
                   required
                 />
@@ -173,15 +175,14 @@ Cookies{% endblock %} {% block main %}
             >
               <i class="fas fa-cart-plus mr-2"></i> Agregar al carrito
             </button>
+            {% if galleta.cantidad_galletas <= 0 %}
+            <p class="text-cookie-600 text-sm mt-2 text-center">
+              <i class="fas fa-info-circle mr-1"></i> Este producto se fabricará
+              a pedido
+            </p>
+            {% endif %}
           </form>
           {% else %}
-          <div class="bg-red-100 text-red-800 p-4 rounded-lg">
-            <p class="flex items-center">
-              <i class="fas fa-exclamation-circle mr-2"></i>
-              Lo sentimos, este producto está agotado.
-            </p>
-          </div>
-          {% endif %} {% else %}
           <div class="bg-cookie-100 p-4 rounded-lg">
             <p class="flex items-center text-cookie-800">
               <i class="fas fa-info-circle mr-2"></i>
@@ -221,37 +222,33 @@ Cookies{% endblock %} {% block main %}
 
 <!-- JavaScript para los botones de incremento/decremento -->
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
-      const decrementBtn = document.getElementById('decrement-btn');
-      const incrementBtn = document.getElementById('increment-btn');
-      const quantityInput = document.getElementById('cantidad');
-      const maxQuantity = {{ galleta.cantidad_galletas }};
+  document.addEventListener("DOMContentLoaded", function () {
+    const decrementBtn = document.getElementById("decrement-btn");
+    const incrementBtn = document.getElementById("increment-btn");
+    const quantityInput = document.getElementById("cantidad");
 
-      if (decrementBtn && incrementBtn && quantityInput) {
-          decrementBtn.addEventListener('click', function() {
-              let value = parseInt(quantityInput.value);
-              if (value > 1) {
-                  quantityInput.value = value - 1;
-              }
-          });
+    if (decrementBtn && incrementBtn && quantityInput) {
+      decrementBtn.addEventListener("click", function () {
+        let value = parseInt(quantityInput.value);
+        if (value > 1) {
+          quantityInput.value = value - 1;
+        }
+      });
 
-          incrementBtn.addEventListener('click', function() {
-              let value = parseInt(quantityInput.value);
-              if (value < maxQuantity) {
-                  quantityInput.value = value + 1;
-              }
-          });
+      incrementBtn.addEventListener("click", function () {
+        let value = parseInt(quantityInput.value);
+        // Ya no limitamos por cantidad disponible
+        quantityInput.value = value + 1;
+      });
 
-          // Validar manualmente si el usuario ingresa un número
-          quantityInput.addEventListener('change', function() {
-              let value = parseInt(quantityInput.value);
-              if (isNaN(value) || value < 1) {
-                  quantityInput.value = 1;
-              } else if (value > maxQuantity) {
-                  quantityInput.value = maxQuantity;
-              }
-          });
-      }
+      // Validar manualmente si el usuario ingresa un número
+      quantityInput.addEventListener("change", function () {
+        let value = parseInt(quantityInput.value);
+        if (isNaN(value) || value < 1) {
+          quantityInput.value = 1;
+        }
+      });
+    }
   });
 </script>
 {% endblock %}

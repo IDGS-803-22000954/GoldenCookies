@@ -1,6 +1,118 @@
 {% extends "layout.html" %} {% block title %}Gestión de Usuarios - Golden Cookies{% endblock
   %} {% block main %}
   <div class="p-4 sm:ml-64">
+    <!-- Modal de Edición de Usuario -->
+<div id="userEditModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 z-50 hidden flex items-center justify-center">
+  <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+    <div class="p-6">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-xl font-kavoon text-cookie-700">Editar Usuario</h3>
+        <button onclick="closeModal()" class="text-gray-500 hover:text-gray-700">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <form id="editUserForm" method="POST" action="{{ url_for('auth.actualizar_usuario') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" id="edit_userId" name="userId" value="">
+        
+        <div class="mb-4">
+          <label for="edit_nombre" class="block text-cookie-700 mb-2">Nombre Completo</label>
+          <input 
+            type="text" 
+            id="edit_nombre" 
+            name="nombre" 
+            class="w-full p-2 border border-cookie-300 rounded-md focus:ring focus:ring-cookie-400 focus:border-cookie-500" 
+            required
+          >
+        </div>
+        
+        <div class="mb-4">
+          <label for="edit_nombre_usuario" class="block text-cookie-700 mb-2">Nombre de Usuario</label>
+          <input 
+            type="text" 
+            id="edit_nombre_usuario" 
+            name="nombre_usuario" 
+            class="w-full p-2 border border-cookie-300 rounded-md focus:ring focus:ring-cookie-400 focus:border-cookie-500" 
+            required
+          >
+        </div>
+        
+        <div class="mb-4">
+          <label for="edit_telefono" class="block text-cookie-700 mb-2">Teléfono</label>
+          <input 
+            type="text" 
+            id="edit_telefono" 
+            name="telefono" 
+            class="w-full p-2 border border-cookie-300 rounded-md focus:ring focus:ring-cookie-400 focus:border-cookie-500" 
+            required
+          >
+        </div>
+        
+        <div class="mb-4">
+          <label for="edit_email" class="block text-cookie-700 mb-2">Correo Electrónico</label>
+          <input 
+            type="email" 
+            id="edit_email" 
+            name="email" 
+            class="w-full p-2 border border-cookie-300 rounded-md focus:ring focus:ring-cookie-400 focus:border-cookie-500" 
+          >
+        </div>
+        
+        <div class="mb-4">
+          <label for="edit_rol" class="block text-cookie-700 mb-2">Rol</label>
+          <select 
+            id="edit_rol" 
+            name="rol" 
+            class="w-full p-2 border border-cookie-300 rounded-md focus:ring focus:ring-cookie-400 focus:border-cookie-500" 
+            required
+          >
+            <option value="admin">Admin</option>
+            <option value="ventas">Ventas</option>
+            <option value="produccion">Producción</option>
+            <option value="cliente">Cliente</option>
+          </select>
+        </div>
+        
+        <div class="mb-4">
+          <label for="edit_contrasenia" class="block text-cookie-700 mb-2">Nueva Contraseña <span class="text-sm text-cookie-500">(Dejar en blanco para mantener la actual)</span></label>
+          <div class="relative">
+            <input 
+              type="password" 
+              id="edit_contrasenia" 
+              name="contrasenia" 
+              class="w-full p-2 border border-cookie-300 rounded-md focus:ring focus:ring-cookie-400 focus:border-cookie-500" 
+              placeholder="Nueva contraseña (opcional)"
+            >
+            <button 
+              type="button" 
+              onclick="togglePasswordVisibility('edit_contrasenia')" 
+              class="absolute inset-y-0 right-0 flex items-center pr-3"
+            >
+              <i id="edit-password-toggle-icon" class="fas fa-eye text-cookie-400"></i>
+            </button>
+          </div>
+        </div>
+        
+        <div class="flex justify-end space-x-2 mt-6">
+          <button 
+            type="button" 
+            onclick="closeModal()" 
+            class="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 transition-colors"
+          >
+            Cancelar
+          </button>
+          <button 
+            type="submit" 
+            class="px-4 py-2 bg-cookie-600 text-white rounded-md hover:bg-cookie-700 transition-colors"
+          >
+            Guardar Cambios
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
     <div class="p-4 md:p-6 lg:p-8">
       <!-- Mobile sidebar toggle -->
       <button
@@ -233,79 +345,77 @@
                   <th class="px-4 py-3">Acciones</th>
                 </tr>
               </thead>
-              <tbody>
-                {% if usuarios is defined and usuarios|length > 0 %}
-                  {% for user in usuarios %}
-                  <tr class="border-b border-cookie-200 hover:bg-cookie-50" data-id="{{ user.id_usuario }}">
-                    <td class="px-4 py-3">{{ user.nombre }}</td>
-                    <td class="px-4 py-3">{{ user.nombre_usuario }}</td>
-                    <td class="px-4 py-3">{{ user.telefono }}</td>
-                    <td class="px-4 py-3">{{ user.email or '-' }}</td>
-                    <td class="px-4 py-3">
-                      <span class="px-2 py-1 rounded-full text-xs font-medium 
-                      {% if user.rol == 'admin' %}bg-purple-100 text-purple-800
-                      {% elif user.rol == 'ventas' %}bg-blue-100 text-blue-800
-                      {% elif user.rol == 'produccion' %}bg-green-100 text-green-800
-                      {% else %}bg-gray-100 text-gray-800{% endif %}">
-                        {{ user.rol }}
-                      </span>
-                    </td>
-                    <td class="px-4 py-3">
-                      <span class="px-2 py-1 rounded-full text-xs font-medium 
-                      {% if user.bloqueado %}bg-red-100 text-red-800{% else %}bg-green-100 text-green-800{% endif %}">
-                        {{ 'Bloqueado' if user.bloqueado else 'Activo' }}
-                      </span>
-                    </td>
-                    <td class="px-4 py-3">
-                      <div class="flex space-x-2">
-                        <button 
-                          onclick="editUser({{ user.id_usuario }}, '{{ user.nombre }}', '{{ user.nombre_usuario }}', '{{ user.telefono }}', '{{ user.email or '' }}', '{{ user.rol }}')" 
-                          class="text-blue-600 hover:text-blue-800"
-                          title="Editar"
-                        >
-                          <i class="fas fa-edit"></i>
-                        </button>
-                        
-                        <form method="POST" action="{{ url_for('auth.eliminar_usuario', id=user.id_usuario) }}" onsubmit="return confirm('¿Estás seguro de eliminar a este usuario?');">
-                          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                          <button 
-                            type="submit" 
-                            class="text-red-600 hover:text-red-800"
-                            title="Eliminar"
-                          >
-                            <i class="fas fa-trash"></i>
-                          </button>
-                        </form>
-                        
-                        {% if user.bloqueado %}
-                        <button 
-                          onclick="toggleUserStatus({{ user.id_usuario }}, false)" 
-                          class="text-green-600 hover:text-green-800"
-                          title="Desbloquear"
-                        >
-                          <i class="fas fa-unlock"></i>
-                        </button>
-                        {% else %}
-                        <button 
-                          onclick="toggleUserStatus({{ user.id_usuario }}, true)" 
-                          class="text-yellow-600 hover:text-yellow-800"
-                          title="Bloquear"
-                        >
-                          <i class="fas fa-lock"></i>
-                        </button>
-                        {% endif %}
-                      </div>
-                    </td>
-                  </tr>
-                  {% endfor %}
-                {% else %}
-                  <tr>
-                    <td colspan="7" class="px-4 py-6 text-center text-cookie-600">
-                      No se encontraron usuarios o no se han cargado los datos. Verifica que la variable "usuarios" esté siendo pasada a la plantilla.
-                    </td>
-                  </tr>
-                {% endif %}
-              </tbody>
+              <!-- Dentro del bloque tbody de la tabla de usuarios -->
+<tbody>
+  {% if usuarios is defined and usuarios|length > 0 %}
+    {% for user in usuarios %}
+    <tr class="border-b border-cookie-200 hover:bg-cookie-50" data-id="{{ user.id_usuario }}">
+      <td class="px-4 py-3">{{ user.nombre }}</td>
+      <td class="px-4 py-3">{{ user.nombre_usuario }}</td>
+      <td class="px-4 py-3">{{ user.telefono }}</td>
+      <td class="px-4 py-3">{{ user.email or '-' }}</td>
+      <td class="px-4 py-3">
+        <span class="px-2 py-1 rounded-full text-xs font-medium 
+        {% if user.rol == 'admin' %}bg-purple-100 text-purple-800
+        {% elif user.rol == 'ventas' %}bg-blue-100 text-blue-800
+        {% elif user.rol == 'produccion' %}bg-green-100 text-green-800
+        {% else %}bg-gray-100 text-gray-800{% endif %}">
+          {{ user.rol }}
+        </span>
+      </td>
+      <td class="px-4 py-3">
+        <span class="px-2 py-1 rounded-full text-xs font-medium 
+        {% if user.bloqueado %}bg-red-100 text-red-800{% else %}bg-green-100 text-green-800{% endif %}">
+          {{ 'Bloqueado' if user.bloqueado else 'Activo' }}
+        </span>
+      </td>
+      <td class="px-4 py-3">
+        <div class="flex space-x-2">
+          {% if user.rol != 'admin' %}
+            <button 
+              onclick="editUser({{ user.id_usuario }}, '{{ user.nombre }}', '{{ user.nombre_usuario }}', '{{ user.telefono }}', '{{ user.email or '' }}', '{{ user.rol }}')" 
+              class="text-blue-600 hover:text-blue-800"
+              title="Editar"
+            >
+              <i class="fas fa-edit"></i>
+            </button>
+            
+            <form method="POST" action="{{ url_for('auth.eliminar_usuario', id=user.id_usuario) }}" onsubmit="return confirm('¿Estás seguro de eliminar a este usuario?');">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button 
+                type="submit" 
+                class="text-red-600 hover:text-red-800"
+                title="Eliminar"
+              >
+                <i class="fas fa-trash"></i>
+              </button>
+            </form>
+            
+            {% if user.bloqueado %}
+            <button 
+              onclick="toggleUserStatus({{ user.id_usuario }}, false)" 
+              class="text-green-600 hover:text-green-800"
+              title="Desbloquear"
+            >
+              <i class="fas fa-unlock"></i>
+            </button>
+            {% else %}
+            {% endif %}
+          {% else %}
+            <span class="text-gray-400 italic text-xs">Protegido</span>
+          {% endif %}
+        </div>
+      </td>
+    </tr>
+    {% endfor %}
+  {% else %}
+    <tr>
+      <td colspan="7" class="px-4 py-6 text-center text-cookie-600">
+        No se encontraron usuarios o no se han cargado los datos.
+      </td>
+    </tr>
+  {% endif %}
+</tbody>
             </table>
           </div>
         </div>
@@ -383,5 +493,56 @@
       // Por ahora, simplemente recargamos la página
       window.location.href = `/toggle_status/${userId}?block=${block}`;
     }
+
+    // Funciones para manipular el modal
+function openModal() {
+  document.getElementById('userEditModal').classList.remove('hidden');
+  document.body.classList.add('overflow-hidden'); // Previene el scroll en el fondo
+}
+
+function closeModal() {
+  document.getElementById('userEditModal').classList.add('hidden');
+  document.body.classList.remove('overflow-hidden');
+}
+
+// Función para editar usuario con modal
+function editUser(id, nombre, nombreUsuario, telefono, email, rol) {
+  // Rellenar formulario modal con datos del usuario
+  document.getElementById('edit_userId').value = id;
+  document.getElementById('edit_nombre').value = nombre;
+  document.getElementById('edit_nombre_usuario').value = nombreUsuario;
+  document.getElementById('edit_telefono').value = telefono;
+  document.getElementById('edit_email').value = email || '';
+  document.getElementById('edit_rol').value = rol;
+  document.getElementById('edit_contrasenia').value = ''; // Limpiar el campo de contraseña
+  
+  // Abrir el modal
+  openModal();
+}
+
+// Cerrar modal si se hace clic fuera del contenido
+window.addEventListener('click', function(event) {
+  const modal = document.getElementById('userEditModal');
+  if (event.target === modal) {
+    closeModal();
+  }
+});
+
+// Función para mostrar/ocultar contraseña en el modal
+function togglePasswordVisibility(inputId) {
+  const passwordInput = document.getElementById(inputId);
+  const iconId = inputId === 'edit_contrasenia' ? 'edit-password-toggle-icon' : 'password-toggle-icon';
+  const icon = document.getElementById(iconId);
+  
+  if (passwordInput.type === 'password') {
+    passwordInput.type = 'text';
+    icon.classList.remove('fa-eye');
+    icon.classList.add('fa-eye-slash');
+  } else {
+    passwordInput.type = 'password';
+    icon.classList.remove('fa-eye-slash');
+    icon.classList.add('fa-eye');
+  }
+}
   </script>
   {% endblock %}

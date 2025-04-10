@@ -89,7 +89,7 @@
         </div>
         <h3 class="text-xl font-bold text-cookie-800">Mermas Totales</h3>
         <p class="text-3xl font-kavoon text-cookie-700 mt-2">
-          {{ (total_galletas + total_insumos)|int }}
+          {{ (total_galletas_registros + total_insumos)|int }}
         </p>
         <p class="text-cookie-500 mt-1">Registros de mermas</p>
       </div>
@@ -197,7 +197,7 @@
                 {% else %} - {% endif %}
               </td>
               <td class="px-4 py-3">
-                {{ merma.fecha_registro.strftime('%d/%m/%Y') }}
+                {{ merma.created_at.strftime('%d/%m/%Y') }}
               </td>
               <td class="px-4 py-3">{{ merma.motivo }}</td>
             </tr>

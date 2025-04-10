@@ -10,6 +10,8 @@ from flask import current_app
 from werkzeug.utils import secure_filename
 import os
 from flask import jsonify
+from flask_login import login_required
+from auth import verificar_roles
 
 recetas_bp = Blueprint('recetas', __name__, url_prefix='/recetas')
 
@@ -59,6 +61,8 @@ def calcular_precio_galleta(id_galleta):
 
 
 @recetas_bp.route("/", methods=['GET', 'POST'])
+@login_required
+@verificar_roles('admin','produccion')
 def receta():
     form = RecetaForm()
     form.cargar_opciones()
@@ -74,6 +78,8 @@ def receta():
 
 
 @recetas_bp.route('/insertar_receta', methods=['GET', 'POST'])
+@login_required
+@verificar_roles('admin','produccion')
 def insertar_receta():
     form = RecetaForm()
     form.cargar_opciones()
@@ -146,6 +152,8 @@ def insertar_receta():
 
 
 @recetas_bp.route('/modificar/<int:id_receta>', methods=['GET', 'POST'])
+@login_required
+@verificar_roles('admin','produccion')
 def modificar_receta(id_receta):
     receta = Receta.query.get_or_404(id_receta)
     galleta = Galleta.query.get_or_404(receta.id_galleta)

@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, redirect, url_for, flash, request,
 from flask_login import login_required, current_user
 from datetime import datetime
 from sqlalchemy import func
-from models import db, Produccion, ProduccionInsumo, Merma, LoteGalleta, LoteInsumo, Receta, Galleta, Insumo
+from models import db, Produccion, ProduccionInsumo, Merma, LoteGalleta, LoteInsumo, Receta, Galleta, Insumo, Venta, DetalleVenta
 from produccion.forms import (ProduccionForm, MermaInsumoForm,
                               MermaGalletaForm, FinalizarProduccionForm, BuscarProduccionForm)
 from collections import defaultdict
@@ -152,11 +152,15 @@ def listar_mermas():
     total_insumos = len(db.session.query(Merma.id_merma).filter(
         Merma.id_lote_insumo != None).all())
 
+    total_galletas_registros = len(db.session.query(Merma.cantidad).filter(
+        Merma.id_lote_insumo != None).all())
+
     return render_template('mermas.html',
                            mermas=mermas,
                            mermas_por_tipo=mermas_por_tipo,
                            total_galletas=total_galletas,
-                           total_insumos=total_insumos)
+                           total_insumos=total_insumos,
+                           total_galletas_registros=total_galletas_registros)
 
 
 @produccion_bp.route('/finalizar/<int:id>', methods=['POST'])
@@ -236,8 +240,64 @@ def finalizar(id):
 
     db.session.commit()
 
+    # NUEVO: Actualizar pedidos relacionados con esta producción
+    actualizar_pedidos_post_produccion(produccion)
+
     flash('Producción finalizada correctamente. Se han utilizado los insumos y se ha creado el lote de galletas.', 'success')
     return redirect(url_for('produccion.detalle', id=id))
+
+
+def actualizar_pedidos_post_produccion(produccion):
+    """
+    Actualiza los pedidos relacionados después de finalizar una producción.
+    Busca pedidos que podrían estar esperando esta producción y 
+    actualiza su estado si todas las galletas ya están disponibles.
+    """
+    # Determinar un rango de tiempo para buscar pedidos relacionados
+    tiempo_produccion = produccion.created_at
+    tiempo_inicio = tiempo_produccion - timedelta(minutes=5)
+    tiempo_fin = tiempo_produccion + timedelta(minutes=5)
+
+    # Buscar pedidos en producción creados cerca del momento de la producción
+    pedidos_potenciales = Venta.query.filter(
+        Venta.estado == 'en_produccion',
+        Venta.created_at >= tiempo_inicio,
+        Venta.created_at <= tiempo_fin
+    ).all()
+
+    for pedido in pedidos_potenciales:
+        # Verificar si todas las galletas del pedido están disponibles
+        detalles = DetalleVenta.query.filter_by(id_venta=pedido.id_venta).all()
+        todas_disponibles = True
+
+        for detalle in detalles:
+            galleta = Galleta.query.get(detalle.id_galleta)
+
+            # Calcular cantidad real según tipo de venta
+            if detalle.tipo_venta == "unidad":
+                galletas_reales = detalle.cantidad
+            elif detalle.tipo_venta == "paquete_10":
+                galletas_reales = detalle.cantidad * 10
+            elif detalle.tipo_venta == "paquete_20":
+                galletas_reales = detalle.cantidad * 20
+            elif detalle.tipo_venta == "paquete_30":
+                galletas_reales = detalle.cantidad * 30
+            elif detalle.tipo_venta == "docena":
+                galletas_reales = detalle.cantidad * 12
+            else:
+                galletas_reales = detalle.cantidad
+
+            # Si no hay suficientes galletas disponibles, este pedido aún no está listo
+            if galleta.cantidad_galletas < galletas_reales:
+                todas_disponibles = False
+                break
+
+        # Si todas las galletas están disponibles, marcar como listo para recoger
+        if todas_disponibles:
+            pedido.estado = 'listo_para_recoger'
+            db.session.commit()
+
+            # También podríamos enviar una notificación al cliente aquí
 
 
 @produccion_bp.route('/merma/insumo', methods=['GET', 'POST'])
@@ -265,10 +325,10 @@ def merma_insumo():
                 nueva_merma = Merma(
                     tipo_merma=form.tipo_merma.data,
                     cantidad=form.cantidad.data,
-                    fecha_registro=form.fecha_registro.data,
                     id_produccion=form.produccion.data.id_produccion if form.produccion.data else None,
                     id_lote_insumo=lote_insumo.id_lote_insumo,
                     motivo=form.motivo.data
+                    # Eliminada la línea: fecha_registro=form.fecha_registro.data
                 )
                 print("Merma creada en memoria:", vars(nueva_merma))
 
@@ -309,10 +369,10 @@ def merma_galleta():
         nueva_merma = Merma(
             tipo_merma=form.tipo_merma.data,
             cantidad=form.cantidad.data,
-            fecha_registro=form.fecha_registro.data,
             id_produccion=form.produccion.data.id_produccion if form.produccion.data else None,
             id_lote_galleta=lote_galleta.id_lote_galleta,
             motivo=form.motivo.data
+            # Eliminada la línea: fecha_registro=form.fecha_registro.data
         )
 
         lote_galleta.cantidad_disponible -= form.cantidad.data
@@ -369,10 +429,47 @@ def calcular_costo():
 @verificar_roles('admin', 'produccion')
 @login_required
 def estadisticas():
-    estatus_count = db.session.query(
+    # Consulta original - NO la modificamos
+    estatus_count_raw = db.session.query(
         Produccion.estatus, func.count(Produccion.id_produccion)
     ).group_by(Produccion.estatus).all()
 
+    # Convertimos a formato más manejable y calculamos total
+    estatus_count = []
+    total_producciones = 0
+    completadas = 0
+    en_proceso = 0
+    programadas = 0
+    canceladas = 0
+
+    # Procesamos cada estatus
+    for estatus, count in estatus_count_raw:
+        # Sumar al total
+        total_producciones += count
+
+        # Guardar valores específicos
+        if estatus == 'completada':
+            completadas = count
+        elif estatus == 'en_proceso':
+            en_proceso = count
+        elif estatus == 'programada':
+            programadas = count
+        elif estatus == 'cancelada':
+            canceladas = count
+
+        # Agregar a la lista procesada
+        estatus_count.append((estatus, count))
+
+    # Calculamos porcentajes
+    estatus_porcentajes = []
+    for estatus, count in estatus_count:
+        if total_producciones > 0:
+            porcentaje = round((count / total_producciones) * 100, 1)
+        else:
+            porcentaje = 0
+        estatus_porcentajes.append((estatus, count, porcentaje))
+
+    # El resto de consultas no las modificamos
     top_galletas = db.session.query(
         Galleta.nombre, func.sum(LoteGalleta.cantidad_inicial).label('total')
     ).join(LoteGalleta).join(Produccion, Produccion.id_lote_galleta == LoteGalleta.id_lote_galleta)\
@@ -392,8 +489,23 @@ def estadisticas():
         Merma.tipo_merma, func.sum(Merma.cantidad).label('total')
     ).group_by(Merma.tipo_merma).all()
 
+    # Imprimimos para debug
+    print("DATOS PROCESADOS:")
+    print(f"Total producciones: {total_producciones}")
+    print(f"Completadas: {completadas}")
+    print(f"En proceso: {en_proceso}")
+    print(f"Programadas: {programadas}")
+    print(f"Canceladas: {canceladas}")
+    print(f"Estatus con porcentajes: {estatus_porcentajes}")
+
     return render_template('estadisticas.html',
                            estatus_count=estatus_count,
+                           estatus_porcentajes=estatus_porcentajes,
                            top_galletas=top_galletas,
                            top_insumos=top_insumos,
-                           mermas=mermas)
+                           mermas=mermas,
+                           total_producciones=total_producciones,
+                           completadas=completadas,
+                           en_proceso=en_proceso,
+                           programadas=programadas,
+                           canceladas=canceladas)

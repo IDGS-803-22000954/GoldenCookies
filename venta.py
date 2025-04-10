@@ -1,10 +1,12 @@
 from flask import Flask, render_template, request, redirect, url_for, session, Blueprint, make_response, jsonify, flash
 from flask_login import UserMixin, login_user, LoginManager, login_required, logout_user, current_user
 import forms_ventas
-from models import db, Venta, DetalleVenta, usuario, Galleta
+from models import db, Venta, DetalleVenta, usuario, Galleta, Receta, Produccion
 from datetime import date, datetime
 from auth import verificar_roles
 from sqlalchemy import or_
+from datetime import timedelta
+
 
 venta = Blueprint('venta', __name__)
 
@@ -155,7 +157,7 @@ def realizar_venta():
                 id_usuario=session.get('id_usuario'),
                 created_at=datetime.now(),
                 fecha_recogida=date.today(),
-                pagado=1
+                pagado=0
             )
             db.session.add(nueva_venta)
             db.session.flush()
@@ -202,7 +204,7 @@ def realizar_venta():
 
 
 @venta.route("/venta_pedido", methods=['GET', 'POST'])
-@verificar_roles('admin', 'ventas', 'cliente')
+@verificar_roles('admin', 'ventas')
 @login_required
 def venta_pedido():
     pedidos = db.session.query(Venta).filter(
@@ -216,15 +218,16 @@ def venta_pedido():
 def realizar_venta_pedido(id_venta):
     venta = db.session.query(Venta).filter_by(id_venta=id_venta).first()
     if request.method == 'POST':
-        venta.estado = 'lista'
-        venta.fecha_recogida = date.today()
-        venta.pagado = 1
+        # Lista para almacenar los productos que necesitan producción
+        productos_pendientes = []
+        # Lista para almacenar las producciones creadas
+        producciones_creadas = []
 
         detalles = db.session.query(
             DetalleVenta).filter_by(id_venta=id_venta).all()
         try:
             for detalle in detalles:
-                # Find the corresponding Galleta
+                # Encontrar la galleta correspondiente
                 galleta = db.session.query(Galleta).filter_by(
                     id_galleta=detalle.id_galleta).first()
 
@@ -246,19 +249,75 @@ def realizar_venta_pedido(id_venta):
                     else:
                         galletas_reales = cantidad_solicitada  # Caso por defecto
 
-                    # Deduct the cantidad from galleta stock
-                    if galleta.cantidad_galletas >= galletas_reales:
-                        galleta.cantidad_galletas -= galletas_reales
-                    else:
-                        flash(
-                            f"No hay suficientes galletas disponibles para '{galleta.nombre}'. Necesarias: {galletas_reales}", 'warning')
-                        db.session.rollback()
-                        return redirect(url_for('venta.venta_pedido'))
+                    # Verificamos si hay suficiente stock, si no hay, añadimos a la lista de pendientes
+                    if galleta.cantidad_galletas < galletas_reales:
+                        productos_pendientes.append({
+                            'galleta': galleta,
+                            'cantidad_necesaria': galletas_reales,
+                            'cantidad_disponible': galleta.cantidad_galletas,
+                            'cantidad_faltante': galletas_reales - galleta.cantidad_galletas
+                        })
+
+                    # Actualizamos el stock (puede quedar en negativo temporalmente)
+                    galleta.cantidad_galletas -= galletas_reales
                 else:
                     flash(
                         f"La galleta referenciada en el detalle de venta no existe.", 'danger')
                     db.session.rollback()
                     return redirect(url_for('venta.venta_pedido'))
+
+            # Si hay productos pendientes, generamos órdenes de producción automáticas
+            if productos_pendientes:
+                for producto in productos_pendientes:
+                    galleta = producto['galleta']
+                    cantidad_faltante = producto['cantidad_faltante']
+
+                    # Buscar la receta de la galleta
+                    receta = db.session.query(Receta).filter_by(
+                        id_galleta=galleta.id_galleta).first()
+
+                    if receta:
+                        # Calcular cuántas producciones necesitamos
+                        cantidad_por_produccion = receta.cantidad_produccion
+                        producciones_necesarias = (
+                            cantidad_faltante + cantidad_por_produccion - 1) // cantidad_por_produccion
+
+                        for _ in range(producciones_necesarias):
+                            nueva_produccion = Produccion(
+                                estatus='programada',
+                                id_usuario=current_user.id_usuario,  # Usuario que procesa el pedido
+                                id_receta=receta.id_receta
+                            )
+                            db.session.add(nueva_produccion)
+                            db.session.flush()  # Para obtener el ID generado
+
+                            producciones_creadas.append({
+                                'id': nueva_produccion.id_produccion,
+                                'galleta': galleta.nombre
+                            })
+
+                # Calcular tiempo aproximado de producción
+                tiempo_espera_maximo = max([galleta.tiempo_estimado_fabricacion(p['cantidad_faltante'])
+                                           for p in productos_pendientes]) if productos_pendientes else 0
+
+                # Actualizar la fecha de recogida si hay producciones
+                if tiempo_espera_maximo > 0:
+                    venta.fecha_recogida = datetime.now() + timedelta(days=tiempo_espera_maximo)
+
+                # Actualizar el estado del pedido
+                venta.estado = 'en_produccion'
+
+                # Construir mensaje con los productos pendientes
+                productos_str = ", ".join(
+                    [f"{p['galleta'].nombre} ({p['cantidad_necesaria']} necesarias, {p['cantidad_disponible']} disponibles)" for p in productos_pendientes])
+                flash(
+                    f'Algunos productos requieren producción: {productos_str}. El pedido ha sido procesado y se han creado {len(producciones_creadas)} órdenes de producción automáticamente.', 'warning')
+            else:
+                # Si no hay productos pendientes, marcar como listo para recoger
+                venta.estado = 'listo_para_recoger'
+                venta.fecha_recogida = date.today()
+
+            venta.pagado = 1
 
             # Commit the transaction
             db.session.commit()
@@ -329,3 +388,20 @@ def ganancias():
             total_cantidad=0,
             fecha_seleccionada=date.today()
         )
+
+
+@venta.route("/entregar_pedido/<int:id_venta>", methods=['POST'])
+@verificar_roles('admin', 'ventas')
+@login_required
+def entregar_pedido(id_venta):
+    """Marca un pedido como entregado cuando el cliente lo recoge"""
+    venta = Venta.query.get_or_404(id_venta)
+
+    if venta.estado != 'listo_para_recoger':
+        flash('Solo se pueden entregar pedidos que estén listos para recoger', 'warning')
+    else:
+        venta.estado = 'entregado'
+        db.session.commit()
+        flash('Pedido entregado correctamente al cliente', 'success')
+
+    return redirect(url_for('venta.venta_pedido'))

@@ -102,7 +102,7 @@
         <a href="#" class="flex items-center justify-center my-6 p-2">
           <div class="logo-container h-28 w-28">
             <img
-              src="../static/img/logo.webp"
+              src="{{ url_for('static', filename='img/logo.webp') }}"
               class="logo-image h-full w-full rounded-full"
               alt="Logo Golden Cookies"
             />
@@ -127,15 +127,6 @@
         <!-- Menú de navegación - Condicional según el rol -->
         <ul class="space-y-2 font-medium">
           <!-- Link de inicio - Visible para todos los roles -->
-          <li>
-            <a
-              href="{{ url_for('menu') }}"
-              class="flex items-center p-2 text-white rounded-lg hover:bg-cookie-500"
-            >
-              <i class="fas fa-home text-cookie-200 w-5 h-5 text-center"></i>
-              <span class="ml-3">Inicio</span>
-            </a>
-          </li>
 
           <!-- Sección Admin -->
           {% if current_user.rol.lower() == 'admin' %}
@@ -146,6 +137,15 @@
             >
               <i class="fas fa-boxes text-cookie-200 w-5 h-5 text-center"></i>
               <span class="ml-3">Insumos</span>
+            </a>
+          </li>
+          <li>
+            <a
+              href="{{ url_for('compras_bp.listar_compras') }}"
+              class="flex items-center p-2 text-white rounded-lg hover:bg-cookie-500"
+            >
+              <i class="fas fa-shop text-cookie-200 w-5 h-5 text-center"></i>
+              <span class="ml-3">Compras</span>
             </a>
           </li>
           <li>
@@ -213,7 +213,7 @@
           {% if current_user.rol.lower() == 'cliente' %}
           <li>
             <a
-              href="{{ url_for('venta.venta_pedido') }}"
+              href="{{ url_for('catalogo.mis_pedidos') }}"
               class="flex items-center p-2 text-white rounded-lg hover:bg-cookie-500"
             >
               <i

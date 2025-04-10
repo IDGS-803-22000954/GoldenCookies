@@ -1,0 +1,433 @@
+{% extends "layout.html" %} {% block title %}Mis Pedidos - Golden Cookies{%
+endblock %} {% block main %}
+<div class="md:ml-64 flex flex-col min-h-screen">
+  <!-- Barra superior con toggle para sidebar -->
+  <header class="bg-cookie-700 p-4 text-white flex items-center md:hidden">
+    <button
+      onclick="toggleSidebar()"
+      class="text-white focus:outline-none mr-4"
+    >
+      <i class="fas fa-bars text-xl"></i>
+    </button>
+    <h1 class="text-xl font-kavoon">Golden Cookies</h1>
+  </header>
+
+  <!-- Contenido principal -->
+  <main class="flex-grow p-4 md:p-8">
+    <!-- Título de la página -->
+    <h1 class="text-3xl font-kavoon text-cookie-800 mb-6">Mis Pedidos</h1>
+
+    <!-- Navegación de migas de pan -->
+    <nav class="flex mb-6" aria-label="Breadcrumb">
+      <ol class="inline-flex items-center space-x-1 md:space-x-3">
+        <li class="inline-flex items-center">
+          <a
+            href="{{ url_for('catalogo.index') }}"
+            class="text-cookie-600 hover:text-cookie-800"
+          >
+            <i class="fas fa-home mr-2"></i>Catálogo
+          </a>
+        </li>
+        <li>
+          <div class="flex items-center">
+            <i class="fas fa-chevron-right text-gray-400 mx-2"></i>
+            <span class="text-gray-500">Mis Pedidos</span>
+          </div>
+        </li>
+      </ol>
+    </nav>
+
+    <!-- Mensajes flash -->
+    {% with messages = get_flashed_messages(with_categories=true) %} {% if
+    messages %} {% for category, message in messages %}
+    <div
+      class="mb-6 p-4 rounded-lg {{ 'bg-green-100 text-green-800' if category == 'success' else 'bg-red-100 text-red-800' if category == 'error' else 'bg-blue-100 text-blue-800' }}"
+    >
+      <p class="flex items-center">
+        <i
+          class="fas {{ 'fa-check-circle' if category == 'success' else 'fa-exclamation-circle' if category == 'error' else 'fa-info-circle' }} mr-2"
+        ></i>
+        {{ message }}
+      </p>
+    </div>
+    {% endfor %} {% endif %} {% endwith %}
+
+    <!-- Lista de pedidos -->
+    {% if pedidos|length > 0 %}
+    <div class="bg-white rounded-lg shadow-md overflow-hidden mb-6">
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-cookie-200">
+          <thead class="bg-cookie-100">
+            <tr>
+              <th
+                scope="col"
+                class="px-6 py-3 text-left text-xs font-medium text-cookie-800 uppercase tracking-wider"
+              >
+                Nº Pedido
+              </th>
+              <th
+                scope="col"
+                class="px-6 py-3 text-left text-xs font-medium text-cookie-800 uppercase tracking-wider"
+              >
+                Fecha Pedido
+              </th>
+              <th
+                scope="col"
+                class="px-6 py-3 text-left text-xs font-medium text-cookie-800 uppercase tracking-wider"
+              >
+                Fecha Recogida
+              </th>
+              <th
+                scope="col"
+                class="px-6 py-3 text-left text-xs font-medium text-cookie-800 uppercase tracking-wider"
+              >
+                Total
+              </th>
+              <th
+                scope="col"
+                class="px-6 py-3 text-left text-xs font-medium text-cookie-800 uppercase tracking-wider"
+              >
+                Estado
+              </th>
+              <th
+                scope="col"
+                class="px-6 py-3 text-right text-xs font-medium text-cookie-800 uppercase tracking-wider"
+              >
+                Acciones
+              </th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-cookie-100">
+            {% for pedido in pedidos %}
+            <tr class="hover:bg-cookie-50">
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm font-medium text-gray-900">
+                  #{{ pedido.id_venta }}
+                </div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-900">
+                  {{ pedido.created_at.strftime('%d/%m/%Y') }}
+                </div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-900">
+                  {{ pedido.fecha_recogida.strftime('%d/%m/%Y') }} {% if
+                  pedido.fecha_recogida.date() > pedido.created_at.date() %}
+                  <span
+                    class="ml-1 px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full"
+                  >
+                    Fabricación en curso
+                  </span>
+                  {% endif %}
+                </div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-900">${{ pedido.total }}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span
+                  class="px-2 py-1 text-xs font-medium rounded-full {% if pedido.estado == 'pendiente' %}bg-yellow-100 text-yellow-800{% elif pedido.estado == 'lista' %}bg-green-100 text-green-800{% else %}bg-gray-100 text-gray-800{% endif %}"
+                >
+                  {% if pedido.estado == 'pendiente' %} {% if
+                  pedido.fecha_recogida.date() > pedido.created_at.date() %} En
+                  fabricación {% else %} Pendiente {% endif %} {% elif
+                  pedido.estado == 'lista' %} Listo para recoger {% else %} {{
+                  pedido.estado }} {% endif %}
+                </span>
+              </td>
+              <td
+                class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium"
+              >
+                <button
+                  type="button"
+                  onclick="abrirModal('modal-{{ pedido.id_venta }}')"
+                  class="text-cookie-600 hover:text-cookie-900"
+                >
+                  <i class="fas fa-eye mr-1"></i> Ver detalles
+                </button>
+              </td>
+            </tr>
+
+            <!-- Modal para detalles del pedido -->
+            <div
+              id="modal-{{ pedido.id_venta }}"
+              class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center"
+            >
+              <div
+                class="bg-white rounded-lg shadow-xl max-w-2xl w-full m-4 max-h-full overflow-y-auto"
+              >
+                <div class="p-6">
+                  <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-kavoon text-cookie-800">
+                      Detalles del Pedido #{{ pedido.id_venta }}
+                    </h3>
+                    <button
+                      type="button"
+                      onclick="cerrarModal('modal-{{ pedido.id_venta }}')"
+                      class="text-cookie-600 hover:text-cookie-800"
+                    >
+                      <i class="fas fa-times"></i>
+                    </button>
+                  </div>
+
+                  <div class="mb-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <p class="mb-2">
+                        <strong>Fecha de pedido:</strong><br />{{
+                        pedido.created_at.strftime('%d/%m/%Y %H:%M') }}
+                      </p>
+                      <p class="mb-2">
+                        <strong>Estado:</strong><br />
+                        <span
+                          class="px-2 py-1 text-xs font-medium rounded-full {% if pedido.estado == 'pendiente' %}bg-yellow-100 text-yellow-800{% elif pedido.estado == 'lista' %}bg-green-100 text-green-800{% else %}bg-gray-100 text-gray-800{% endif %}"
+                        >
+                          {% if pedido.estado == 'pendiente' %} {% if
+                          pedido.fecha_recogida.date() >
+                          pedido.created_at.date() %} En fabricación {% else %}
+                          Pendiente {% endif %} {% elif pedido.estado == 'lista'
+                          %} Listo para recoger {% else %} {{ pedido.estado }}
+                          {% endif %}
+                        </span>
+                      </p>
+                    </div>
+                    <div>
+                      <p class="mb-2">
+                        <strong>Fecha de recogida:</strong><br />{{
+                        pedido.fecha_recogida.strftime('%d/%m/%Y') }}
+                      </p>
+                      <p class="mb-2">
+                        <strong>Total:</strong><br />${{ pedido.total }}
+                      </p>
+                    </div>
+                  </div>
+
+                  {% if pedido.fecha_recogida.date() > pedido.created_at.date()
+                  %}
+                  <div
+                    class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg"
+                  >
+                    <h4
+                      class="font-semibold text-blue-800 mb-2 flex items-center"
+                    >
+                      <i class="fas fa-info-circle mr-2"></i> Información de
+                      producción
+                    </h4>
+                    <p class="text-blue-700">
+                      Este pedido incluye galletas que están siendo fabricadas
+                      especialmente para ti. Estará listo para recoger a partir
+                      del
+                      <strong
+                        >{{ pedido.fecha_recogida.strftime('%d/%m/%Y')
+                        }}</strong
+                      >.
+                    </p>
+                    <p class="text-blue-700 mt-2">
+                      Nos aseguramos de que todas tus galletas sean preparadas
+                      con los mejores ingredientes y con el mayor cuidado.
+                    </p>
+                  </div>
+                  {% endif %}
+
+                  <h4 class="font-semibold text-cookie-700 mb-2">Productos:</h4>
+                  <div class="overflow-x-auto">
+                    <table class="w-full text-sm mb-6">
+                      <thead class="text-xs uppercase bg-cookie-100">
+                        <tr>
+                          <th class="px-3 py-2 text-left">Producto</th>
+                          <th class="px-3 py-2 text-left">Tipo</th>
+                          <th class="px-3 py-2 text-right">Cantidad</th>
+                          <th class="px-3 py-2 text-right">Precio</th>
+                          <th class="px-3 py-2 text-right">Subtotal</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for detalle in pedido.detalle_venta %}
+                        <tr class="border-b border-cookie-200">
+                          <td class="px-3 py-2">
+                            <div class="flex items-center">
+                              {% if detalle.galleta.imagen %}
+                              <div
+                                class="h-8 w-8 flex-shrink-0 mr-3 bg-cookie-100 rounded-full overflow-hidden"
+                              >
+                                <img
+                                  src="{{ url_for('static', filename='uploads/' + detalle.galleta.imagen) }}"
+                                  alt="{{ detalle.galleta.nombre }}"
+                                  class="h-full w-full object-cover"
+                                />
+                              </div>
+                              {% else %}
+                              <div
+                                class="h-8 w-8 flex-shrink-0 mr-3 bg-cookie-100 rounded-full flex items-center justify-center"
+                              >
+                                <i class="fas fa-cookie text-cookie-400"></i>
+                              </div>
+                              {% endif %} {{ detalle.galleta.nombre }}
+                            </div>
+                          </td>
+                          <td class="px-3 py-2">
+                            {% if detalle.tipo_venta == 'unidad' %} Unidad {%
+                            elif detalle.tipo_venta == 'paquete_10' %} Paquete
+                            x10 {% elif detalle.tipo_venta == 'paquete_20' %}
+                            Paquete x20 {% elif detalle.tipo_venta ==
+                            'paquete_30' %} Paquete x30 {% elif
+                            detalle.tipo_venta == 'docena' %} Docena {% else %}
+                            {{ detalle.tipo_venta }} {% endif %}
+                          </td>
+                          <td class="px-3 py-2 text-right">
+                            {{ detalle.cantidad }}
+                          </td>
+                          <td class="px-3 py-2 text-right">
+                            ${{ detalle.precio_unitario }}
+                          </td>
+                          <td class="px-3 py-2 text-right font-medium">
+                            ${{ (detalle.precio_unitario *
+                            detalle.cantidad)|round(2) }}
+                          </td>
+                        </tr>
+                        {% endfor %}
+                      </tbody>
+                      <tfoot class="bg-cookie-50">
+                        <tr>
+                          <td
+                            colspan="4"
+                            class="px-3 py-2 text-right font-bold"
+                          >
+                            Total:
+                          </td>
+                          <td class="px-3 py-2 text-right font-bold">
+                            ${{ pedido.total }}
+                          </td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+
+                  <div
+                    class="bg-cookie-50 p-4 rounded-lg border border-cookie-200"
+                  >
+                    <h4
+                      class="font-semibold text-cookie-700 mb-2 flex items-center"
+                    >
+                      <i class="fas fa-map-marker-alt mr-2"></i> Información de
+                      recogida
+                    </h4>
+                    <p class="text-gray-700">
+                      Puedes recoger tu pedido en nuestra tienda ubicada en Av.
+                      Principal #123, Ciudad.
+                    </p>
+                    <p class="text-gray-700 mt-1">
+                      Horario de atención: Lunes a Sábado de 9:00 AM a 7:00 PM.
+                    </p>
+                    <p class="text-gray-700 mt-1">
+                      <strong>Importante:</strong> Presenta tu número de pedido
+                      (#{{ pedido.id_venta }}) al momento de recoger.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% else %}
+    <!-- Sin pedidos -->
+    <div class="text-center py-12 bg-white rounded-lg shadow-md">
+      <div class="mb-6">
+        <i class="fas fa-clipboard-list text-6xl text-cookie-300"></i>
+      </div>
+      <h2 class="text-2xl font-bold text-cookie-800 mb-4">
+        No tienes pedidos aún
+      </h2>
+      <p class="text-gray-600 mb-8 max-w-md mx-auto">
+        No has realizado ningún pedido. ¡Explora nuestro catálogo y descubre
+        nuestras deliciosas opciones!
+      </p>
+      <a
+        href="{{ url_for('catalogo.index') }}"
+        class="inline-flex items-center px-6 py-3 bg-cookie-600 text-white rounded-lg hover:bg-cookie-700 focus:outline-none transition"
+      >
+        <i class="fas fa-cookie-bite mr-2"></i>
+        Ver catálogo
+      </a>
+    </div>
+    {% endif %}
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-cookie-800 text-white p-6 md:ml-0">
+    <div class="max-w-7xl mx-auto">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div>
+          <h3 class="text-xl font-kavoon mb-4">Golden Cookies</h3>
+          <p class="text-cookie-100">
+            Las mejores galletas artesanales hechas con ingredientes de calidad
+            y mucho amor.
+          </p>
+        </div>
+        <div>
+          <h3 class="text-lg font-bold mb-4">Contacto</h3>
+          <p class="flex items-center mb-2">
+            <i class="fas fa-map-marker-alt mr-2 text-cookie-300"></i> Av.
+            Principal #123, Ciudad
+          </p>
+          <p class="flex items-center mb-2">
+            <i class="fas fa-phone mr-2 text-cookie-300"></i> (123) 456-7890
+          </p>
+          <p class="flex items-center">
+            <i class="fas fa-envelope mr-2 text-cookie-300"></i>
+            info@goldencookies.com
+          </p>
+        </div>
+        <div>
+          <h3 class="text-lg font-bold mb-4">Síguenos</h3>
+          <div class="flex space-x-4">
+            <a href="#" class="text-white hover:text-cookie-300 transition"
+              ><i class="fab fa-facebook-f text-2xl"></i
+            ></a>
+            <a href="#" class="text-white hover:text-cookie-300 transition"
+              ><i class="fab fa-instagram text-2xl"></i
+            ></a>
+            <a href="#" class="text-white hover:text-cookie-300 transition"
+              ><i class="fab fa-twitter text-2xl"></i
+            ></a>
+          </div>
+        </div>
+      </div>
+      <div
+        class="border-t border-cookie-600 mt-6 pt-6 text-center text-cookie-300"
+      >
+        <p>&copy; 2025 Golden Cookies. Todos los derechos reservados.</p>
+      </div>
+    </div>
+  </footer>
+</div>
+
+<!-- Scripts para modales -->
+<script>
+  function abrirModal(id) {
+    document.getElementById(id).classList.remove("hidden");
+    document.body.style.overflow = "hidden";
+  }
+
+  function cerrarModal(id) {
+    document.getElementById(id).classList.add("hidden");
+    document.body.style.overflow = "auto";
+  }
+
+  // Cerrar modal con ESC
+  document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape") {
+      const modales = document.querySelectorAll('[id^="modal-"]');
+      modales.forEach((modal) => {
+        if (!modal.classList.contains("hidden")) {
+          modal.classList.add("hidden");
+          document.body.style.overflow = "auto";
+        }
+      });
+    }
+  });
+</script>
+{% endblock %}

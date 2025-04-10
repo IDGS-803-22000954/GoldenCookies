@@ -64,11 +64,6 @@ class MermaInsumoForm(FlaskForm):
     cantidad = FloatField('Cantidad', validators=[
                           DataRequired(), NumberRange(min=0.01)])
 
-    fecha_registro = DateTimeField('Fecha de Registro',
-                                   default=datetime.now,
-                                   format='%Y-%m-%dT%H:%M',
-                                   validators=[DataRequired()])
-
     produccion = QuerySelectField('Producción Relacionada',
                                   query_factory=get_producciones,
                                   get_label=lambda p: f"#{p.id_produccion} - {p.receta.galleta.nombre}",
@@ -101,11 +96,6 @@ class MermaGalletaForm(FlaskForm):
 
     cantidad = IntegerField('Cantidad', validators=[
                             DataRequired(), NumberRange(min=1)])
-
-    fecha_registro = DateTimeField('Fecha de Registro',
-                                   default=datetime.now,
-                                   format='%Y-%m-%dT%H:%M',
-                                   validators=[DataRequired()])
 
     produccion = QuerySelectField('Producción Relacionada',
                                   query_factory=get_producciones,
