@@ -1,9 +1,8 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, SelectField, DateField, TextAreaField, FloatField, IntegerField, HiddenField, DateTimeField, BooleanField, SubmitField
 from wtforms.validators import DataRequired, Optional, NumberRange, Length, ValidationError
-from flask_wtf.file import FileField, FileRequired, FileAllowed
 from wtforms_sqlalchemy.fields import QuerySelectField
-from models import usuario, Receta, LoteGalleta, LoteInsumo, Produccion
+from models import usuario, Receta, LoteGalleta, LoteInsumo, Produccion, Insumo, Galleta
 from datetime import datetime
 
 
@@ -15,15 +14,22 @@ def get_recetas():
     return Receta.query.all()
 
 
-def get_lotes_galleta():
-    return LoteGalleta.query.filter(LoteGalleta.cantidad_disponible > 0).all()
-
-
 def get_producciones():
     return Produccion.query.filter(Produccion.estatus != 'cancelada').all()
 
 
+def get_insumos_disponibles():
+    # Obtenemos insumos con existencia mayor a 0
+    return Insumo.query.filter(Insumo.cantidad_insumo > 0).all()
+
+
+def get_galletas_disponibles():
+    # Obtenemos galletas con existencia mayor a 0
+    return Galleta.query.filter(Galleta.cantidad_galletas > 0).all()
+
+
 class ProduccionForm(FlaskForm):
+    # Este formulario se mantiene igual
     receta = QuerySelectField('Receta',
                               query_factory=get_recetas,
                               get_label=lambda r: f"{r.galleta.nombre} - {r.cantidad_produccion} unidades",
@@ -55,14 +61,19 @@ class MermaInsumoForm(FlaskForm):
                              ],
                              validators=[DataRequired()])
 
-    lote_insumo = QuerySelectField('Lote de Insumo',
-                                   query_factory=lambda: LoteInsumo.query.filter(
-                                       LoteInsumo.cantidad_disponible > 0).all(),
-                                   get_label=lambda li: f"{li.insumo.nombre} - Lote #{li.id_lote_insumo} ({li.cantidad_disponible} {li.insumo.unidad_medida} disponibles)",
-                                   validators=[DataRequired()])
+    # Cambiamos de lote_insumo a insumo directamente
+    insumo = QuerySelectField('Insumo',
+                              query_factory=get_insumos_disponibles,
+                              get_label=lambda i: f"{i.nombre} ({i.cantidad_insumo} {i.unidad_medida})",
+                              validators=[DataRequired()])
+
+    # Agregamos un campo para seleccionar el lote después
+    lote_insumo = SelectField('Lote (opcional)',
+                              choices=[],
+                              validators=[Optional()])
 
     cantidad = FloatField('Cantidad', validators=[
-                          DataRequired(), NumberRange(min=0.01)])
+        DataRequired(), NumberRange(min=0.01)])
 
     produccion = QuerySelectField('Producción Relacionada',
                                   query_factory=get_producciones,
@@ -89,13 +100,19 @@ class MermaGalletaForm(FlaskForm):
                              ],
                              validators=[DataRequired()])
 
-    lote_galleta = QuerySelectField('Lote de Galleta',
-                                    query_factory=get_lotes_galleta,
-                                    get_label=lambda lg: f"{lg.galleta.nombre} - Lote #{lg.id_lote_galleta} ({lg.cantidad_disponible} unidades)",
-                                    validators=[DataRequired()])
+    # Cambiamos de lote_galleta a galleta directamente
+    galleta = QuerySelectField('Galleta',
+                               query_factory=get_galletas_disponibles,
+                               get_label=lambda g: f"{g.nombre} ({g.cantidad_galletas})",
+                               validators=[DataRequired()])
+
+    # Agregamos un campo para seleccionar el lote después
+    lote_galleta = SelectField('Lote (opcional)',
+                               choices=[],
+                               validators=[Optional()])
 
     cantidad = IntegerField('Cantidad', validators=[
-                            DataRequired(), NumberRange(min=1)])
+        DataRequired(), NumberRange(min=1)])
 
     produccion = QuerySelectField('Producción Relacionada',
                                   query_factory=get_producciones,

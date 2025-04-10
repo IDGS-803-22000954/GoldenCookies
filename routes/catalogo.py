@@ -145,7 +145,7 @@ def finalizar_compra():
         estado='pendiente',
         # Fecha de recogida basada en el tiempo máximo de producción
         fecha_recogida=datetime.now() + timedelta(days=tiempo_espera_maximo),
-        pagado=1  # Asumimos pago al momento por ahora
+        pagado=0  # Asumimos pago al momento por ahora
     )
 
     db.session.add(nueva_venta)
@@ -175,8 +175,6 @@ def finalizar_compra():
                 'cantidad_faltante': item['cantidad'] - galleta.cantidad_galletas
             })
 
-        # Actualizamos el stock (puede quedar en negativo temporalmente)
-        galleta.cantidad_galletas -= item['cantidad']
 
     # Generar producciones automáticas para las galletas que lo requieren
     producciones_creadas = []

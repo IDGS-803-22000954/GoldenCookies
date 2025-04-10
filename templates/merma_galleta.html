@@ -25,7 +25,7 @@ Cookies{% endblock %} {% block main %}
           Registrar Merma de Galleta
         </h1>
         <p class="text-cookie-600">
-          Reporta galletas dañadas, caducadas o con defectos
+          Reporta galletas dañadas, caducadas o desperdiciadas
         </p>
       </div>
     </div>
@@ -73,17 +73,41 @@ Cookies{% endblock %} {% block main %}
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div>
-              <label for="lote_galleta" class="block text-cookie-700 mb-2"
+              <label for="galleta" class="block text-cookie-700 mb-2"
                 >Galleta</label
               >
               <div class="relative">
-                {{ form.lote_galleta(class="w-full p-2 pl-10 border
-                border-cookie-300 rounded-md focus:ring focus:ring-cookie-400
-                focus:border-cookie-500", required=true) }}
+                {{ form.galleta(class="w-full p-2 pl-10 border border-cookie-300
+                rounded-md focus:ring focus:ring-cookie-400
+                focus:border-cookie-500", required=true, id="select-galleta") }}
                 <div
                   class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"
                 >
                   <i class="fas fa-cookie text-cookie-400"></i>
+                </div>
+              </div>
+              {% if form.galleta.errors %}
+              <div class="text-red-600 text-sm mt-1">
+                {% for error in form.galleta.errors %} {{ error }} {% endfor %}
+              </div>
+              {% endif %}
+              <p class="text-sm text-cookie-500 mt-1">
+                Seleccione la galleta de la cual registrará la merma
+              </p>
+            </div>
+
+            <div>
+              <label for="lote_galleta" class="block text-cookie-700 mb-2"
+                >Lote (opcional)</label
+              >
+              <div class="relative">
+                {{ form.lote_galleta(class="w-full p-2 pl-10 border
+                border-cookie-300 rounded-md focus:ring focus:ring-cookie-400
+                focus:border-cookie-500", id="select-lote") }}
+                <div
+                  class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"
+                >
+                  <i class="fas fa-tag text-cookie-400"></i>
                 </div>
               </div>
               {% if form.lote_galleta.errors %}
@@ -93,23 +117,22 @@ Cookies{% endblock %} {% block main %}
               </div>
               {% endif %}
               <p class="text-sm text-cookie-500 mt-1">
-                Seleccione el lote específico de galletas
+                Si lo deja vacío, se seleccionará automáticamente
               </p>
             </div>
 
             <div>
               <label for="cantidad" class="block text-cookie-700 mb-2"
-                >Cantidad (unidades)</label
+                >Cantidad</label
               >
               <div class="relative">
                 {{ form.cantidad(class="w-full p-2 pl-10 border
                 border-cookie-300 rounded-md focus:ring focus:ring-cookie-400
-                focus:border-cookie-500", required=true, min=1, type="number")
-                }}
+                focus:border-cookie-500", required=true, min=1) }}
                 <div
                   class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"
                 >
-                  <i class="fas fa-sort-numeric-up text-cookie-400"></i>
+                  <i class="fas fa-balance-scale text-cookie-400"></i>
                 </div>
               </div>
               {% if form.cantidad.errors %}
@@ -117,8 +140,8 @@ Cookies{% endblock %} {% block main %}
                 {% for error in form.cantidad.errors %} {{ error }} {% endfor %}
               </div>
               {% endif %}
-              <p class="text-sm text-cookie-500 mt-1" id="disponible">
-                Disponible: - unidades
+              <p class="text-sm text-cookie-500 mt-1">
+                Número de galletas que se reportarán como merma
               </p>
             </div>
 
@@ -222,42 +245,55 @@ Cookies{% endblock %} {% block main %}
     }
   }
 
-  // Cerrar mensajes flash automáticamente después de 5 segundos
+  // JavaScript para cargar los lotes según la galleta seleccionada
   document.addEventListener("DOMContentLoaded", function () {
     const flashMessages = document.querySelectorAll('[id^="flash-"]');
     flashMessages.forEach((message) => {
-      // Añadir transición para efecto de desvanecimiento
       message.style.transition = "opacity 0.3s ease";
-
-      // Cerrar automáticamente después de 5 segundos
       setTimeout(() => {
         closeFlash(message.id);
       }, 5000);
     });
 
-    // Actualizar la cantidad disponible cuando cambia la galleta seleccionada
-    const loteGalletaSelect = document.querySelector("#lote_galleta");
-    const disponibleText = document.querySelector("#disponible");
+    // Cargar los lotes disponibles cuando cambia la galleta
+    const galletaSelect = document.querySelector("#select-galleta");
+    const loteSelect = document.querySelector("#select-lote");
 
-    if (loteGalletaSelect) {
-      loteGalletaSelect.addEventListener("change", function () {
-        // En un entorno real, harías una solicitud AJAX para obtener la cantidad disponible
-        // Este es un ejemplo simplificado
-        const option = this.options[this.selectedIndex];
-        const disponible = option.getAttribute("data-disponible");
+    if (galletaSelect) {
+      galletaSelect.addEventListener("change", function () {
+        // Cargar los lotes correspondientes a esta galleta
+        const idGalleta = this.value;
+        if (idGalleta) {
+          fetch(`/produccion/lotes-galleta/${idGalleta}`)
+            .then((response) => response.json())
+            .then((data) => {
+              // Vaciar opciones actuales
+              loteSelect.innerHTML =
+                '<option value="">-- Seleccionar lote (opcional) --</option>';
 
-        if (disponible) {
-          disponibleText.textContent = `Disponible: ${disponible} unidades`;
-          document.querySelector("#cantidad").setAttribute("max", disponible);
+              // Agregar nuevas opciones
+              data.forEach((lote) => {
+                const option = document.createElement("option");
+                option.value = lote.id;
+                option.textContent = lote.label;
+                loteSelect.appendChild(option);
+              });
+            })
+            .catch((error) => {
+              console.error("Error al cargar los lotes:", error);
+              loteSelect.innerHTML =
+                '<option value="">No hay lotes disponibles</option>';
+            });
         } else {
-          disponibleText.textContent = "Disponible: - unidades";
+          loteSelect.innerHTML =
+            '<option value="">Seleccione una galleta primero</option>';
         }
       });
 
-      // Disparar el evento change para establecer la disponibilidad inicial
-      if (loteGalletaSelect.value) {
+      // Disparar el evento change para establecer valores iniciales
+      if (galletaSelect.value) {
         const event = new Event("change");
-        loteGalletaSelect.dispatchEvent(event);
+        galletaSelect.dispatchEvent(event);
       }
     }
   });

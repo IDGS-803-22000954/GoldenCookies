@@ -1,0 +1,5 @@
+DB_USER = 'gc'
+DB_PASSWORD = 'LimonHansa3009'
+DB_HOST = '127.0.0.1'
+DB_NAME = 'gc_r'
+SECRET_KEY = 'clave_secreta'

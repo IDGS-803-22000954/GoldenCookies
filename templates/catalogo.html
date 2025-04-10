@@ -45,8 +45,9 @@ Cookies{% endblock %} {% block main %}
         Nuestras Deliciosas Galletas
       </h1>
 
-      <!-- Botón de carrito (solo para usuarios autenticados) -->
-      {% if current_user.is_authenticated %}
+      <!-- Botón de carrito (solo para usuarios de tipo cliente) -->
+      {% if current_user.is_authenticated and current_user.rol ==
+      'cliente' %}
       <a
         href="{{ url_for('catalogo.ver_carrito') }}"
         class="flex items-center bg-cookie-600 hover:bg-cookie-700 text-white px-4 py-2 rounded-lg transition"
@@ -127,7 +128,8 @@ Cookies{% endblock %} {% block main %}
               Ver detalles
             </a>
 
-            {% if current_user.is_authenticated %}
+            {% if current_user.is_authenticated %} {% if
+            current_user.rol == 'cliente' %}
             <form
               action="{{ url_for('catalogo.agregar_carrito', id_galleta=galleta.id_galleta) }}"
               method="post"
@@ -150,6 +152,13 @@ Cookies{% endblock %} {% block main %}
             <p class="text-cookie-600 text-xs mt-1 text-center">
               <i class="fas fa-clock mr-1"></i> Fabricación a pedido
             </p>
+            {% endif %} {% else %}
+            <div
+              class="w-full px-4 py-2 bg-gray-300 text-gray-700 rounded-lg text-center"
+            >
+              <i class="fas fa-info-circle mr-2"></i> Solo clientes pueden
+              comprar
+            </div>
             {% endif %} {% else %}
             <a
               href="{{ url_for('auth.login') }}"

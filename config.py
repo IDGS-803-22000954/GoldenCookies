@@ -1,12 +1,12 @@
-import os
-from sqlalchemy import create_engine
-import urllib
+import settings
+
 
 class Config(object):
-    SECRET_KEY='clave nueva'
-    SESION_COOKIE_SECURE=False
+    SECRET_KEY = settings.SECRET_KEY
+    SESSION_COOKIE_SECURE = False
+
 
 class DevelopmentConfig(Config):
-    DEBUG=True
-    SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://root:LimonHansa3009@127.0.0.1/gc_db'
-    SQLALCHEMY_TRACK_MODIFICATIONS=False
+    DEBUG = True
+    SQLALCHEMY_DATABASE_URI = f'mysql+pymysql://{settings.DB_USER}:{settings.DB_PASSWORD}@{settings.DB_HOST}/{settings.DB_NAME}'
+    SQLALCHEMY_TRACK_MODIFICATIONS = False

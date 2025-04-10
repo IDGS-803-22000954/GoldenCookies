@@ -1,0 +1,378 @@
+{% extends "layout.html" %} {% block title %}Dashboard - Golden Cookies{%
+endblock %} {% block styles %}
+<style>
+  .dashboard-card {
+    background-color: white;
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s;
+  }
+
+  .dashboard-card:hover {
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+  }
+
+  .stat-value {
+    font-family: "Kavoon", cursive;
+  }
+
+  .chart-container {
+    height: 250px;
+    width: 100%;
+    position: relative;
+  }
+
+  /* Loader para las gráficas */
+  .chart-loader {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(255, 255, 255, 0.8);
+  }
+
+  .cookie-recommendation {
+    background-color: #f2e2c4;
+    border-left: 4px solid #bb9f7c;
+  }
+</style>
+{% endblock %} {% block main %}
+<div class="p-2 sm:ml-64">
+  <div class="p-2 md:p-4 mt-14">
+    <!-- Header con toggle para móvil -->
+    <div class="flex justify-between items-center mb-6">
+      <button onclick="toggleSidebar()" class="md:hidden text-cookie-800">
+        <i class="fas fa-bars text-2xl"></i>
+      </button>
+      <h1 class="text-2xl md:text-3xl font-kavoon text-cookie-800">
+        Dashboard
+      </h1>
+      <div class="text-cookie-600 text-sm">
+        <i class="fas fa-calendar-alt mr-1"></i> {{ today_date }}
+      </div>
+    </div>
+
+    <!-- Resumen - Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <!-- Ventas Totales -->
+      <div class="dashboard-card p-4">
+        <div class="flex items-center">
+          <div class="p-3 rounded-full bg-amber-100 text-amber-600">
+            <i class="fas fa-cash-register text-xl"></i>
+          </div>
+          <div class="ml-4">
+            <p class="text-sm font-medium text-gray-500">Ventas Totales</p>
+            <p class="text-xl font-bold stat-value text-amber-600">
+              {{ format_money(total_sales_amount) }}
+            </p>
+          </div>
+        </div>
+        <div class="mt-2 text-xs text-gray-500 flex items-center">
+          <span class="text-green-500 mr-1"
+            ><i class="fas fa-arrow-up"></i> {{ sales_trend }}%</span
+          >
+          <span>desde el mes pasado</span>
+        </div>
+      </div>
+
+      <!-- Galletas Vendidas -->
+      <div class="dashboard-card p-4">
+        <div class="flex items-center">
+          <div class="p-3 rounded-full bg-cookie-200 text-cookie-800">
+            <i class="fas fa-cookie text-xl"></i>
+          </div>
+          <div class="ml-4">
+            <p class="text-sm font-medium text-gray-500">Galletas Vendidas</p>
+            <p class="text-xl font-bold stat-value text-cookie-800">
+              {{ number_format(total_cookies_sold) }}
+            </p>
+          </div>
+        </div>
+        <div class="mt-2 text-xs text-gray-500 flex items-center">
+          <span class="text-green-500 mr-1"
+            ><i class="fas fa-arrow-up"></i> {{ cookies_trend }}%</span
+          >
+          <span>desde el mes pasado</span>
+        </div>
+      </div>
+
+      <!-- Valor de Inventario -->
+      <div class="dashboard-card p-4">
+        <div class="flex items-center">
+          <div class="p-3 rounded-full bg-blue-100 text-blue-600">
+            <i class="fas fa-boxes-stacked text-xl"></i>
+          </div>
+          <div class="ml-4">
+            <p class="text-sm font-medium text-gray-500">Valor Inventario</p>
+            <p class="text-xl font-bold stat-value text-blue-600">
+              {{ format_money(inventory_value) }}
+            </p>
+          </div>
+        </div>
+        <div class="mt-2 text-xs text-gray-500 flex items-center">
+          <span
+            class="{{ 'text-green-500' if inventory_growth > 0 else 'text-red-500' }} mr-1"
+          >
+            <i
+              class="fas {{ 'fa-arrow-up' if inventory_growth > 0 else 'fa-arrow-down' }}"
+            ></i>
+            {{ inventory_growth | abs }}%
+          </span>
+          <span>cambio</span>
+        </div>
+      </div>
+
+      <!-- Ganancia Esperada -->
+      <div class="dashboard-card p-4">
+        <div class="flex items-center">
+          <div class="p-3 rounded-full bg-green-100 text-green-600">
+            <i class="fas fa-chart-line text-xl"></i>
+          </div>
+          <div class="ml-4">
+            <p class="text-sm font-medium text-gray-500">Ganancia Esperada</p>
+            <p class="text-xl font-bold stat-value text-green-600">
+              {{ format_money(expected_profit) }}
+            </p>
+          </div>
+        </div>
+        <div class="mt-2 text-xs text-gray-500 flex items-center">
+          <span class="text-green-500 mr-1">
+            <i class="fas fa-arrow-up"></i> {{ profit_margin }}%
+          </span>
+          <span>margen</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Gráficos y Tablas -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+      <!-- Ventas por Galleta (Gráfica) -->
+      <div class="dashboard-card p-4">
+        <h2 class="text-lg font-bold text-cookie-800 mb-4">
+          Ventas por Galleta
+        </h2>
+        <div class="chart-container" id="cookieSalesChart">
+          <div class="chart-loader">
+            <i class="fas fa-spinner fa-spin text-cookie-500 text-2xl"></i>
+          </div>
+          <!-- Canvas para el gráfico -->
+          <canvas></canvas>
+        </div>
+      </div>
+
+      <!-- Tendencia de Ventas (Gráfica) -->
+      <div class="dashboard-card p-4">
+        <h2 class="text-lg font-bold text-cookie-800 mb-4">
+          Tendencia de Ventas
+        </h2>
+        <div class="chart-container" id="salesTrendChart">
+          <div class="chart-loader">
+            <i class="fas fa-spinner fa-spin text-cookie-500 text-2xl"></i>
+          </div>
+          <!-- Canvas para el gráfico -->
+          <canvas></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Recomendación de Galleta -->
+      <div class="dashboard-card p-4">
+        <h2 class="text-lg font-bold text-cookie-800 mb-4">
+          Recomendación de Venta
+        </h2>
+        <div class="cookie-recommendation p-3 rounded">
+          <div class="flex items-center mb-2">
+            <i class="fas fa-lightbulb text-cookie-600 mr-2"></i>
+            <h3 class="font-bold text-cookie-800">Galleta Recomendada</h3>
+          </div>
+          <div class="flex items-center">
+            <div
+              class="w-16 h-16 rounded-full bg-cookie-300 flex items-center justify-center mr-3"
+            >
+              <i class="fas fa-cookie text-2xl text-cookie-800"></i>
+            </div>
+            <div>
+              <p class="font-bold text-cookie-800">
+                {{ recommended_cookie.name }}
+              </p>
+              <p class="text-sm text-cookie-600">
+                Margen:
+                <span class="font-bold">{{ recommended_cookie.margin }}%</span>
+              </p>
+              <p class="text-xs text-cookie-600 mt-1">
+                Existencia: {{ recommended_cookie.stock }} unidades
+              </p>
+            </div>
+          </div>
+          <p class="text-sm mt-3 text-cookie-700">
+            {{ recommended_cookie.reason }}
+          </p>
+        </div>
+      </div>
+
+      <!-- Inventario de Galletas -->
+      <div class="dashboard-card p-4 col-span-1 lg:col-span-2">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-lg font-bold text-cookie-800">
+            Inventario de Galletas
+          </h2>
+          <a
+            href="{{ url_for('recetas.receta') }}"
+            class="text-sm text-amber-600 hover:underline"
+          >
+            <i class="fas fa-eye mr-1"></i> Ver todo
+          </a>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead>
+              <tr>
+                <th
+                  class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  Galleta
+                </th>
+                <th
+                  class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  Stock
+                </th>
+                <th
+                  class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  Precio
+                </th>
+                <th
+                  class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  Ganancia
+                </th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              {% for cookie in cookies_inventory %}
+              <tr class="hover:bg-gray-50">
+                <td class="px-4 py-2 whitespace-nowrap">{{ cookie.nombre }}</td>
+                <td class="px-4 py-2 whitespace-nowrap">
+                  <span
+                    class="px-2 py-1 text-xs rounded-full {{ 'bg-red-100 text-red-800' if cookie.cantidad_galletas < 50 else 'bg-green-100 text-green-800' }}"
+                  >
+                    {{ cookie.cantidad_galletas }}
+                  </span>
+                </td>
+                <td class="px-4 py-2 whitespace-nowrap">
+                  {{ format_money(cookie.precio) }}
+                </td>
+                <td class="px-4 py-2 whitespace-nowrap">
+                  <span class="text-green-600"
+                    >{{ format_money(cookie.ganancia_estimada) }}</span
+                  >
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- JavaScript para gráficos -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Eliminar loaders cuando la página esté lista
+    setTimeout(() => {
+      document.querySelectorAll('.chart-loader').forEach(loader => {
+        loader.style.display = 'none';
+      });
+    }, 800);
+
+    // Gráfico de Ventas por Galleta
+    const cookieCanvas = document.querySelector('#cookieSalesChart canvas');
+    new Chart(cookieCanvas, {
+      type: 'bar',
+      data: {
+        labels: {{ cookie_names | safe }},
+        datasets: [{
+          label: 'Unidades Vendidas',
+          data: {{ cookie_sales | safe }},
+          backgroundColor: '#bb9f7c',
+          borderColor: '#9a7b5a',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: false
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            grid: {
+              display: true,
+              color: 'rgba(0,0,0,0.05)'
+            }
+          },
+          x: {
+            grid: {
+              display: false
+            }
+          }
+        }
+      }
+    });
+
+    // Gráfico de Tendencia de Ventas
+    const trendCanvas = document.querySelector('#salesTrendChart canvas');
+    new Chart(trendCanvas, {
+      type: 'line',
+      data: {
+        labels: {{ months | safe }},
+        datasets: [{
+          label: 'Ventas Totales',
+          data: {{ sales_trend_data | safe }},
+          borderColor: '#f59e0b',
+          backgroundColor: 'rgba(245, 158, 11, 0.1)',
+          tension: 0.4,
+          fill: true
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: false
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            grid: {
+              display: true,
+              color: 'rgba(0,0,0,0.05)'
+            }
+          },
+          x: {
+            grid: {
+              display: false
+            }
+          }
+        }
+      }
+    });
+  });
+</script>
+{% endblock %}

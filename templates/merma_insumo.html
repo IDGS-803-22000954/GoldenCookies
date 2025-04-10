@@ -73,17 +73,41 @@ Cookies{% endblock %} {% block main %}
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div>
-              <label for="lote_insumo" class="block text-cookie-700 mb-2"
+              <label for="insumo" class="block text-cookie-700 mb-2"
                 >Insumo</label
               >
               <div class="relative">
-                {{ form.lote_insumo(class="w-full p-2 pl-10 border
-                border-cookie-300 rounded-md focus:ring focus:ring-cookie-400
-                focus:border-cookie-500", required=true) }}
+                {{ form.insumo(class="w-full p-2 pl-10 border border-cookie-300
+                rounded-md focus:ring focus:ring-cookie-400
+                focus:border-cookie-500", required=true, id="select-insumo") }}
                 <div
                   class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"
                 >
                   <i class="fas fa-box text-cookie-400"></i>
+                </div>
+              </div>
+              {% if form.insumo.errors %}
+              <div class="text-red-600 text-sm mt-1">
+                {% for error in form.insumo.errors %} {{ error }} {% endfor %}
+              </div>
+              {% endif %}
+              <p class="text-sm text-cookie-500 mt-1">
+                Seleccione el insumo del cual registrará la merma
+              </p>
+            </div>
+
+            <div>
+              <label for="lote_insumo" class="block text-cookie-700 mb-2"
+                >Lote (opcional)</label
+              >
+              <div class="relative">
+                {{ form.lote_insumo(class="w-full p-2 pl-10 border
+                border-cookie-300 rounded-md focus:ring focus:ring-cookie-400
+                focus:border-cookie-500", id="select-lote") }}
+                <div
+                  class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"
+                >
+                  <i class="fas fa-tag text-cookie-400"></i>
                 </div>
               </div>
               {% if form.lote_insumo.errors %}
@@ -93,7 +117,7 @@ Cookies{% endblock %} {% block main %}
               </div>
               {% endif %}
               <p class="text-sm text-cookie-500 mt-1">
-                Seleccione el lote específico del insumo
+                Si lo deja vacío, se seleccionará automáticamente
               </p>
             </div>
 
@@ -221,41 +245,68 @@ Cookies{% endblock %} {% block main %}
     }
   }
 
-  // Cerrar mensajes flash automáticamente después de 5 segundos
+  // JavaScript para cargar los lotes según el insumo seleccionado
   document.addEventListener("DOMContentLoaded", function () {
     const flashMessages = document.querySelectorAll('[id^="flash-"]');
     flashMessages.forEach((message) => {
-      // Añadir transición para efecto de desvanecimiento
       message.style.transition = "opacity 0.3s ease";
-
-      // Cerrar automáticamente después de 5 segundos
       setTimeout(() => {
         closeFlash(message.id);
       }, 5000);
     });
 
-    // Actualizar la unidad de medida cuando cambia el insumo seleccionado
-    const loteInsumoSelect = document.querySelector("#lote_insumo");
+    // Actualizar la unidad de medida y los lotes disponibles cuando cambia el insumo
+    const insumoSelect = document.querySelector("#select-insumo");
+    const loteSelect = document.querySelector("#select-lote");
     const unidadMedidaText = document.querySelector("#unidad-medida");
 
-    if (loteInsumoSelect) {
-      loteInsumoSelect.addEventListener("change", function () {
-        // En un entorno real, harías una solicitud AJAX para obtener la unidad de medida
-        // Este es un ejemplo simplificado
+    if (insumoSelect) {
+      insumoSelect.addEventListener("change", function () {
+        // Actualizar la unidad de medida
         const option = this.options[this.selectedIndex];
-        const unidadMedida = option.getAttribute("data-unidad-medida");
+        const label = option.textContent || "";
 
-        if (unidadMedida) {
-          unidadMedidaText.textContent = unidadMedida;
+        // Extraer unidad desde el texto (formato: "Nombre (X unidad_medida disponibles)")
+        const match = label.match(/\(([0-9.,]+)\s+([^)]+)\s+disponibles\)/);
+        if (match && match[2]) {
+          unidadMedidaText.textContent = match[2];
         } else {
-          unidadMedidaText.textContent = "Unidad de medida";
+          unidadMedidaText.textContent = "unidades";
+        }
+
+        // Cargar los lotes correspondientes a este insumo
+        const idInsumo = this.value;
+        if (idInsumo) {
+          fetch(`/produccion/lotes-insumo/${idInsumo}`)
+            .then((response) => response.json())
+            .then((data) => {
+              // Vaciar opciones actuales
+              loteSelect.innerHTML =
+                '<option value="">-- Seleccionar lote (opcional) --</option>';
+
+              // Agregar nuevas opciones
+              data.forEach((lote) => {
+                const option = document.createElement("option");
+                option.value = lote.id;
+                option.textContent = lote.label;
+                loteSelect.appendChild(option);
+              });
+            })
+            .catch((error) => {
+              console.error("Error al cargar los lotes:", error);
+              loteSelect.innerHTML =
+                '<option value="">No hay lotes disponibles</option>';
+            });
+        } else {
+          loteSelect.innerHTML =
+            '<option value="">Seleccione un insumo primero</option>';
         }
       });
 
-      // Disparar el evento change para establecer la unidad inicial
-      if (loteInsumoSelect.value) {
+      // Disparar el evento change para establecer valores iniciales
+      if (insumoSelect.value) {
         const event = new Event("change");
-        loteInsumoSelect.dispatchEvent(event);
+        insumoSelect.dispatchEvent(event);
       }
     }
   });

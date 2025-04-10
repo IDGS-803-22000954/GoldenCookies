@@ -207,8 +207,51 @@ def realizar_venta():
 @verificar_roles('admin', 'ventas')
 @login_required
 def venta_pedido():
+    # Obtener todos los pedidos no entregados (pendiente, en_produccion, o listo_para_recoger)
     pedidos = db.session.query(Venta).filter(
-        Venta.estado == 'pendiente').join(usuario).all()
+        or_(
+            Venta.estado == 'pendiente',
+            Venta.estado == 'en_produccion',
+            Venta.estado == 'listo_para_recoger'
+        )
+    ).join(usuario).all()
+
+    # Para cada pedido, calcular si los productos están disponibles
+    for pedido in pedidos:
+        # Verificar si todas las galletas del pedido están disponibles
+        detalles = DetalleVenta.query.filter_by(id_venta=pedido.id_venta).all()
+        pedido.productos_disponibles = True
+
+        for detalle in detalles:
+            galleta = Galleta.query.get(detalle.id_galleta)
+            if not galleta:
+                continue
+
+            # Calcular cantidad real según tipo de venta
+            if detalle.tipo_venta == "unidad":
+                galletas_reales = detalle.cantidad
+            elif detalle.tipo_venta == "paquete_10":
+                galletas_reales = detalle.cantidad * 10
+            elif detalle.tipo_venta == "paquete_20":
+                galletas_reales = detalle.cantidad * 20
+            elif detalle.tipo_venta == "paquete_30":
+                galletas_reales = detalle.cantidad * 30
+            elif detalle.tipo_venta == "docena":
+                galletas_reales = detalle.cantidad * 12
+            else:
+                galletas_reales = detalle.cantidad
+
+            # Si no hay suficientes galletas disponibles
+            if galleta.cantidad_galletas < galletas_reales:
+                pedido.productos_disponibles = False
+                break
+
+        # Si todos los productos están disponibles pero el estado sigue siendo 'en_produccion'
+        # actualizamos automáticamente a 'listo_para_recoger'
+        if pedido.productos_disponibles and pedido.estado == 'en_produccion':
+            pedido.estado = 'listo_para_recoger'
+            db.session.commit()
+
     return render_template('venta_pedido.html', pedidos=pedidos)
 
 
@@ -217,6 +260,10 @@ def venta_pedido():
 @login_required
 def realizar_venta_pedido(id_venta):
     venta = db.session.query(Venta).filter_by(id_venta=id_venta).first()
+    if not venta:
+        flash('Pedido no encontrado', 'danger')
+        return redirect(url_for('venta.venta_pedido'))
+
     if request.method == 'POST':
         # Lista para almacenar los productos que necesitan producción
         productos_pendientes = []
@@ -226,6 +273,7 @@ def realizar_venta_pedido(id_venta):
         detalles = db.session.query(
             DetalleVenta).filter_by(id_venta=id_venta).all()
         try:
+            # Primero verificamos disponibilidad sin modificar el inventario
             for detalle in detalles:
                 # Encontrar la galleta correspondiente
                 galleta = db.session.query(Galleta).filter_by(
@@ -250,6 +298,7 @@ def realizar_venta_pedido(id_venta):
                         galletas_reales = cantidad_solicitada  # Caso por defecto
 
                     # Verificamos si hay suficiente stock, si no hay, añadimos a la lista de pendientes
+                    # IMPORTANTE: No descontamos del stock durante el procesamiento inicial
                     if galleta.cantidad_galletas < galletas_reales:
                         productos_pendientes.append({
                             'galleta': galleta,
@@ -257,9 +306,6 @@ def realizar_venta_pedido(id_venta):
                             'cantidad_disponible': galleta.cantidad_galletas,
                             'cantidad_faltante': galletas_reales - galleta.cantidad_galletas
                         })
-
-                    # Actualizamos el stock (puede quedar en negativo temporalmente)
-                    galleta.cantidad_galletas -= galletas_reales
                 else:
                     flash(
                         f"La galleta referenciada en el detalle de venta no existe.", 'danger')
@@ -307,6 +353,9 @@ def realizar_venta_pedido(id_venta):
                 # Actualizar el estado del pedido
                 venta.estado = 'en_produccion'
 
+                # Mantener como no pagado hasta que el cliente recoja el pedido
+                venta.pagado = 0
+
                 # Construir mensaje con los productos pendientes
                 productos_str = ", ".join(
                     [f"{p['galleta'].nombre} ({p['cantidad_necesaria']} necesarias, {p['cantidad_disponible']} disponibles)" for p in productos_pendientes])
@@ -317,11 +366,15 @@ def realizar_venta_pedido(id_venta):
                 venta.estado = 'listo_para_recoger'
                 venta.fecha_recogida = date.today()
 
-            venta.pagado = 1
+                # Mantener como no pagado hasta que el cliente recoja el pedido
+                venta.pagado = 0
+
+                flash(
+                    'Todos los productos están disponibles. El pedido está listo para recoger.', 'success')
 
             # Commit the transaction
             db.session.commit()
-            flash('Pedido procesado correctamente.', 'success')
+
         except Exception as e:
             db.session.rollback()
             flash(f'Error al procesar el pedido: {str(e)}', 'danger')
@@ -347,12 +400,15 @@ def ganancias():
         else:
             fecha_seleccionada = date.today()
 
-        # Buscar todas las ventas de la fecha con estado 'lista' y pagadas
+
+        # Buscar todas las ventas de la fecha con estado 'entregado' y pagadas
         ventas = db.session.query(Venta).filter(
-            Venta.fecha_recogida == fecha_seleccionada,
+            Venta.created_at >= datetime.combine(
+                fecha_seleccionada, datetime.min.time()),
+            Venta.created_at < datetime.combine(
+                fecha_seleccionada + timedelta(days=1), datetime.min.time()),
             Venta.pagado == 1,
-            # Algunas ventas pueden no tener estado
-            or_(Venta.estado == 'lista', Venta.estado == None)
+            Venta.estado == 'entregado'
         ).join(usuario).all()
 
         total_ventas = len(ventas)
@@ -394,14 +450,39 @@ def ganancias():
 @verificar_roles('admin', 'ventas')
 @login_required
 def entregar_pedido(id_venta):
-    """Marca un pedido como entregado cuando el cliente lo recoge"""
+    """Marca un pedido como entregado cuando el cliente lo recoge y lo marca como pagado"""
     venta = Venta.query.get_or_404(id_venta)
 
     if venta.estado != 'listo_para_recoger':
         flash('Solo se pueden entregar pedidos que estén listos para recoger', 'warning')
     else:
+        # Obtener los detalles del pedido
+        detalles = DetalleVenta.query.filter_by(id_venta=venta.id_venta).all()
+
+        # AHORA es cuando debemos descontar del inventario
+        for detalle in detalles:
+            galleta = Galleta.query.get(detalle.id_galleta)
+            if galleta:
+                # Calcular cantidad real según tipo de venta
+                if detalle.tipo_venta == "unidad":
+                    galletas_reales = detalle.cantidad
+                elif detalle.tipo_venta == "paquete_10":
+                    galletas_reales = detalle.cantidad * 10
+                elif detalle.tipo_venta == "paquete_20":
+                    galletas_reales = detalle.cantidad * 20
+                elif detalle.tipo_venta == "paquete_30":
+                    galletas_reales = detalle.cantidad * 30
+                elif detalle.tipo_venta == "docena":
+                    galletas_reales = detalle.cantidad * 12
+                else:
+                    galletas_reales = detalle.cantidad
+
+                # Descontar del stock ahora que el cliente recoge el pedido
+                galleta.cantidad_galletas -= galletas_reales
+
         venta.estado = 'entregado'
+        venta.pagado = 1  # Marcar como pagado cuando el cliente recoge el pedido
         db.session.commit()
-        flash('Pedido entregado correctamente al cliente', 'success')
+        flash('Pedido entregado correctamente al cliente y marcado como pagado', 'success')
 
     return redirect(url_for('venta.venta_pedido'))

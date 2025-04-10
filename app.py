@@ -12,6 +12,7 @@ from venta import venta
 from recetas.recetas import recetas_bp
 from produccion.routes import produccion_bp
 from routes.catalogo import catalogo_bp
+from routes.dashboard import dashboard_bp
 
 app = Flask(__name__)
 app.config.from_object(DevelopmentConfig)
@@ -48,7 +49,7 @@ def index():
 @login_required
 @verificar_roles('admin')
 def admin():
-    return render_template('admin.html')
+    return redirect(url_for('dashboard.index'))
 
 @app.route('/cliente')
 @verificar_roles('cliente','admin')
@@ -71,6 +72,7 @@ app.register_blueprint(venta, url_prefix='/venta')
 app.register_blueprint(recetas_bp, url_prefix='/recetas')
 app.register_blueprint(produccion_bp, url_prefix='/produccion')
 app.register_blueprint(catalogo_bp, url_prefix='/catalogo')
+app.register_blueprint(dashboard_bp, url_prefix='/dashboard')
 
 
 if __name__ == '__main__':

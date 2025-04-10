@@ -267,6 +267,7 @@ Cookies{% endblock %} {% block main %}
           </h2>
 
           <div class="overflow-x-auto">
+            <!-- Reemplazar la tabla de insumos con esta versión corregida -->
             <table class="w-full text-sm text-left">
               <thead class="text-xs text-cookie-700 uppercase bg-cookie-100">
                 <tr>
@@ -286,11 +287,16 @@ Cookies{% endblock %} {% block main %}
                   <td class="px-4 py-3">{{ ri.insumo.unidad_medida }}</td>
                   {% if produccion.estatus == 'completada' %}
                   <td class="px-4 py-3">
-                    {% set pi = insumos_usados|selectattr('id_insumo', 'eq',
-                    ri.id_insumo)|first %} {% if pi %} ${{
-                    '%.2f'|format(pi.cantidad_usada *
-                    (pi.lote_insumo.costo_total/pi.lote_insumo.cantidad)) }} {% else %} $0.00 {% endif
-                    %}
+                    {% if insumos_usados_dict and ri.id_insumo in
+                    insumos_usados_dict %} {% set insumo_info =
+                    insumos_usados_dict[ri.id_insumo] %} ${{
+                    '%.2f'|format(insumo_info.cantidad_usada *
+                    insumo_info.costo_unitario) }} {% else %} {% set lotes =
+                    ri.insumo.lote_insumo|sort(attribute='created_at',
+                    reverse=true) %} {% if lotes|length > 0 %} {% set
+                    costo_estimado = ri.cantidad_insumo * (lotes[0].costo_total
+                    / lotes[0].cantidad) %} ${{ '%.2f'|format(costo_estimado) }}
+                    (est.) {% else %} $0.00 {% endif %} {% endif %}
                   </td>
                   {% endif %}
                 </tr>
