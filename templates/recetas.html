@@ -49,6 +49,18 @@
       {% endfor %} {% endif %} {% endwith %}
     </div>
 
+    <!-- Diccionario de Unidades Button -->
+    <div class="mb-6">
+      <button
+        type="button"
+        onclick="mostrarDiccionarioUnidades()"
+        class="inline-flex items-center p-2 text-cookie-700 rounded-lg hover:bg-cookie-200 focus:outline-none border border-cookie-300"
+      >
+        <i class="fas fa-balance-scale text-lg mr-2"></i>
+        <span>Diccionario de Unidades</span>
+      </button>
+    </div>
+
     <!-- Recipe form and listing interface -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <!-- Recipe creation form -->
@@ -359,6 +371,280 @@
         </form>
       </div>
     </div>
+
+    <!-- Diccionario de Unidades Modal -->
+    <!-- Diccionario de Unidades Modal -->
+    <div
+      id="unidadesModal"
+      class="fixed inset-0 z-50 hidden overflow-auto bg-black bg-opacity-50 flex items-center justify-center p-4"
+    >
+      <div
+        class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-screen overflow-y-auto"
+      >
+        <div
+          class="flex justify-between items-center border-b border-cookie-200 p-4"
+        >
+          <h3 class="text-xl font-kavoon text-cookie-700">
+            Diccionario de Unidades para Galletas
+          </h3>
+          <button
+            onclick="cerrarModalUnidades()"
+            class="text-cookie-500 hover:text-cookie-700"
+          >
+            <i class="fas fa-times text-xl"></i>
+          </button>
+        </div>
+
+        <div class="p-6">
+          <!-- Contenido del diccionario -->
+          <div class="mb-8">
+            <h4 class="text-lg font-kavoon text-cookie-700 mb-3">
+              Conversiones Básicas para Recetas
+            </h4>
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead class="text-xs text-cookie-700 uppercase bg-cookie-100">
+                  <tr>
+                    <th class="px-4 py-2">Unidad</th>
+                    <th class="px-4 py-2">Equivalencia en ml</th>
+                    <th class="px-4 py-2">Equivalencia en g (agua)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr class="border-b border-cookie-200">
+                    <td class="px-4 py-2">1 taza</td>
+                    <td class="px-4 py-2">240 ml</td>
+                    <td class="px-4 py-2">240 g</td>
+                  </tr>
+                  <tr class="border-b border-cookie-200">
+                    <td class="px-4 py-2">1 cucharada</td>
+                    <td class="px-4 py-2">15 ml</td>
+                    <td class="px-4 py-2">15 g</td>
+                  </tr>
+                  <tr class="border-b border-cookie-200">
+                    <td class="px-4 py-2">1 cucharadita</td>
+                    <td class="px-4 py-2">5 ml</td>
+                    <td class="px-4 py-2">5 g</td>
+                  </tr>
+                  <tr class="border-b border-cookie-200">
+                    <td class="px-4 py-2">1 pizca</td>
+                    <td class="px-4 py-2">Menos de 1 ml</td>
+                    <td class="px-4 py-2">Entre 0.25 g y 0.5 g</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="mb-8">
+            <h4 class="text-lg font-kavoon text-cookie-700 mb-3">
+              Ingredientes Secos (1 cucharada en gramos)
+            </h4>
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead class="text-xs text-cookie-700 uppercase bg-cookie-100">
+                  <tr>
+                    <th class="px-4 py-2">Ingrediente</th>
+                    <th class="px-4 py-2">1 taza (gramos)</th>
+                    <th class="px-4 py-2">1 cucharada (gramos)</th>
+                    <th class="px-4 py-2">1 cucharadita (gramos)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr class="border-b border-cookie-200">
+                    <td class="px-4 py-2">Harina de trigo</td>
+                    <td class="px-4 py-2">140g</td>
+                    <td class="px-4 py-2">9g</td>
+                    <td class="px-4 py-2">3g</td>
+                  </tr>
+                  <tr class="border-b border-cookie-200">
+                    <td class="px-4 py-2">Azúcar blanca</td>
+                    <td class="px-4 py-2">200g</td>
+                    <td class="px-4 py-2">12.5g</td>
+                    <td class="px-4 py-2">4g</td>
+                  </tr>
+                  <tr class="border-b border-cookie-200">
+                    <td class="px-4 py-2">Azúcar morena</td>
+                    <td class="px-4 py-2">180g</td>
+                    <td class="px-4 py-2">11g</td>
+                    <td class="px-4 py-2">4g</td>
+                  </tr>
+                  <tr class="border-b border-cookie-200">
+                    <td class="px-4 py-2">Azúcar glass</td>
+                    <td class="px-4 py-2">120g</td>
+                    <td class="px-4 py-2">8g</td>
+                    <td class="px-4 py-2">3g</td>
+                  </tr>
+                  <tr class="border-b border-cookie-200">
+                    <td class="px-4 py-2">Cacao en polvo</td>
+                    <td class="px-4 py-2">100g</td>
+                    <td class="px-4 py-2">6g</td>
+                    <td class="px-4 py-2">2g</td>
+                  </tr>
+                  <tr class="border-b border-cookie-200">
+                    <td class="px-4 py-2">Polvo para hornear</td>
+                    <td class="px-4 py-2">180g</td>
+                    <td class="px-4 py-2">11g</td>
+                    <td class="px-4 py-2">4g</td>
+                  </tr>
+                  <tr class="border-b border-cookie-200">
+                    <td class="px-4 py-2">Sal</td>
+                    <td class="px-4 py-2">300g</td>
+                    <td class="px-4 py-2">18g</td>
+                    <td class="px-4 py-2">6g</td>
+                  </tr>
+                  <tr class="border-b border-cookie-200">
+                    <td class="px-4 py-2">Bicarbonato de sodio</td>
+                    <td class="px-4 py-2">220g</td>
+                    <td class="px-4 py-2">14g</td>
+                    <td class="px-4 py-2">5g</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="mb-8">
+            <h4 class="text-lg font-kavoon text-cookie-700 mb-3">
+              Ingredientes Líquidos y Grasos
+            </h4>
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead class="text-xs text-cookie-700 uppercase bg-cookie-100">
+                  <tr>
+                    <th class="px-4 py-2">Ingrediente</th>
+                    <th class="px-4 py-2">1 taza</th>
+                    <th class="px-4 py-2">1 cucharada</th>
+                    <th class="px-4 py-2">1 cucharadita</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr class="border-b border-cookie-200">
+                    <td class="px-4 py-2">Mantequilla</td>
+                    <td class="px-4 py-2">225g / 240ml</td>
+                    <td class="px-4 py-2">14g / 15ml</td>
+                    <td class="px-4 py-2">5g / 5ml</td>
+                  </tr>
+                  <tr class="border-b border-cookie-200">
+                    <td class="px-4 py-2">Aceite vegetal</td>
+                    <td class="px-4 py-2">210g / 240ml</td>
+                    <td class="px-4 py-2">13g / 15ml</td>
+                    <td class="px-4 py-2">4g / 5ml</td>
+                  </tr>
+                  <tr class="border-b border-cookie-200">
+                    <td class="px-4 py-2">Leche</td>
+                    <td class="px-4 py-2">240g / 240ml</td>
+                    <td class="px-4 py-2">15g / 15ml</td>
+                    <td class="px-4 py-2">5g / 5ml</td>
+                  </tr>
+                  <tr class="border-b border-cookie-200">
+                    <td class="px-4 py-2">Miel</td>
+                    <td class="px-4 py-2">340g / 240ml</td>
+                    <td class="px-4 py-2">21g / 15ml</td>
+                    <td class="px-4 py-2">7g / 5ml</td>
+                  </tr>
+                  <tr class="border-b border-cookie-200">
+                    <td class="px-4 py-2">Jarabe de maíz</td>
+                    <td class="px-4 py-2">320g / 240ml</td>
+                    <td class="px-4 py-2">20g / 15ml</td>
+                    <td class="px-4 py-2">7g / 5ml</td>
+                  </tr>
+                  <tr class="border-b border-cookie-200">
+                    <td class="px-4 py-2">Yogur</td>
+                    <td class="px-4 py-2">245g / 240ml</td>
+                    <td class="px-4 py-2">15g / 15ml</td>
+                    <td class="px-4 py-2">5g / 5ml</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="mb-8">
+            <h4 class="text-lg font-kavoon text-cookie-700 mb-3">
+              Frutos Secos, Chispas y Agregados
+            </h4>
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead class="text-xs text-cookie-700 uppercase bg-cookie-100">
+                  <tr>
+                    <th class="px-4 py-2">Ingrediente</th>
+                    <th class="px-4 py-2">1 taza (gramos)</th>
+                    <th class="px-4 py-2">Cantidad por unidad</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr class="border-b border-cookie-200">
+                    <td class="px-4 py-2">Chispas de chocolate</td>
+                    <td class="px-4 py-2">175g</td>
+                    <td class="px-4 py-2">~70 chispas = 10g</td>
+                  </tr>
+                  <tr class="border-b border-cookie-200">
+                    <td class="px-4 py-2">Nueces picadas</td>
+                    <td class="px-4 py-2">120g</td>
+                    <td class="px-4 py-2">1 nuez mediana = 5g</td>
+                  </tr>
+                  <tr class="border-b border-cookie-200">
+                    <td class="px-4 py-2">Almendras picadas</td>
+                    <td class="px-4 py-2">140g</td>
+                    <td class="px-4 py-2">1 almendra = 1.2g</td>
+                  </tr>
+                  <tr class="border-b border-cookie-200">
+                    <td class="px-4 py-2">Pasas</td>
+                    <td class="px-4 py-2">150g</td>
+                    <td class="px-4 py-2">1 pasa = 0.5g</td>
+                  </tr>
+                  <tr class="border-b border-cookie-200">
+                    <td class="px-4 py-2">Avena</td>
+                    <td class="px-4 py-2">90g</td>
+                    <td class="px-4 py-2">-</td>
+                  </tr>
+                  <tr class="border-b border-cookie-200">
+                    <td class="px-4 py-2">Coco rallado</td>
+                    <td class="px-4 py-2">80g</td>
+                    <td class="px-4 py-2">-</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="mb-8">
+            <h4 class="text-lg font-kavoon text-cookie-700 mb-3">
+              Conversiones para Huevos
+            </h4>
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead class="text-xs text-cookie-700 uppercase bg-cookie-100">
+                  <tr>
+                    <th class="px-4 py-2">Medida</th>
+                    <th class="px-4 py-2">Peso (gramos)</th>
+                    <th class="px-4 py-2">Volumen (ml)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr class="border-b border-cookie-200">
+                    <td class="px-4 py-2">1 huevo grande (entero)</td>
+                    <td class="px-4 py-2">50-55g</td>
+                    <td class="px-4 py-2">-</td>
+                  </tr>
+                  <tr class="border-b border-cookie-200">
+                    <td class="px-4 py-2">1 clara de huevo</td>
+                    <td class="px-4 py-2">30-35g</td>
+                    <td class="px-4 py-2">30ml</td>
+                  </tr>
+                  <tr class="border-b border-cookie-200">
+                    <td class="px-4 py-2">1 yema de huevo</td>
+                    <td class="px-4 py-2">15-20g</td>
+                    <td class="px-4 py-2">15ml</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -480,10 +766,22 @@
     modal.classList.add("hidden");
   }
 
-  // Cerrar el modal si se hace clic fuera de él
+  // Funciones para el modal de diccionario de unidades
+  function mostrarDiccionarioUnidades() {
+    document.getElementById("unidadesModal").classList.remove("hidden");
+  }
+
+  function cerrarModalUnidades() {
+    document.getElementById("unidadesModal").classList.add("hidden");
+  }
+
+  // Cerrar los modales si se hace clic fuera de ellos
   window.onclick = function (event) {
     if (event.target === modal) {
       cerrarModal();
+    }
+    if (event.target === document.getElementById("unidadesModal")) {
+      cerrarModalUnidades();
     }
   };
 </script>
