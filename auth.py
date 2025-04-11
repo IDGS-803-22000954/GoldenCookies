@@ -51,12 +51,10 @@ def login():
             db.session.commit()
             return redirect(url_for('auth.login'))
 
-        # Restablecer intentos fallidos
         user.intentos_fallidos = 0
         user.ultimo_login = datetime.now()
         db.session.commit()
 
-        # Iniciar sesión directamente
         login_user(user)
 
         session['id_usuario'] = user.id_usuario
@@ -64,7 +62,6 @@ def login():
             datetime.now() + timedelta(seconds=30)).timestamp()
         session['rol'] = user.rol.lower()
 
-        # Redirigir según el rol del usuario
         if user.rol.lower() == 'admin':
             return redirect(url_for('admin'))
         elif user.rol.lower() == 'produccion':
@@ -85,14 +82,12 @@ def registro():
     form = RegistroForm()
 
     if form.validate_on_submit():
-        # Verificar si el nombre de usuario ya existe en la base de datos
         usuario_existente = usuario.query.filter_by(
             nombre_usuario=form.nombre_usuario.data).first()
         if usuario_existente:
             flash('El nombre de usuario ya está en uso. Por favor, elige otro.', 'danger')
             return redirect(url_for('auth.registro'))
 
-        # Hashear la contraseña antes de almacenarla
         hashed_password = generate_password_hash(form.contrasenia.data)
 
         user = usuario(
@@ -100,7 +95,7 @@ def registro():
             nombre_usuario=form.nombre_usuario.data,
             telefono=form.telefono.data,
             email=form.email.data,
-            contrasenia=hashed_password,  # Guardar la contraseña encriptada
+            contrasenia=hashed_password,
             ultimo_login=datetime.utcnow()
         )
 
@@ -112,22 +107,21 @@ def registro():
             datetime.utcnow() + timedelta(seconds=20)).timestamp()
         session['rol'] = user.rol.lower()
 
-        # Autenticar al usuario recién registrado
         login_user(user)
 
         flash('Usuario registrado y autenticado con éxito!', 'success')
-        return redirect(url_for('cliente'))  # Redirigir al menú
+        return redirect(url_for('cliente'))
 
     return render_template('auth/registro.html', form=form)
 
 
 @auth.route('/logout', methods=['GET', 'POST'])
 def logout():
-    logout_user()  # Cierra la sesión
-    flash("Has cerrado sesión exitosamente", "success")  # Mensaje opcional
-    session.pop('id_usuario', None)  # Elimina el ID de usuario de la sesión
+    logout_user()
+    flash("Has cerrado sesión exitosamente", "success")
+    session.pop('id_usuario', None)
     session.pop('rol', None)
-    session.pop('expiracion_sesion', None)  # Elimina la expiración de sesión
+    session.pop('expiracion_sesion', None)
     return redirect('/catalogo')
 
 
@@ -159,11 +153,9 @@ def editar_perfil():
 
 @auth.route('/redirigir')
 def redirigir():
-    # Obtener el rol del usuario desde la sesión (o de donde lo manejes)
     user = usuario.query.get(session.get('id_usuario'))
-    rol = session.get('rol', 'admin')  # Por defecto "cliente"
+    rol = session.get('rol', 'admin')
 
-    # Diccionario con las rutas según el rol
     if user.rol.lower() == 'admin':
         return redirect(url_for('admin'))
     elif user.rol.lower() == 'produccion':
@@ -183,7 +175,6 @@ def redirigir():
 def registro_adm():
     form = RegistroForm_adm()
 
-    # Obtener lista de usuarios con filtrado si existe
     filtro_rol = request.args.get('rol', '')
     busqueda = request.args.get('q', '')
 
@@ -201,7 +192,6 @@ def registro_adm():
             (usuario.rol.ilike(f"%{busqueda}%"))
         )
 
-    # Obtener todos los usuarios según los filtros
     usuarios_lista = query.all()
 
     roles_permitidos = ['admin', 'cliente', 'ventas', 'produccion']
@@ -212,14 +202,12 @@ def registro_adm():
             flash('Rol no válido.', 'danger')
             return redirect(url_for('auth.registro_adm'))
 
-        # Verificar si el nombre de usuario ya existe en la base de datos
         usuario_existente = usuario.query.filter_by(
             nombre_usuario=form.nombre_usuario.data).first()
         if usuario_existente:
             flash('El nombre de usuario ya está en uso. Por favor, elige otro.', 'danger')
             return redirect(url_for('auth.registro_adm'))
 
-        # Hashear la contraseña antes de almacenarla
         hashed_password = generate_password_hash(form.contrasenia.data)
 
         nuevo_usuario = usuario(
@@ -227,7 +215,7 @@ def registro_adm():
             nombre_usuario=form.nombre_usuario.data,
             telefono=form.telefono.data,
             email=form.email.data,
-            contrasenia=hashed_password,  # Guardar la contraseña encriptada
+            contrasenia=hashed_password,
             rol=rol_seleccionado
         )
 
@@ -250,19 +238,16 @@ def actualizar_usuario():
         flash('ID de usuario no proporcionado.', 'danger')
         return redirect(url_for('auth.registro_adm'))
 
-    # Buscar el usuario existente
     user_to_update = usuario.query.get(int(user_id))
 
     if not user_to_update:
         flash('Usuario no encontrado.', 'danger')
         return redirect(url_for('auth.registro_adm'))
 
-    # Proteger a los usuarios admin de ser modificados
     if user_to_update.rol == 'admin':
         flash('No se pueden modificar usuarios con rol de administrador.', 'danger')
         return redirect(url_for('auth.registro_adm'))
 
-    # Verificar que el nombre de usuario no esté siendo usado por otro usuario
     nombre_usuario = request.form.get('nombre_usuario')
     nombre_usuario_existente = usuario.query.filter(
         usuario.nombre_usuario == nombre_usuario,
@@ -273,19 +258,16 @@ def actualizar_usuario():
         flash('El nombre de usuario ya está en uso por otro usuario.', 'danger')
         return redirect(url_for('auth.registro_adm'))
 
-    # Actualizar los datos del usuario
     user_to_update.nombre = request.form.get('nombre')
     user_to_update.nombre_usuario = nombre_usuario
     user_to_update.telefono = request.form.get('telefono')
     user_to_update.email = request.form.get('email')
     user_to_update.rol = request.form.get('rol')
 
-    # Asegurarse de que no se pueda cambiar a rol admin
     if user_to_update.rol == 'admin':
         flash('No se puede cambiar el rol a administrador.', 'danger')
         return redirect(url_for('auth.registro_adm'))
 
-    # Actualizar contraseña solo si se proporciona una nueva
     nueva_contrasenia = request.form.get('contrasenia')
     if nueva_contrasenia and nueva_contrasenia.strip():
         user_to_update.contrasenia = generate_password_hash(nueva_contrasenia)
@@ -299,7 +281,7 @@ def actualizar_usuario():
 def expirada():
     expiracion = verificar_expiracion_sesion()
     if expiracion:
-        return expiracion  # Redirige al logout si la sesión ha expirado
+        return expiracion
 
     return render_template('auth/login.html')
 
@@ -312,13 +294,11 @@ def verificar_expiracion_sesion():
         if tiempo_actual > tiempo_expiracion:
             flash(
                 'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.', 'warning')
-            # Llamar a la función logout
             return redirect(url_for('auth.logout'))
 
 
 @auth.route('/usuarios', methods=['GET'])
 def obtener_usuarios():
-    """Renderiza la página con la tabla de usuarios, permitiendo búsqueda y filtrado."""
     filtro_rol = request.args.get('rol', '')
     busqueda = request.args.get('q', '')
 
@@ -345,10 +325,8 @@ def obtener_usuarios():
 @login_required
 @verificar_roles('admin')
 def eliminar_usuario(id):
-    """Elimina un usuario por ID."""
     user = usuario.query.get_or_404(id)
 
-    # Proteger a los usuarios admin de ser eliminados
     if user.rol == 'admin':
         flash('No se pueden eliminar usuarios con rol de administrador.', 'danger')
         return redirect(url_for('auth.registro_adm'))
@@ -361,6 +339,5 @@ def eliminar_usuario(id):
 
 @auth.route('/obtener_usuario/<int:id>', methods=['GET'])
 def obtener_usuario(id):
-    """Obtiene los datos de un usuario específico para edición."""
     usuario = usuario.query.get_or_404(id)
     return render_template('registro_adm.html', usuario=usuario)

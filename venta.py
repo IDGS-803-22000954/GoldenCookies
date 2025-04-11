@@ -12,28 +12,14 @@ venta = Blueprint('venta', __name__)
 
 
 def redondear_precio_mxn(precio):
-    """
-    Redondea un precio al estilo mexicano:
-    - Si el precio tiene decimales menores o iguales a 50 centavos, redondea a 50 centavos
-    - Si el precio tiene decimales mayores a 50 centavos, redondea al entero superior
-
-    Args:
-        precio (float): El precio original
-
-    Returns:
-        float: El precio redondeado
-    """
     entero = int(precio)
     decimal = precio - entero
 
     if decimal == 0:
-        # Ya es un número entero, lo dejamos así
         return precio
     elif decimal <= 0.5:
-        # Redondeamos a 50 centavos
         return entero + 0.5
     else:
-        # Redondeamos al entero superior
         return entero + 1.0
 
 
@@ -56,7 +42,6 @@ def procesar_tabla():
         galleta = db.session.query(Galleta).filter_by(
             id_galleta=form.galleta.data).first()
 
-        # Calcular cantidad real de galletas según el tipo de venta
         tipo_venta = form.tipo_venta.data
         cantidad_solicitada = form.cantidad.data
 
@@ -81,21 +66,19 @@ def procesar_tabla():
                 session['ventas_acumuladas'] = []
             ventas = session['ventas_acumuladas']
 
-            # Calcular precio con posibles descuentos según tipo de paquete
             if tipo_venta == "unidad":
                 precio_total = cantidad_solicitada * galleta.precio
             elif tipo_venta == "paquete_10":
-                precio_total = cantidad_solicitada * 10 * galleta.precio * 0.95  # 5% descuento
+                precio_total = cantidad_solicitada * 10 * galleta.precio * 0.95
             elif tipo_venta == "paquete_20":
                 precio_total = cantidad_solicitada * 20 * \
-                    galleta.precio * 0.90  # 10% descuento
+                    galleta.precio * 0.90
             elif tipo_venta == "paquete_30":
                 precio_total = cantidad_solicitada * 30 * \
-                    galleta.precio * 0.85  # 15% descuento
+                    galleta.precio * 0.85
             elif tipo_venta == "docena":
-                precio_total = cantidad_solicitada * 12 * galleta.precio * 0.95  # 5% descuento
+                precio_total = cantidad_solicitada * 12 * galleta.precio * 0.95
 
-            # Aplicar redondeo al precio total para el estilo mexicano
             precio_total = redondear_precio_mxn(precio_total)
 
             nueva_venta = {
@@ -104,7 +87,7 @@ def procesar_tabla():
                 "tipo_venta": tipo_venta,
                 "cantidad": cantidad_solicitada,
                 "precio": precio_total,
-                "galletas_reales": galletas_reales  # Guardar la cantidad real para usarla después
+                "galletas_reales": galletas_reales
             }
 
             ventas.append(nueva_venta)
@@ -128,7 +111,6 @@ def terminar_venta():
 @login_required
 def eliminar_venta(indice):
     va = session.get('ventas_acumuladas', [])
-    # Funciona tanto con GET como con POST
     if indice < len(va):
         producto_eliminado = va.pop(indice)
         flash(
@@ -149,7 +131,6 @@ def realizar_venta():
         try:
             ptotal = sum(float(venta["precio"]) for venta in va)
 
-            # No redondeamos el total de nuevo ya que cada producto ya fue redondeado
 
             nueva_venta = Venta(
                 tipo_venta='local',
@@ -169,7 +150,6 @@ def realizar_venta():
                     id_galleta=v["id_galleta"]).first()
 
                 if galleta:
-                    # Usar la cantidad real de galletas (ya calculada en procesar_tabla)
                     galletas_reales = v["galletas_reales"]
 
                     if galleta.cantidad_galletas >= galletas_reales:
@@ -180,10 +160,9 @@ def realizar_venta():
                         db.session.rollback()
                         return redirect(url_for('venta.ventas'))
 
-                # Almacenar el detalle de venta
                 nuevo_detalle = DetalleVenta(
                     cantidad=int(v["cantidad"]),
-                    precio_unitario=float(v["precio"]),  # Precio ya redondeado
+                    precio_unitario=float(v["precio"]),
                     tipo_venta=v["tipo_venta"],
                     id_galleta=int(v['id_galleta']),
                     id_venta=idv,
@@ -207,7 +186,6 @@ def realizar_venta():
 @verificar_roles('admin', 'ventas')
 @login_required
 def venta_pedido():
-    # Obtener todos los pedidos no entregados (pendiente, en_produccion, o listo_para_recoger)
     pedidos = db.session.query(Venta).filter(
         or_(
             Venta.estado == 'pendiente',
@@ -215,10 +193,8 @@ def venta_pedido():
             Venta.estado == 'listo_para_recoger'
         )
     ).join(usuario).all()
-
-    # Para cada pedido, calcular si los productos están disponibles
+    
     for pedido in pedidos:
-        # Verificar si todas las galletas del pedido están disponibles
         detalles = DetalleVenta.query.filter_by(id_venta=pedido.id_venta).all()
         pedido.productos_disponibles = True
 
@@ -227,7 +203,6 @@ def venta_pedido():
             if not galleta:
                 continue
 
-            # Calcular cantidad real según tipo de venta
             if detalle.tipo_venta == "unidad":
                 galletas_reales = detalle.cantidad
             elif detalle.tipo_venta == "paquete_10":
@@ -241,13 +216,10 @@ def venta_pedido():
             else:
                 galletas_reales = detalle.cantidad
 
-            # Si no hay suficientes galletas disponibles
             if galleta.cantidad_galletas < galletas_reales:
                 pedido.productos_disponibles = False
                 break
 
-        # Si todos los productos están disponibles pero el estado sigue siendo 'en_produccion'
-        # actualizamos automáticamente a 'listo_para_recoger'
         if pedido.productos_disponibles and pedido.estado == 'en_produccion':
             pedido.estado = 'listo_para_recoger'
             db.session.commit()
@@ -265,22 +237,17 @@ def realizar_venta_pedido(id_venta):
         return redirect(url_for('venta.venta_pedido'))
 
     if request.method == 'POST':
-        # Lista para almacenar los productos que necesitan producción
         productos_pendientes = []
-        # Lista para almacenar las producciones creadas
         producciones_creadas = []
 
         detalles = db.session.query(
             DetalleVenta).filter_by(id_venta=id_venta).all()
         try:
-            # Primero verificamos disponibilidad sin modificar el inventario
             for detalle in detalles:
-                # Encontrar la galleta correspondiente
                 galleta = db.session.query(Galleta).filter_by(
                     id_galleta=detalle.id_galleta).first()
 
                 if galleta:
-                    # Calcular cantidad real de galletas según el tipo de venta
                     tipo_venta = detalle.tipo_venta
                     cantidad_solicitada = detalle.cantidad
 
@@ -295,10 +262,7 @@ def realizar_venta_pedido(id_venta):
                     elif tipo_venta == "docena":
                         galletas_reales = cantidad_solicitada * 12
                     else:
-                        galletas_reales = cantidad_solicitada  # Caso por defecto
-
-                    # Verificamos si hay suficiente stock, si no hay, añadimos a la lista de pendientes
-                    # IMPORTANTE: No descontamos del stock durante el procesamiento inicial
+                        galletas_reales = cantidad_solicitada
                     if galleta.cantidad_galletas < galletas_reales:
                         productos_pendientes.append({
                             'galleta': galleta,
@@ -312,18 +276,15 @@ def realizar_venta_pedido(id_venta):
                     db.session.rollback()
                     return redirect(url_for('venta.venta_pedido'))
 
-            # Si hay productos pendientes, generamos órdenes de producción automáticas
             if productos_pendientes:
                 for producto in productos_pendientes:
                     galleta = producto['galleta']
                     cantidad_faltante = producto['cantidad_faltante']
 
-                    # Buscar la receta de la galleta
                     receta = db.session.query(Receta).filter_by(
                         id_galleta=galleta.id_galleta).first()
 
                     if receta:
-                        # Calcular cuántas producciones necesitamos
                         cantidad_por_produccion = receta.cantidad_produccion
                         producciones_necesarias = (
                             cantidad_faltante + cantidad_por_produccion - 1) // cantidad_por_produccion
@@ -331,48 +292,40 @@ def realizar_venta_pedido(id_venta):
                         for _ in range(producciones_necesarias):
                             nueva_produccion = Produccion(
                                 estatus='programada',
-                                id_usuario=current_user.id_usuario,  # Usuario que procesa el pedido
+                                id_usuario=current_user.id_usuario,
                                 id_receta=receta.id_receta
                             )
                             db.session.add(nueva_produccion)
-                            db.session.flush()  # Para obtener el ID generado
+                            db.session.flush()
 
                             producciones_creadas.append({
                                 'id': nueva_produccion.id_produccion,
                                 'galleta': galleta.nombre
                             })
 
-                # Calcular tiempo aproximado de producción
                 tiempo_espera_maximo = max([galleta.tiempo_estimado_fabricacion(p['cantidad_faltante'])
                                            for p in productos_pendientes]) if productos_pendientes else 0
 
-                # Actualizar la fecha de recogida si hay producciones
                 if tiempo_espera_maximo > 0:
                     venta.fecha_recogida = datetime.now() + timedelta(days=tiempo_espera_maximo)
 
-                # Actualizar el estado del pedido
                 venta.estado = 'en_produccion'
 
-                # Mantener como no pagado hasta que el cliente recoja el pedido
                 venta.pagado = 0
 
-                # Construir mensaje con los productos pendientes
                 productos_str = ", ".join(
                     [f"{p['galleta'].nombre} ({p['cantidad_necesaria']} necesarias, {p['cantidad_disponible']} disponibles)" for p in productos_pendientes])
                 flash(
                     f'Algunos productos requieren producción: {productos_str}. El pedido ha sido procesado y se han creado {len(producciones_creadas)} órdenes de producción automáticamente.', 'warning')
             else:
-                # Si no hay productos pendientes, marcar como listo para recoger
                 venta.estado = 'listo_para_recoger'
                 venta.fecha_recogida = date.today()
 
-                # Mantener como no pagado hasta que el cliente recoja el pedido
                 venta.pagado = 0
 
                 flash(
                     'Todos los productos están disponibles. El pedido está listo para recoger.', 'success')
 
-            # Commit the transaction
             db.session.commit()
 
         except Exception as e:
@@ -386,7 +339,6 @@ def realizar_venta_pedido(id_venta):
 @verificar_roles('admin', 'ventas')
 @login_required
 def ganancias():
-    # Obtener fecha seleccionada o usar la fecha actual
     fecha_str = request.args.get('fecha')
 
     try:
@@ -401,7 +353,6 @@ def ganancias():
             fecha_seleccionada = date.today()
 
 
-        # Buscar todas las ventas de la fecha con estado 'entregado' y pagadas
         ventas = db.session.query(Venta).filter(
             Venta.created_at >= datetime.combine(
                 fecha_seleccionada, datetime.min.time()),
@@ -414,10 +365,8 @@ def ganancias():
         total_ventas = len(ventas)
         total_cantidad = sum(venta.total for venta in ventas) if ventas else 0
 
-        # Aplicar redondeo al total para el reporte
         total_cantidad = redondear_precio_mxn(total_cantidad)
 
-        # Si no hay ventas, mostrar un mensaje pero no redirigir
         if not ventas and fecha_str:
             flash(
                 f'No hay ventas registradas para la fecha {fecha_seleccionada.strftime("%d/%m/%Y")}', 'info')
@@ -436,7 +385,6 @@ def ganancias():
         print(f"Error en ganancias: {str(e)}")
         print(traceback_str)
         flash(f'Error al cargar reporte: {str(e)}', 'danger')
-        # En lugar de redirigir, renderizamos la plantilla con datos vacíos
         return render_template(
             'ganancias.html',
             ventas=[],
@@ -450,20 +398,16 @@ def ganancias():
 @verificar_roles('admin', 'ventas')
 @login_required
 def entregar_pedido(id_venta):
-    """Marca un pedido como entregado cuando el cliente lo recoge y lo marca como pagado"""
     venta = Venta.query.get_or_404(id_venta)
 
     if venta.estado != 'listo_para_recoger':
         flash('Solo se pueden entregar pedidos que estén listos para recoger', 'warning')
     else:
-        # Obtener los detalles del pedido
         detalles = DetalleVenta.query.filter_by(id_venta=venta.id_venta).all()
 
-        # AHORA es cuando debemos descontar del inventario
         for detalle in detalles:
             galleta = Galleta.query.get(detalle.id_galleta)
             if galleta:
-                # Calcular cantidad real según tipo de venta
                 if detalle.tipo_venta == "unidad":
                     galletas_reales = detalle.cantidad
                 elif detalle.tipo_venta == "paquete_10":
@@ -477,11 +421,10 @@ def entregar_pedido(id_venta):
                 else:
                     galletas_reales = detalle.cantidad
 
-                # Descontar del stock ahora que el cliente recoge el pedido
                 galleta.cantidad_galletas -= galletas_reales
 
         venta.estado = 'entregado'
-        venta.pagado = 1  # Marcar como pagado cuando el cliente recoge el pedido
+        venta.pagado = 1
         db.session.commit()
         flash('Pedido entregado correctamente al cliente y marcado como pagado', 'success')
 

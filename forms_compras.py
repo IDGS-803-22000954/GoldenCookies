@@ -64,7 +64,6 @@ class CompraInsumoForm(FlaskForm):
     id_proveedor = SelectField(
         'Proveedor', coerce=int, validators=[DataRequired()])
 
-    # Cambiamos presentación a SelectField con opciones predefinidas
     presentacion = SelectField('Presentación', choices=[
         ('costal', 'Costal'),
         ('bolsa', 'Bolsa'),
@@ -90,7 +89,6 @@ class CompraInsumoForm(FlaskForm):
         NumberRange(min=0.01, message='El costo debe ser mayor a cero')
     ])
 
-    # Campo para mostrar la unidad de medida (no editable)
     unidad_medida = StringField(
         'Unidad de Medida', render_kw={'readonly': True})
 

@@ -209,17 +209,14 @@ def modificar_receta(id_receta):
         flash("Receta y galleta modificadas correctamente", "success")
         return redirect(url_for('recetas.receta'))
 
-    # Construir el JSON para la respuesta
     receta_insumos = {
         ri.id_insumo: ri.cantidad_insumo for ri in receta.receta_insumo}
 
-    # Añadir los insumos con sus cantidades asociadas
     insumos_data = [
         {
             'id_insumo': insumo.id_insumo,
             'nombre': insumo.nombre,
             'unidad_medida': insumo.unidad_medida,
-            # Obtener la cantidad si existe
             'cantidad': receta_insumos.get(insumo.id_insumo, 0)
         }
         for insumo in insumos
@@ -238,5 +235,5 @@ def modificar_receta(id_receta):
             'peso_unidad': galleta.peso_unidad,
             'imagen': galleta.imagen
         },
-        'insumos': insumos_data  # Asegurarse de incluir la lista de insumos
+        'insumos': insumos_data
     })

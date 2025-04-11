@@ -19,17 +19,14 @@ def get_producciones():
 
 
 def get_insumos_disponibles():
-    # Obtenemos insumos con existencia mayor a 0
     return Insumo.query.filter(Insumo.cantidad_insumo > 0).all()
 
 
 def get_galletas_disponibles():
-    # Obtenemos galletas con existencia mayor a 0
     return Galleta.query.filter(Galleta.cantidad_galletas > 0).all()
 
 
 class ProduccionForm(FlaskForm):
-    # Mantenemos solo el campo de receta y eliminamos el campo estatus
     receta = QuerySelectField('Receta',
                               query_factory=get_recetas,
                               get_label=lambda r: f"{r.galleta.nombre} - {r.cantidad_produccion} unidades",
@@ -51,13 +48,11 @@ class MermaInsumoForm(FlaskForm):
                              ],
                              validators=[DataRequired()])
 
-    # Cambiamos de lote_insumo a insumo directamente
     insumo = QuerySelectField('Insumo',
                               query_factory=get_insumos_disponibles,
                               get_label=lambda i: f"{i.nombre} ({i.cantidad_insumo} {i.unidad_medida})",
                               validators=[DataRequired()])
 
-    # Agregamos un campo para seleccionar el lote después
     lote_insumo = SelectField('Lote (opcional)',
                               choices=[],
                               validators=[Optional()])
@@ -90,13 +85,11 @@ class MermaGalletaForm(FlaskForm):
                              ],
                              validators=[DataRequired()])
 
-    # Cambiamos de lote_galleta a galleta directamente
     galleta = QuerySelectField('Galleta',
                                query_factory=get_galletas_disponibles,
                                get_label=lambda g: f"{g.nombre} ({g.cantidad_galletas})",
                                validators=[DataRequired()])
 
-    # Agregamos un campo para seleccionar el lote después
     lote_galleta = SelectField('Lote (opcional)',
                                choices=[],
                                validators=[Optional()])

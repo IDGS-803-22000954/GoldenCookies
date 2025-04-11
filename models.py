@@ -31,21 +31,16 @@ class Galleta(db.Model):
         'DetalleVenta', back_populates='galleta')
 
     def tiempo_estimado_fabricacion(self, cantidad=1):
-        """Estima el tiempo necesario para fabricar una cantidad de galletas"""
-        # Obtener la receta asociada
         receta = Receta.query.filter_by(id_galleta=self.id_galleta).first()
 
         if not receta:
-            return 1  # Por defecto, 1 día si no hay receta
+            return 1
 
-        # Calcula cuántas producciones se necesitan
         producciones_necesarias = (
             cantidad + receta.cantidad_produccion - 1) // receta.cantidad_produccion
 
-        # Por cada producción, asumimos 0.5 días de trabajo (simplificado)
         dias_estimados = 0.5 * producciones_necesarias
 
-        # Redondeamos hacia arriba y siempre mínimo 1 día
         return max(1, int(dias_estimados + 0.5))
 
 
@@ -107,13 +102,13 @@ class usuario(db.Model, UserMixin):
         return check_password_hash(self.password_hash, password)
 
     def is_active(self):
-        return not self.bloqueado  # Considera activo si no está bloqueado
+        return not self.bloqueado
 
     def is_authenticated(self):
-        return True  # Siempre autenticado si ha iniciado sesión
+        return True
 
     def is_anonymous(self):
-        return False  # Nunca anónimo si ha iniciado sesión
+        return False
 
     def get_id(self):
         return str(self.id_usuario)

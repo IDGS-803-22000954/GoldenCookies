@@ -8,22 +8,18 @@ from wtforms import validators
 def validar_contrasenia(form, field):
     contrasenia = field.data
 
-    # Verifica si hay más de 3 caracteres iguales seguidos
     if re.search(r'(.)\1{2,}', contrasenia):
         raise ValidationError(
             "La contraseña no puede contener más de 3 caracteres iguales seguidos.")
 
-    # Verifica si contiene al menos una letra mayúscula
     if not re.search(r'[A-Z]', contrasenia):
         raise ValidationError(
             "La contraseña debe contener al menos una letra mayúscula.")
 
-    # Verifica si contiene al menos un número
     if not re.search(r'\d', contrasenia):
         raise ValidationError(
             "La contraseña debe contener al menos un número.")
 
-    # Verifica si contiene al menos un carácter especial
     if not re.search(r'[!@#$%^&*]', contrasenia):
         raise ValidationError(
             "La contraseña debe contener al menos un carácter especial (!@#$%^&*).")

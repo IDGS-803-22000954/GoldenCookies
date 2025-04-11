@@ -8,30 +8,21 @@ from auth import verificar_roles
 
 compras_bp = Blueprint('compras_bp', __name__, template_folder='templates')
 
-# Importar la función de cálculo de precio de recetas.py
 
 
 def actualizar_precios_galletas(id_insumo):
-    """
-    Actualiza los precios de todas las galletas que utilizan un insumo específico.
-    """
-    # Encontrar todas las recetas que usan este insumo
     recetas_insumos = RecetaInsumo.query.filter_by(id_insumo=id_insumo).all()
 
-    # Recopilar los IDs únicos de recetas
     ids_recetas = set(ri.id_receta for ri in recetas_insumos)
 
-    # Obtener todas las recetas afectadas
     recetas = Receta.query.filter(Receta.id_receta.in_(ids_recetas)).all()
 
-    # Para cada receta, actualizar el precio de su galleta
     for receta in recetas:
         galleta = Galleta.query.get(receta.id_galleta)
         if galleta:
             nuevo_precio = calcular_precio_galleta(galleta.id_galleta)
             galleta.precio = nuevo_precio
 
-    # Guardar todos los cambios
     db.session.commit()
 
 
@@ -41,7 +32,6 @@ def actualizar_precios_galletas(id_insumo):
 def listar_compras():
     form = CompraInsumoForm()
 
-    # Los select fields
     form.id_insumo.choices = [(i.id_insumo, f"{i.nombre} ({i.unidad_medida})")
                               for i in Insumo.query.filter(Insumo.id_insumo != 0).order_by(Insumo.nombre)]
     form.id_proveedor.choices = [(p.id_proveedor, p.nombre)
@@ -52,10 +42,8 @@ def listar_compras():
 
     if form.validate_on_submit():
         try:
-            # (presentaciones * peso unitario)
             cantidad_total = form.cantidad_presentaciones.data * form.peso_unitario.data
 
-            # (precio_total / cantidad_total)
             precio_unitario = form.precio_total.data / cantidad_total
 
             id_insumo = form.id_insumo.data
@@ -84,8 +72,6 @@ def listar_compras():
             insumo.cantidad_insumo += cantidad_total
 
             db.session.commit()
-
-            # Después de registrar la compra, actualizar los precios de las galletas
             actualizar_precios_galletas(id_insumo)
 
             flash(

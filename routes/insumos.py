@@ -14,13 +14,13 @@ insumo_bp = Blueprint('insumo_bp', __name__, url_prefix='/insumo_bp')
 @login_required
 def agregarInsumo():
     formulario = InsumoForm()
-    insumos = Insumo.query.all()  # Consulta todos los registros de la tabla Insumo
+    insumos = Insumo.query.all()
 
     if formulario.validate_on_submit():
         nuevo_insumo = Insumo(
             nombre=formulario.nombre.data,
             unidad_medida=formulario.unidad_medida.data,
-            cantidad_insumo=0,  # Inicializa la cantidad de insumo en 0
+            cantidad_insumo=0,
         )
         db.session.add(nuevo_insumo)
         db.session.commit()

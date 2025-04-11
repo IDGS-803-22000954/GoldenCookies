@@ -42,7 +42,7 @@ def crear():
 
     if form.validate_on_submit():
         nueva_produccion = Produccion(
-            estatus='programada',  # Establecemos directamente como "en_proceso"
+            estatus='programada',
             id_usuario=current_user.id_usuario,
             id_receta=form.receta.data.id_receta
         )
@@ -69,7 +69,6 @@ def detalle(id):
     if produccion.estatus == 'completada' and produccion.id_lote_galleta:
         lote_galleta = LoteGalleta.query.get(produccion.id_lote_galleta)
 
-    # Crear un diccionario para obtener fácilmente los insumos usados por id_insumo
     insumos_usados_dict = {}
     costo_total = 0
 
@@ -256,7 +255,6 @@ def finalizar(id):
 
     db.session.commit()
 
-    # NUEVO: Actualizar pedidos relacionados con esta producción
     actualizar_pedidos_post_produccion(produccion)
 
     flash('Producción finalizada correctamente. Se han utilizado los insumos y se ha creado el lote de galletas.', 'success')
@@ -264,26 +262,18 @@ def finalizar(id):
 
 
 def actualizar_pedidos_post_produccion(produccion):
-    """
-    Actualiza los pedidos relacionados después de finalizar una producción.
-    Busca pedidos en estado 'en_produccion' y verifica si la galleta producida
-    satisface alguno de los pedidos pendientes.
-    """
-    # Obtener la galleta producida
     galleta_producida = None
     if produccion.receta and produccion.receta.galleta:
         galleta_producida = produccion.receta.galleta
 
     if not galleta_producida:
-        return  # No podemos actualizar pedidos si no hay galleta identificable
+        return
 
-    # Buscar todos los pedidos en producción
     pedidos_potenciales = Venta.query.filter(
         Venta.estado == 'en_produccion'
     ).all()
 
     for pedido in pedidos_potenciales:
-        # Verificar si todas las galletas del pedido están disponibles
         detalles = DetalleVenta.query.filter_by(id_venta=pedido.id_venta).all()
         todas_disponibles = True
 
@@ -291,8 +281,7 @@ def actualizar_pedidos_post_produccion(produccion):
             galleta = Galleta.query.get(detalle.id_galleta)
             if not galleta:
                 continue
-
-            # Calcular cantidad real según tipo de venta
+            
             if detalle.tipo_venta == "unidad":
                 galletas_reales = detalle.cantidad
             elif detalle.tipo_venta == "paquete_10":
@@ -306,20 +295,15 @@ def actualizar_pedidos_post_produccion(produccion):
             else:
                 galletas_reales = detalle.cantidad
 
-            # Si no hay suficientes galletas disponibles, este pedido aún no está listo
             if galleta.cantidad_galletas < galletas_reales:
                 todas_disponibles = False
                 break
 
-        # Si todas las galletas están disponibles, marcar como listo para recoger
         if todas_disponibles:
             pedido.estado = 'listo_para_recoger'
             db.session.commit()
             print(
                 f"Pedido #{pedido.id_venta} actualizado a listo_para_recoger")
-
-            # NUEVO: Notificar al cliente que su pedido está listo
-            # Aquí podrías agregar lógica para enviar un correo electrónico o notificación
 
 
 @produccion_bp.route('/merma/insumo', methods=['GET', 'POST'])
@@ -341,20 +325,17 @@ def merma_insumo():
                 print(f"Insumo seleccionado: {insumo.nombre}")
                 print(f"Cantidad disponible total: {insumo.cantidad_insumo}")
 
-                # Validar contra la cantidad total del insumo
                 if insumo.cantidad_insumo < form.cantidad.data:
                     flash(
                         f'La cantidad excede lo disponible en inventario. Máximo: {insumo.cantidad_insumo} {insumo.unidad_medida}', 'danger')
                     return redirect(url_for('produccion.merma_insumo'))
 
-                # Si se seleccionó un lote específico, usarlo
                 if lote_id:
                     lote_insumo = LoteInsumo.query.get(lote_id)
                     if not lote_insumo or lote_insumo.id_insumo != insumo.id_insumo:
                         flash('El lote seleccionado no es válido', 'danger')
                         return redirect(url_for('produccion.merma_insumo'))
                 else:
-                    # Seleccionar automáticamente el lote más antiguo con disponibilidad
                     lote_insumo = LoteInsumo.query.filter(
                         LoteInsumo.id_insumo == insumo.id_insumo,
                         LoteInsumo.cantidad_disponible > 0
@@ -374,15 +355,12 @@ def merma_insumo():
                 )
                 print("Merma creada en memoria:", vars(nueva_merma))
 
-                # Determinar cuánto podemos descontar del lote seleccionado
                 cantidad_descontar_lote = min(
                     form.cantidad.data, lote_insumo.cantidad_disponible)
                 lote_insumo.cantidad_disponible -= cantidad_descontar_lote
 
-                # Actualizar el total del insumo
                 insumo.cantidad_insumo -= form.cantidad.data
 
-                # Si queda cantidad por descontar y hay más lotes, distribuir entre ellos
                 cantidad_restante = form.cantidad.data - cantidad_descontar_lote
                 if cantidad_restante > 0:
                     lotes_adicionales = LoteInsumo.query.filter(
@@ -427,20 +405,17 @@ def merma_galleta():
         galleta = form.galleta.data
         lote_id = form.lote_galleta.data if form.lote_galleta.data else None
 
-        # Validar contra la cantidad total de la galleta
         if galleta.cantidad_galletas < form.cantidad.data:
             flash(
                 f'La cantidad excede lo disponible en inventario. Máximo: {galleta.cantidad_galletas} unidades', 'danger')
             return redirect(url_for('produccion.merma_galleta'))
 
-        # Si se seleccionó un lote específico, usarlo
         if lote_id:
             lote_galleta = LoteGalleta.query.get(lote_id)
             if not lote_galleta or lote_galleta.id_galleta != galleta.id_galleta:
                 flash('El lote seleccionado no es válido', 'danger')
                 return redirect(url_for('produccion.merma_galleta'))
         else:
-            # Seleccionar automáticamente el lote más antiguo con disponibilidad
             lote_galleta = LoteGalleta.query.filter(
                 LoteGalleta.id_galleta == galleta.id_galleta,
                 LoteGalleta.cantidad_disponible > 0
@@ -459,15 +434,12 @@ def merma_galleta():
             motivo=form.motivo.data
         )
 
-        # Determinar cuánto podemos descontar del lote seleccionado
         cantidad_descontar_lote = min(
             form.cantidad.data, lote_galleta.cantidad_disponible)
         lote_galleta.cantidad_disponible -= cantidad_descontar_lote
 
-        # Actualizar el total de la galleta
         galleta.cantidad_galletas -= form.cantidad.data
 
-        # Si queda cantidad por descontar y hay más lotes, distribuir entre ellos
         cantidad_restante = form.cantidad.data - cantidad_descontar_lote
         if cantidad_restante > 0:
             lotes_adicionales = LoteGalleta.query.filter(
@@ -494,7 +466,6 @@ def merma_galleta():
     return render_template('merma_galleta.html', form=form)
 
 
-# Ruta para cargar lotes según el insumo seleccionado (para AJAX)
 @produccion_bp.route('/lotes-insumo/<int:id_insumo>', methods=['GET'])
 @verificar_roles('admin', 'produccion')
 @login_required
@@ -511,7 +482,6 @@ def get_lotes_insumo(id_insumo):
     return jsonify(lotes_data)
 
 
-# Ruta para cargar lotes según la galleta seleccionada (para AJAX)
 @produccion_bp.route('/lotes-galleta/<int:id_galleta>', methods=['GET'])
 @verificar_roles('admin', 'produccion')
 @login_required
@@ -569,12 +539,10 @@ def calcular_costo():
 @verificar_roles('admin', 'produccion')
 @login_required
 def estadisticas():
-    # Consulta original - NO la modificamos
     estatus_count_raw = db.session.query(
         Produccion.estatus, func.count(Produccion.id_produccion)
     ).group_by(Produccion.estatus).all()
 
-    # Convertimos a formato más manejable y calculamos total
     estatus_count = []
     total_producciones = 0
     completadas = 0
@@ -582,12 +550,9 @@ def estadisticas():
     programadas = 0
     canceladas = 0
 
-    # Procesamos cada estatus
     for estatus, count in estatus_count_raw:
-        # Sumar al total
         total_producciones += count
 
-        # Guardar valores específicos
         if estatus == 'completada':
             completadas = count
         elif estatus == 'en_proceso':
@@ -597,10 +562,8 @@ def estadisticas():
         elif estatus == 'cancelada':
             canceladas = count
 
-        # Agregar a la lista procesada
         estatus_count.append((estatus, count))
 
-    # Calculamos porcentajes
     estatus_porcentajes = []
     for estatus, count in estatus_count:
         if total_producciones > 0:
@@ -609,7 +572,6 @@ def estadisticas():
             porcentaje = 0
         estatus_porcentajes.append((estatus, count, porcentaje))
 
-    # El resto de consultas no las modificamos
     top_galletas = db.session.query(
         Galleta.nombre, func.sum(LoteGalleta.cantidad_inicial).label('total')
     ).join(LoteGalleta).join(Produccion, Produccion.id_lote_galleta == LoteGalleta.id_lote_galleta)\
@@ -629,7 +591,6 @@ def estadisticas():
         Merma.tipo_merma, func.sum(Merma.cantidad).label('total')
     ).group_by(Merma.tipo_merma).all()
 
-    # Imprimimos para debug
     print("DATOS PROCESADOS:")
     print(f"Total producciones: {total_producciones}")
     print(f"Completadas: {completadas}")

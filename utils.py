@@ -17,30 +17,24 @@ def generar_codigo_2fa(user):
     totp = pyotp.TOTP(Secret_key)
     codigo_2fa = totp.now()
     
-    # Guardar el código en la base de datos
     user.codigo_2fa = codigo_2fa
     db.session.commit()
 
-    # Enviar el código por correo
     if enviar_correo(user.email, codigo_2fa):
         flash('Código de autenticación enviado por correo.', 'info')
     else:
         flash('Error al enviar el código.', 'danger')
     
-    # Guardar el código en la sesión
     session["codigo_2fa"] = user.codigo_2fa
 
 
-##key = AIzaSyASQ4nW21_fsw-xtsRzhwi7fvvw7GRc0CI
 def enviar_correo(destinatario, codigo_2fa):
     """Función para enviar el código 2FA por correo electrónico usando Gmail API."""
     mensaje = f'Tu código de autenticación es: {codigo_2fa}'
     
-    # Cargar credenciales
     creds = None
     SCOPES = ['https://www.googleapis.com/auth/gmail.send']
     
-    # Verificar si hay credenciales guardadas
     if os.path.exists('token.json'):
         creds = Credentials.from_authorized_user_file('token.json', SCOPES)
     
@@ -54,15 +48,13 @@ def enviar_correo(destinatario, codigo_2fa):
         with open('token.json', 'w') as token:
             token.write(creds.to_json())
 
-    # Crear el mensaje
     msg = MIMEMultipart()
-    msg['From'] = 'ian.aquinoflores@gmail.com'  # Cambia esto por tu correo
+    msg['From'] = 'ian.aquinoflores@gmail.com'
     msg['To'] = destinatario
     msg['Subject'] = 'Código de Autenticación 2FA'
     msg.attach(MIMEText(mensaje, 'plain'))
 
     try:
-        # Enviar el mensaje
         service = build('gmail', 'v1', credentials=creds)
         raw_message = base64.urlsafe_b64encode(msg.as_bytes()).decode().replace("=", "")
         message = {'raw': raw_message}

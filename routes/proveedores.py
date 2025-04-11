@@ -14,19 +14,19 @@ proveedor_bp = Blueprint('proveedor_bp', __name__, url_prefix='/proveedor_bp')
 @verificar_roles('admin')
 @login_required
 def agregarProveedor():
-    formulario = ProveedorForm()  # Cambiado a ProveedorForm
+    formulario = ProveedorForm()
     proveedores = Proveedor.query.all()
     
     if formulario.validate_on_submit():
         nuevo_proveedor = Proveedor(
-            nombre=formulario.nombre.data,  # Cambiado a nombre
+            nombre=formulario.nombre.data,
             contacto=formulario.contacto.data,
             telefono=formulario.telefono.data
         )
         db.session.add(nuevo_proveedor)
         db.session.commit()
         flash('Proveedor agregado correctamente', 'success')
-        return redirect(url_for('proveedor_bp.agregarProveedor'))  # Corregido el nombre de la función
+        return redirect(url_for('proveedor_bp.agregarProveedor'))
     
     return render_template('proovedores.html', formulario=formulario, proveedores=proveedores)
 
