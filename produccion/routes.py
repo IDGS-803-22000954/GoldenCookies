@@ -42,7 +42,7 @@ def crear():
 
     if form.validate_on_submit():
         nueva_produccion = Produccion(
-            estatus=form.estatus.data,
+            estatus='programada',  # Establecemos directamente como "en_proceso"
             id_usuario=current_user.id_usuario,
             id_receta=form.receta.data.id_receta
         )

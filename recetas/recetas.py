@@ -55,7 +55,7 @@ def calcular_precio_galleta(id_galleta):
     if receta.cantidad_produccion == 0:
         return 0.0
 
-    precio_unitario_galleta = (costo_total / receta.cantidad_produccion) * 1.25
+    precio_unitario_galleta = (costo_total / receta.cantidad_produccion) * 1.75
     precio = round(precio_unitario_galleta, 2)
     return precio
 

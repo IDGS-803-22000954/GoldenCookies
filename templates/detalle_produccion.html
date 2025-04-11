@@ -345,7 +345,7 @@ Cookies{% endblock %} {% block main %}
                     unidades {% endif %}
                   </td>
                   <td class="px-4 py-3">
-                    {{ merma.fecha_registro.strftime('%d/%m/%Y') }}
+                    {{ merma.created_at.strftime('%d/%m/%Y') }}
                   </td>
                   <td class="px-4 py-3">{{ merma.motivo }}</td>
                 </tr>

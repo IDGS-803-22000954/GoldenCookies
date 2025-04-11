@@ -29,21 +29,11 @@ def get_galletas_disponibles():
 
 
 class ProduccionForm(FlaskForm):
-    # Este formulario se mantiene igual
+    # Mantenemos solo el campo de receta y eliminamos el campo estatus
     receta = QuerySelectField('Receta',
                               query_factory=get_recetas,
                               get_label=lambda r: f"{r.galleta.nombre} - {r.cantidad_produccion} unidades",
                               validators=[DataRequired()])
-
-    estatus = SelectField('Estatus',
-                          choices=[
-                              ('programada', 'Programada'),
-                              ('en_proceso', 'En Proceso'),
-                              ('completada', 'Completada'),
-                              ('cancelada', 'Cancelada')
-                          ],
-                          default='programada',
-                          validators=[DataRequired()])
 
     submit = SubmitField('Crear Producción')
 
